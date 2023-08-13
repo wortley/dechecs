@@ -2,7 +2,8 @@
 v: 0
 micros:
   - name: wchess-api
-    src: ./
+    src: .
     engine: python3.9
     run: uvicorn main:chess_api
-    public: true
+    public_routes:
+      - "/*"
