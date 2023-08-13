@@ -1,0 +1,15 @@
+.statusCircle {
+  display: inline-block;
+  border-radius: 50%;
+  background-color: none;
+  border: 0.5px solid #213547;
+  height: 0.6em;
+  width: 0.6em;
+  margin-right: 0.3em;
+  transition: background-color 0.3s ease;
+
+  &.connected {
+    border: 0.5px solid green;
+    background-color: green;
+  }
+}

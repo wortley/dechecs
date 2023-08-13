@@ -1,0 +1,147 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: normal;
+  color: #213547;
+  background-color: #ffffff;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/* Headings */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 500;
+  margin: 0;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+h2 {
+  font-size: 2em;
+  line-height: 1.2;
+}
+
+h3 {
+  font-size: 1.5em;
+}
+
+h4 {
+  font-size: 1.25em;
+  margin: 1em;
+}
+
+h5 {
+  font-size: 1.1em;
+}
+
+h6 {
+  font-size: 1em;
+  margin: 1em;
+}
+
+/* <a> */
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #747bff;
+}
+
+/* <button> */
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  margin: 0 0.3em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #f9f9f9;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+/* <select> */
+select {
+  border-radius: 8px;
+  border: 1px solid #213547;
+  padding: 0.6em 1.2em 0.6em 0.5em;
+  font-size: 1em;
+  font-family: inherit;
+  transition: border-color 0.25s;
+  margin-bottom: 1em;
+}
+select:hover {
+  border-color: #646cff;
+}
+select:focus,
+select:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+/* <input> */
+input {
+  border-radius: 8px;
+  border: 1px solid #213547;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-family: inherit;
+  transition: border-color 0.25s;
+}
+input:hover {
+  border-color: #646cff;
+}
+input:focus,
+input:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+/* <dialog> */
+dialog {
+  margin: 0;
+  padding: 1.2em;
+  border-radius: 12px;
+  border: 1px solid lightgrey;
+}
+dialog::backdrop {
+  backdrop-filter: blur(0.5px);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+hr {
+  margin: 0.1em 0;
+}
+
+/* @media (prefers-color-scheme: light) {
+  button {
+    background-color: #f9f9f9;
+  }
+} */

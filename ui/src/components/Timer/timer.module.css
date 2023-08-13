@@ -1,0 +1,27 @@
+.timer {
+  font-size: 3em;
+  min-width: 280px;
+  width: calc(80vh / 3);
+  background-color: #f9f9f9;
+  padding: 0.1em 0;
+  border: 1px solid #213547;
+  border-radius: 8px;
+}
+
+@media (max-width: 1150px) {
+  .timer {
+    display: flex;
+    flex-direction: row;
+    font-size: 2em;
+  }
+
+  .side {
+    width: 50%;
+  }
+}
+
+@media (max-width: 768px) {
+  .timer {
+    font-size: 1.7em;
+  }
+}
