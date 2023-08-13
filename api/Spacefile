@@ -1,9 +1,0 @@
-# Spacefile Docs: https://go.deta.dev/docs/spacefile/v0
-v: 0
-micros:
-  - name: api
-    src: .
-    engine: python3.9
-    run: uvicorn main:chess_api
-    primary: true
-    public: true
