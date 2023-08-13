@@ -1,9 +1,9 @@
 # Spacefile Docs: https://go.deta.dev/docs/spacefile/v0
 v: 0
 micros:
-  - name: wchess-api
+  - name: api
     src: .
     engine: python3.9
     run: uvicorn main:chess_api
-    public_routes:
-      - "/*"
+    primary: true
+    public: true
