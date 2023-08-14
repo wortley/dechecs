@@ -220,8 +220,3 @@ async def accept_rematch(sid):
 @chess_api.sio.on("exit")
 async def exit(sid):
     clear_game(players_to_games.get(sid, None))
-
-
-# for deployment
-if __name__ == "__main__":
-    uvicorn.run(chess_api, reload=False)
