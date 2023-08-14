@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.min.css";
 import "./App.css";
 import Router from "./Router";
 import ConnectionStatus from "./components/ConnectionStatus";
