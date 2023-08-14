@@ -1,11 +1,12 @@
 .timer {
-  font-size: 3em;
+  font-size: 2.8em;
   min-width: 280px;
   width: calc(80vh / 3);
   background-color: #f9f9f9;
   padding: 0.1em 0;
   border: 1px solid #213547;
   border-radius: 8px;
+  margin-bottom: 0.3em;
 }
 
 @media (max-width: 1150px) {
@@ -22,6 +23,6 @@
 
 @media (max-width: 768px) {
   .timer {
-    font-size: 1.7em;
+    font-size: 1.6em;
   }
 }

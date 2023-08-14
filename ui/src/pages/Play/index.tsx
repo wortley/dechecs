@@ -56,16 +56,19 @@ export default function Play() {
               setWinner={setWinner}
             />
           )}
-          <Timer side={colour} timeControl={timeControl} />
+          <div>
+            <Timer side={colour} timeControl={timeControl} />
+            {drawOffer ? (
+              <button onClick={onAcceptDraw}>Accept draw offer</button>
+            ) : (
+              <button onClick={onOfferDraw}>Offer draw</button>
+            )}
+            <button onClick={onResign}>Resign</button>
+          </div>
         </div>
       </div>
       <ResultModal outcome={outcome} winner={winner} side={colour} />
-      {drawOffer ? (
-        <button onClick={onAcceptDraw}>Accept draw offer</button>
-      ) : (
-        <button onClick={onOfferDraw}>Offer draw</button>
-      )}
-      <button onClick={onResign}>Resign</button>
+
       <small>
         Chess pieces by{" "}
         <a
