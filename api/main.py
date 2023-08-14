@@ -206,7 +206,7 @@ async def offer_draw(sid):
 
     if game:
         await chess_api.sio.emit(
-            "offerDraw", to=next(p for p in game.players if p != sid)
+            "drawOffer", to=next(p for p in game.players if p != sid)
         )
     else:
         await emit_error(sid)

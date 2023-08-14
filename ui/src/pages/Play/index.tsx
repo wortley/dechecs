@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useLocation } from "react-router-dom";
 import Board from "../../components/Board";
@@ -8,21 +8,40 @@ import { socket } from "../../socket";
 import { Colour, Outcome } from "../../types";
 import styles from "./play.module.css";
 
-// TODO: Resign and offer draw buttons
-
 export default function Play() {
   const location = useLocation();
 
   const [turn, setTurn] = useState(Colour.WHITE);
   const [outcome, setOutcome] = useState<Outcome>();
   const [winner, setWinner] = useState<Colour>();
+  const [drawOffer, setDrawOffer] = useState(false);
 
   const colour = location.state.colour;
   const timeControl = location.state.timeControl;
 
+  function onOfferDraw() {
+    socket.timeout(2000).emit("offerDraw");
+  }
+
+  function onAcceptDraw() {
+    socket.timeout(2000).emit("acceptDraw");
+  }
+
   function onResign() {
     socket.timeout(2000).emit("resign");
   }
+
+  useEffect(() => {
+    function onReceiveDrawOffer() {
+      setDrawOffer(true);
+    }
+
+    socket.on("drawOffer", onReceiveDrawOffer);
+
+    return () => {
+      socket.off("drawOffer", onReceiveDrawOffer);
+    };
+  }, []);
 
   return (
     <>
@@ -41,7 +60,11 @@ export default function Play() {
         </div>
       </div>
       <ResultModal outcome={outcome} winner={winner} side={colour} />
-      <button>Offer draw</button>
+      {drawOffer ? (
+        <button onClick={onAcceptDraw}>Accept draw offer</button>
+      ) : (
+        <button onClick={onOfferDraw}>Offer draw</button>
+      )}
       <button onClick={onResign}>Resign</button>
       <small>
         Chess pieces by{" "}
