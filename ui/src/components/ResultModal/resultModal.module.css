@@ -2,8 +2,8 @@
   position: fixed;
   left: 50%;
   top: 50%;
-  height: 280px;
-  width: 320px;
+  width: min(320px, 80vw);
+  aspect-ratio: 1.15 / 1;
   transform: translate(-50%, -50%);
   z-index: 100;
 }
