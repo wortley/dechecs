@@ -50,10 +50,10 @@ def clear_game(game_id):
             game.timer.task.cancel()
         current_games.pop(game_id, None)
 
-async def emit_generic_error(sid):
-    await chess_api.sio.emit(
-            "error", "Something went wrong", to=sid
-    )
+
+async def emit_error(sid, message="Something went wrong"):
+    await chess_api.sio.emit("error", message, to=sid)
+
 
 async def countdown(game_id):
     game = current_games.get(game_id, None)
@@ -138,14 +138,10 @@ async def create(sid, time_control):
 async def join(sid, game_id):
     game = current_games.get(game_id, None)
     if not game:
-        await chess_api.sio.emit(
-            "error", "Game not found", to=sid
-        )
+        await emit_error(sid, "Game not found")
         return
     if len(game.players) > 1:
-        await chess_api.sio.emit(
-            "error", "This game already has two players", to=sid
-        )
+        await emit_error(sid, "This game already has two players")
         return
     chess_api.sio.enter_room(sid, game_id)  # join room
     game.players.append(sid)
@@ -199,8 +195,7 @@ async def move(sid, uci):
         if outcome:
             game.timer.task.cancel()
     else:
-        await emit_generic_error(sid)
-
+        await emit_error(sid)
 
 
 @chess_api.sio.on("offerRematch")
@@ -212,7 +207,7 @@ async def offer_rematch(sid):
             "rematchOffer", 1, to=next(p for p in game.players if p != sid)
         )
     else:
-        await emit_generic_error(sid)
+        await emit_error(sid)
 
 
 @chess_api.sio.on("acceptRematch")
@@ -234,7 +229,8 @@ async def accept_rematch(sid):
             "start", {"colour": 0, "timeControl": game.time_control}, to=game.players[1]
         )
     else:
-        await emit_generic_error(sid)
+        await emit_error(sid)
+
 
 @chess_api.sio.on("exit")
 async def exit(sid):
