@@ -7,6 +7,8 @@ import Timer from "../../components/Timer";
 import { Colour, Outcome } from "../../types";
 import styles from "./play.module.css";
 
+// TODO: Resign and offer draw functionality
+
 export default function Play() {
   const location = useLocation();
 
