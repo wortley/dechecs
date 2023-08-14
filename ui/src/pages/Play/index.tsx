@@ -4,6 +4,7 @@ import { useLocation } from "react-router-dom";
 import Board from "../../components/Board";
 import ResultModal from "../../components/ResultModal";
 import Timer from "../../components/Timer";
+import { socket } from "../../socket";
 import { Colour, Outcome } from "../../types";
 import styles from "./play.module.css";
 
@@ -18,6 +19,10 @@ export default function Play() {
 
   const colour = location.state.colour;
   const timeControl = location.state.timeControl;
+
+  function onResign() {
+    socket.timeout(2000).emit("resign");
+  }
 
   return (
     <>
@@ -36,6 +41,8 @@ export default function Play() {
         </div>
       </div>
       <ResultModal outcome={outcome} winner={winner} side={colour} />
+      <button>Offer draw</button>
+      <button onClick={onResign}>Resign</button>
       <small>
         Chess pieces by{" "}
         <a

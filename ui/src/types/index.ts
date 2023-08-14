@@ -29,6 +29,7 @@ export enum Outcome {
   VARIANT_LOSS = 9,
   VARIANT_DRAW = 10,
   TIME_OUT = 11,
+  RESIGNATION = 12,
 }
 
 export type PieceRef = {
