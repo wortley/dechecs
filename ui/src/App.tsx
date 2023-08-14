@@ -51,7 +51,7 @@ function App() {
         pauseOnFocusLoss
         draggable={false}
         pauseOnHover
-        theme="light"
+        theme="colored"
       />
       <Header />
       <ConnectionStatus connected={connected} />
