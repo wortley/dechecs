@@ -22,10 +22,11 @@ chess_api = FastAPI()
 
 chess_api.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://wchess.netlify.app",
-        "http://localhost:5173",
-    ],
+    # allow_origins=[
+    #     "https://wchess.netlify.app",
+    #     "http://localhost:5173",
+    # ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
