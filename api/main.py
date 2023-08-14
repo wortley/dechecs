@@ -14,10 +14,11 @@ import random
 import uuid
 
 from chess import Board, Move
-from constants import DS_MINUTE
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_socketio import SocketManager
+
+from constants import AGREEMENT, DS_MINUTE, RESIGNATION, TIMEOUT
 from models import Castles, Game, Timer
 
 chess_api = FastAPI()
@@ -70,7 +71,7 @@ async def countdown(game_id):
                     "move",
                     {
                         "winner": 1,
-                        "outcome": 11,
+                        "outcome": TIMEOUT,
                     },
                     room=game_id,
                 )
@@ -85,7 +86,7 @@ async def countdown(game_id):
                     "move",
                     {
                         "winner": 0,
-                        "outcome": 11,
+                        "outcome": TIMEOUT,
                     },
                     room=game_id,
                 )
@@ -194,6 +195,57 @@ async def move(sid, uci):
         # stop timer if game finished
         if outcome:
             game.timer.task.cancel()
+    else:
+        await emit_error(sid)
+
+
+@chess_api.sio.on("offerDraw")
+async def offer_draw(sid):
+    game_id = players_to_games.get(sid, None)
+    game = current_games.get(game_id, None)
+
+    if game:
+        await chess_api.sio.emit(
+            "offerDraw", to=next(p for p in game.players if p != sid)
+        )
+    else:
+        await emit_error(sid)
+
+
+@chess_api.sio.on("acceptDraw")
+async def accept_draw(sid):
+    game_id = players_to_games.get(sid, None)
+    game = current_games.get(game_id, None)
+
+    if game:
+        await chess_api.sio.emit(
+            "move",
+            {
+                "winner": None,
+                "outcome": AGREEMENT,
+            },
+            room=game_id,
+        )
+        game.timer.task.cancel()
+    else:
+        await emit_error(sid)
+
+
+@chess_api.sio.on("resign")
+async def resign(sid):
+    game_id = players_to_games.get(sid, None)
+    game = current_games.get(game_id, None)
+
+    if game:
+        await chess_api.sio.emit(
+            "move",
+            {
+                "winner": game.players.index(sid),
+                "outcome": RESIGNATION,
+            },
+            room=game_id,
+        )
+        game.timer.task.cancel()
     else:
         await emit_error(sid)
 

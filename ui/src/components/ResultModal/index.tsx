@@ -68,6 +68,12 @@ export default function ResultModal({
       case Outcome.TIME_OUT: {
         return "on time";
       }
+      case Outcome.RESIGNATION: {
+        return "by resignation";
+      }
+      case Outcome.AGREEMENT: {
+        return "by agreement";
+      }
       default: {
         return;
       }
