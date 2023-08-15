@@ -273,12 +273,10 @@ export default function Board({
         }
 
         setSelectedPiece(undefined);
-        setTurn(data.turn);
         setLegalMoves(data.legalMoves.map((m) => uciToMove(m)));
-      } else {
-        // if player's own move
-        setTurn(data.turn);
       }
+
+      setTurn(data.turn);
     }
 
     socket.on("move", onMove);
