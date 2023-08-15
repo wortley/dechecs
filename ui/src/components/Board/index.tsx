@@ -295,6 +295,19 @@ export default function Board({
     );
   }
 
+  function isCastles(file_idx: number) {
+    return (
+      selectedPiece?.pieceType === PieceType.KING &&
+      ((colour === Colour.WHITE &&
+        selectedPiece.rank === 0 &&
+        selectedPiece.file === 4) ||
+        (colour === Colour.BLACK &&
+          selectedPiece.rank === 7 &&
+          selectedPiece.file === 4)) &&
+      Math.abs(file_idx - selectedPiece.file) === 2
+    );
+  }
+
   function onSquareClick(rank_idx: number, file_idx: number, dropped = false) {
     if (selectedPiece && turn === colour) {
       const fromSquare: [number, number] = [
@@ -332,15 +345,7 @@ export default function Board({
           pieceType: PieceType.QUEEN,
           colour: colour,
         };
-      } else if (
-        selectedPiece.pieceType === PieceType.KING &&
-        ((colour === Colour.WHITE &&
-          selectedPiece.rank === 0 &&
-          selectedPiece.file === 4) ||
-          (colour === Colour.BLACK &&
-            selectedPiece.rank === 7 &&
-            selectedPiece.file === 4))
-      ) {
+      } else if (isCastles(file_idx)) {
         // castles
         if (file_idx === 6) {
           // short castles
