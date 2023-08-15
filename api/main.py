@@ -182,7 +182,7 @@ async def move(sid, uci):
             outcome = board.outcome(claim_draw=True)
         except AssertionError:
             # move not pseudo-legal
-            await emit_error("Illegal move")
+            await emit_error(sid, "Illegal move")
             return
 
         data = {
