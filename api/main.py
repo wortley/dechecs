@@ -177,8 +177,14 @@ async def move(sid, uci):
         elif board.is_en_passant(move):
             en_passant = True
 
-        board.push(move)
-        outcome = board.outcome(claim_draw=True)
+        try:
+            board.push(move)
+            outcome = board.outcome(claim_draw=True)
+        except AssertionError:
+            # move not pseudo-legal
+            await emit_error("Illegal move")
+            return
+
         data = {
             "turn": int(board.turn),  # 1: white, 0: black
             "winner": int(outcome.winner) if outcome else None,
