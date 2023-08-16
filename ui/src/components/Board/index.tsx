@@ -202,13 +202,7 @@ export default function Board({
 
   useEffect(() => {
     function onMove(data: BoardState) {
-      // process outcome
-      if (data.outcome) {
-        setOutcome(data.outcome);
-        setWinner(data.winner);
-        return;
-      }
-      if (data.turn == colour) {
+      if (data.turn == colour && data.move) {
         // if other player's move
         const move = uciToMove(data.move);
         const newState = cloneDeep(state);
@@ -277,6 +271,12 @@ export default function Board({
       }
 
       setTurn(data.turn);
+
+      // process outcome
+      if (data.outcome) {
+        setOutcome(data.outcome);
+        setWinner(data.winner);
+      }
     }
 
     socket.on("move", onMove);
