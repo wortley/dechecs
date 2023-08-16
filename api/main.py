@@ -14,11 +14,10 @@ import random
 import uuid
 
 from chess import Board, Move
+from constants import AGREEMENT, DS_MINUTE, RESIGNATION, TIMEOUT
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_socketio import SocketManager
-
-from constants import AGREEMENT, DS_MINUTE, RESIGNATION, TIMEOUT
 from models import Castles, Game, Timer
 
 chess_api = FastAPI()
@@ -168,8 +167,7 @@ async def move(sid, uci):
     if game:
         board = game.board
         move = Move.from_uci(uci)
-        castles = None
-        en_passant = False
+        castles, en_passant = None, False
         if board.is_kingside_castling(move):
             castles = Castles.KINGSIDE
         elif board.is_queenside_castling(move):
