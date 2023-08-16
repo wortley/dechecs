@@ -60,7 +60,7 @@ export default function ResultModal({
         return "by insufficient material";
       }
       case Outcome.FIFTY_MOVES: {
-        return "by 50-move rule";
+        return "by fifty-move rule";
       }
       case Outcome.THREEFOLD_REPETITION: {
         return "by threefold repetition";
