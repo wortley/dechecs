@@ -14,10 +14,11 @@ import random
 import uuid
 
 from chess import Board, Move
-from constants import AGREEMENT, DS_MINUTE, RESIGNATION, TIMEOUT
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_socketio import SocketManager
+
+from constants import AGREEMENT, DS_MINUTE, RESIGNATION, TIMEOUT
 from models import Castles, Game, Timer
 
 chess_api = FastAPI()
