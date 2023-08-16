@@ -443,20 +443,12 @@ export default function Board({
                         pieceType={piece.pieceType}
                         colour={piece.colour}
                         onClick={() => {
-                          if (
-                            selectedPiece &&
-                            piece.colour !== selectedPiece.colour
-                          ) {
-                            // if taking enemy piece
-                            onSquareClick(7 - rank_idx, file_idx);
-                          } else {
-                            if (piece.colour === colour) {
-                              setSelectedPiece({
-                                ...piece,
-                                rank: 7 - rank_idx,
-                                file: file_idx,
-                              });
-                            }
+                          if (piece.colour === colour) {
+                            setSelectedPiece({
+                              ...piece,
+                              rank: 7 - rank_idx,
+                              file: file_idx,
+                            });
                           }
                         }}
                         onDrag={() => {
@@ -503,20 +495,12 @@ export default function Board({
                       pieceType={piece.pieceType}
                       colour={piece.colour}
                       onClick={() => {
-                        if (
-                          selectedPiece &&
-                          piece.colour !== selectedPiece.colour
-                        ) {
-                          // if taking enemy piece
-                          onSquareClick(rank_idx, 7 - file_idx);
-                        } else {
-                          if (piece.colour === colour) {
-                            setSelectedPiece({
-                              ...piece,
-                              rank: rank_idx,
-                              file: 7 - file_idx,
-                            });
-                          }
+                        if (piece.colour === colour) {
+                          setSelectedPiece({
+                            ...piece,
+                            rank: rank_idx,
+                            file: 7 - file_idx,
+                          });
                         }
                       }}
                       onDrag={() => {
