@@ -103,11 +103,6 @@ async def countdown(game_id):
             )
 
 
-@chess_api.get("/", status_code=200)
-async def root():
-    return {"message": "Welcome to the WChess API!"}
-
-
 @chess_api.sio.on("connect")
 async def connect(sid, _):
     print(f"Client {sid} connected")
@@ -124,7 +119,6 @@ async def create(sid, time_control):
     game_id = str(uuid.uuid4())
     chess_api.sio.enter_room(sid, game_id)  # create a room for the game
     current_games[game_id] = Game(
-        created_by=sid,
         players=[sid],
         board=Board(),
         time_control=time_control,

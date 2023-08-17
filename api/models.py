@@ -15,7 +15,6 @@ class Timer:
 
 @dataclass
 class Game:
-    created_by: str
     players: List[str]  # [0] white, [1] black
     board: Board
     time_control: int
