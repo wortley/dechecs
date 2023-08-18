@@ -14,11 +14,10 @@ import random
 import uuid
 
 from chess import Board, Move
+from constants import AGREEMENT, DS_MINUTE, RESIGNATION, TIMEOUT
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_socketio import SocketManager
-
-from constants import AGREEMENT, DS_MINUTE, RESIGNATION, TIMEOUT
 from models import Castles, Game, Timer
 
 chess_api = FastAPI()
@@ -126,23 +125,12 @@ async def create(sid, time_control):
     )
     players_to_games[sid] = game_id
 
-    # debug
-    print("create()")
-    print(current_games)
-    print(players_to_games)
-    print("---------")
     # send game id to client
     await chess_api.sio.emit("gameId", game_id, room=game_id)
 
 
 @chess_api.sio.on("join")
 async def join(sid, game_id):
-    # debug
-    print("join()")
-    print(current_games)
-    print(players_to_games)
-    print("---------")
-
     game = current_games.get(game_id, None)
     if not game:
         await emit_error(sid, "Game not found")
