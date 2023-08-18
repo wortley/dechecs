@@ -125,12 +125,24 @@ async def create(sid, time_control):
         timer=Timer(white=time_control * DS_MINUTE, black=time_control * DS_MINUTE),
     )
     players_to_games[sid] = game_id
+
+    # debug
+    print("create()")
+    print(current_games)
+    print(players_to_games)
+    print("---------")
     # send game id to client
     await chess_api.sio.emit("gameId", game_id, room=game_id)
 
 
 @chess_api.sio.on("join")
 async def join(sid, game_id):
+    # debug
+    print("join()")
+    print(current_games)
+    print(players_to_games)
+    print("---------")
+
     game = current_games.get(game_id, None)
     if not game:
         await emit_error(sid, "Game not found")
