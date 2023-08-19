@@ -8,6 +8,7 @@ type SquareProps = {
   onDrop(): void;
   selected: boolean;
   isLegalMove: boolean;
+  wasPrevMove: boolean;
   children?: React.ReactNode; // current piece on square
 };
 
@@ -17,6 +18,7 @@ export default function Square({
   selected,
   onDrop,
   isLegalMove,
+  wasPrevMove,
   children,
 }: SquareProps) {
   const [{ isOver }, drop] = useDrop(
@@ -40,9 +42,13 @@ export default function Square({
       onContextMenu={(e) => e.preventDefault()}
     >
       <div className={`${styles.squareChild} ${styles.piece}`}>{children}</div>
-      {selected && (
+      {selected ? (
         <div className={`${styles.squareChild} ${styles.overlay}`} />
-      )}
+      ) : wasPrevMove ? (
+        <div
+          className={`${styles.squareChild} ${styles.overlay} ${styles.prevMove}`}
+        />
+      ) : null}
       {isLegalMove && (
         <div
           className={`${styles.squareChild} ${styles.option} ${

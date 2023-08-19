@@ -104,6 +104,7 @@ export default function Board({
   const animating = useRef(false);
 
   const [selectedPiece, setSelectedPiece] = useState<PieceRef>();
+  const [moveStack, setMoveStack] = useState<string[]>([]);
   const [state, setState] = useState(initialState);
   const [legalMoves, setLegalMoves] = useState<Move[]>(initialLegalMoves);
   const [squareCoords, setSquareCoords] =
@@ -202,6 +203,8 @@ export default function Board({
 
   useEffect(() => {
     function onMove(data: BoardState) {
+      setMoveStack(data.moveStack);
+
       if (data.turn == colour && data.move) {
         // if other player's move
         const move = uciToMove(data.move);
@@ -437,6 +440,13 @@ export default function Board({
                         m.toSquare[0] === 7 - rank_idx &&
                         m.toSquare[1] === file_idx
                     )}
+                    wasPrevMove={
+                      moveStack
+                        .at(-1)
+                        ?.includes(
+                          getAlgebraicNotation(7 - rank_idx, file_idx)
+                        ) ?? false
+                    }
                   >
                     {piece?.pieceType && (
                       <Piece
@@ -489,6 +499,13 @@ export default function Board({
                       m.toSquare[0] === rank_idx &&
                       m.toSquare[1] === 7 - file_idx
                   )}
+                  wasPrevMove={
+                    moveStack
+                      .at(-1)
+                      ?.includes(
+                        getAlgebraicNotation(rank_idx, 7 - file_idx)
+                      ) ?? false
+                  }
                 >
                   {piece?.pieceType && (
                     <Piece

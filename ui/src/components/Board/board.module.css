@@ -32,6 +32,11 @@
     background-color: blue;
     pointer-events: none;
     z-index: 2;
+
+    &.prevMove {
+      opacity: 0.6;
+      background-color: orange;
+    }
   }
 
   &.option {
