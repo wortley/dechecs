@@ -49,7 +49,7 @@ chess_api.add_middleware(
     allow_headers=["*"],
 )
 
-socket_manager = SocketManager(app=chess_api, mount_location="")
+socket_manager = SocketManager(app=chess_api)
 
 # helper functions
 

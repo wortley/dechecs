@@ -6,6 +6,7 @@ const URL =
     : "http://localhost:8000";
 
 export const socket = io(URL ?? "", {
+  path: "/ws/socket.io",
   transports: ["websocket"],
   autoConnect: false,
 });
