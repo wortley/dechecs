@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
+import { TouchBackend } from "react-dnd-touch-backend";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.min.css";
 import "./App.css";
@@ -13,6 +14,7 @@ import { socket } from "./socket";
 
 function App() {
   const [connected, setConnected] = useState(false);
+  const dndBackend = window.innerWidth <= 768 ? TouchBackend : HTML5Backend;
 
   useEffect(() => {
     function onConnect() {
@@ -42,7 +44,7 @@ function App() {
   }, []);
 
   return (
-    <DndProvider backend={HTML5Backend}>
+    <DndProvider backend={dndBackend}>
       <CustomPreview />
       <ToastContainer
         autoClose={2500}
