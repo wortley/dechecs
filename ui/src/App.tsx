@@ -6,6 +6,7 @@ import "react-toastify/dist/ReactToastify.min.css";
 import "./App.css";
 import Router from "./Router";
 import ConnectionStatus from "./components/ConnectionStatus";
+import Footer from "./components/Footer";
 import Header from "./components/Header";
 import { CustomPreview } from "./components/Piece";
 import { socket } from "./socket";
@@ -56,6 +57,7 @@ function App() {
       <Header />
       <ConnectionStatus connected={connected} />
       <Router />
+      <Footer />
     </DndProvider>
   );
 }
