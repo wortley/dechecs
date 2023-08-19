@@ -12,15 +12,31 @@ Heroku logs: heroku logs --tail
 import asyncio
 import random
 import uuid
+from contextlib import asynccontextmanager
 
 from chess import Board, Move
-from constants import AGREEMENT, DS_MINUTE, RESIGNATION, TIMEOUT
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_socketio import SocketManager
+
+from constants import AGREEMENT, DS_MINUTE, RESIGNATION, TIMEOUT
 from models import Castles, Game, Timer
 
-chess_api = FastAPI()
+# store ongoing games in memory
+current_games = {}
+# map of players to ongoing games
+players_to_games = {}
+
+
+@asynccontextmanager
+async def lifespan(_):
+    yield
+    # clean up
+    current_games.clear()
+    players_to_games.clear()
+
+
+chess_api = FastAPI(lifespan=lifespan)
 
 chess_api.add_middleware(
     CORSMiddleware,
@@ -35,10 +51,7 @@ chess_api.add_middleware(
 
 socket_manager = SocketManager(app=chess_api, mount_location="")
 
-# store ongoing games in memory
-current_games = {}
-# map of players to ongoing games
-players_to_games = {}
+# helper functions
 
 
 def clear_game(game_id):
@@ -100,6 +113,9 @@ async def countdown(game_id):
                 {"white": game.timer.white, "black": game.timer.black},
                 room=game_id,
             )
+
+
+# WebSocket event handlers
 
 
 @chess_api.sio.on("connect")
