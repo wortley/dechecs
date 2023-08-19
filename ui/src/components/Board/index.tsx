@@ -104,7 +104,7 @@ export default function Board({
   const animating = useRef(false);
 
   const [selectedPiece, setSelectedPiece] = useState<PieceRef>();
-  const [moveStack, setMoveStack] = useState<string[]>([]);
+  const [moveStack, setMoveStack] = useState<string[]>();
   const [state, setState] = useState(initialState);
   const [legalMoves, setLegalMoves] = useState<Move[]>(initialLegalMoves);
   const [squareCoords, setSquareCoords] =
@@ -442,7 +442,7 @@ export default function Board({
                     )}
                     wasPrevMove={
                       moveStack
-                        .at(-1)
+                        ?.at(-1)
                         ?.includes(
                           getAlgebraicNotation(7 - rank_idx, file_idx)
                         ) ?? false
@@ -501,7 +501,7 @@ export default function Board({
                   )}
                   wasPrevMove={
                     moveStack
-                      .at(-1)
+                      ?.at(-1)
                       ?.includes(
                         getAlgebraicNotation(rank_idx, 7 - file_idx)
                       ) ?? false

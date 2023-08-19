@@ -54,7 +54,7 @@ export type BoardState = {
   castles: Castles;
   enPassant: boolean;
   legalMoves: string[];
-  moveStack: string[];
+  moveStack?: string[];
 };
 
 export type StartData = {
