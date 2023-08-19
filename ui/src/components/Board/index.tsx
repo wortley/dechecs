@@ -104,8 +104,8 @@ export default function Board({
   const animating = useRef(false);
 
   const [selectedPiece, setSelectedPiece] = useState<PieceRef>();
-  const [moveStack, setMoveStack] = useState<string[]>();
   const [state, setState] = useState(initialState);
+  const [prevMove, setPrevMove] = useState("");
   const [legalMoves, setLegalMoves] = useState<Move[]>(initialLegalMoves);
   const [squareCoords, setSquareCoords] =
     useState<Map<string, { x: number; y: number }>>();
@@ -203,10 +203,9 @@ export default function Board({
 
   useEffect(() => {
     function onMove(data: BoardState) {
-      setMoveStack(data.moveStack);
-
       if (data.turn == colour && data.move) {
         // if other player's move
+        setPrevMove(data.moveStack?.at(-1) ?? "");
         const move = uciToMove(data.move);
         const newState = cloneDeep(state);
 
@@ -397,9 +396,9 @@ export default function Board({
       }
 
       // send move to server
-      socket
-        .timeout(2000)
-        .emit("move", moveToUci({ fromSquare, toSquare, promotion }));
+      const uci = moveToUci({ fromSquare, toSquare, promotion });
+      setPrevMove(uci);
+      socket.timeout(2000).emit("move", uci);
 
       if (animating.current) {
         setTimeout(() => {
@@ -440,13 +439,9 @@ export default function Board({
                         m.toSquare[0] === 7 - rank_idx &&
                         m.toSquare[1] === file_idx
                     )}
-                    wasPrevMove={
-                      moveStack
-                        ?.at(-1)
-                        ?.includes(
-                          getAlgebraicNotation(7 - rank_idx, file_idx)
-                        ) ?? false
-                    }
+                    wasPrevMove={prevMove.includes(
+                      getAlgebraicNotation(7 - rank_idx, file_idx)
+                    )}
                   >
                     {piece?.pieceType && (
                       <Piece
@@ -499,13 +494,9 @@ export default function Board({
                       m.toSquare[0] === rank_idx &&
                       m.toSquare[1] === 7 - file_idx
                   )}
-                  wasPrevMove={
-                    moveStack
-                      ?.at(-1)
-                      ?.includes(
-                        getAlgebraicNotation(rank_idx, 7 - file_idx)
-                      ) ?? false
-                  }
+                  wasPrevMove={prevMove.includes(
+                    getAlgebraicNotation(rank_idx, 7 - file_idx)
+                  )}
                 >
                   {piece?.pieceType && (
                     <Piece
