@@ -44,7 +44,7 @@ function App() {
   }, []);
 
   return (
-    <DndProvider backend={dndBackend}>
+    <DndProvider backend={dndBackend} options={{ enableMouseEvents: true }}>
       <CustomPreview />
       <ToastContainer
         autoClose={2500}
