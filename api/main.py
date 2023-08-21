@@ -4,8 +4,8 @@ WCHESS API
 Run locally: uvicorn main:chess_api --reload
 Swagger docs: http://localhost:8000/docs
 
-Push to heroku: git subtree push --prefix api heroku master
-Heroku logs: heroku logs --tail
+Manually push to heroku: git subtree push --prefix api heroku master
+Logs: heroku logs --tail -a wchess-api
 
 """
 
