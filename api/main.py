@@ -115,6 +115,14 @@ async def countdown(game_id):
             )
 
 
+# root endpoint
+
+
+@chess_api.get("/")
+async def root():
+    return {"message": "Welcome to the WChess API!"}
+
+
 # WebSocket event handlers
 
 
