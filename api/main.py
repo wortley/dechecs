@@ -15,11 +15,10 @@ import uuid
 from contextlib import asynccontextmanager
 
 from chess import Board, Move
+from constants import AGREEMENT, DS_MINUTE, RESIGNATION, TIMEOUT
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_socketio import SocketManager
-
-from constants import AGREEMENT, DS_MINUTE, RESIGNATION, TIMEOUT
 from models import Castles, Game, Timer
 
 # store ongoing games in memory
@@ -113,14 +112,6 @@ async def countdown(game_id):
                 {"white": game.timer.white, "black": game.timer.black},
                 room=game_id,
             )
-
-
-# root endpoint
-
-
-@chess_api.get("/")
-async def root():
-    return {"message": "Welcome to the WChess API!"}
 
 
 # WebSocket event handlers
