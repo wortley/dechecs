@@ -1,8 +1,10 @@
-name: Deploy API to Heroku
+name: Deploy API
 on:
   push:
     branches:
       - master
+    paths:
+      - api
 
 jobs:
   build:
