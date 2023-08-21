@@ -11,4 +11,4 @@ jobs:
      - run: |
           git config --global user.name 'Oliver Wortley'
           git config --global user.email 'oliver@wortley.me'
-          git subtree push --prefix api heroku master
+          git subtree push --prefix api https://git.heroku.com/wchess-api.git master
