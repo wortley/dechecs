@@ -1,0 +1,14 @@
+name: Deploy API to Heroku
+on: push
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+     - uses: actions/checkout@v3
+     - run: |
+          git config --global user.name 'Oliver Wortley'
+          git config --global user.email 'oliver@wortley.me'
+          git subtree push --prefix api heroku master
