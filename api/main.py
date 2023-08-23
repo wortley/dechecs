@@ -23,6 +23,7 @@ from constants import (
     AGREEMENT,
     BUCKET_CAPACITY,
     DS_MINUTE,
+    GAME_LIMIT,
     INITIAL_TOKENS,
     REFILL_RATE_MINUTE,
     RESIGNATION,
@@ -161,6 +162,8 @@ async def disconnect(sid):
 async def create(sid, time_control):
     game_id = str(uuid.uuid4())
     chess_api.sio.enter_room(sid, game_id)  # create a room for the game
+    if len(current_games) > GAME_LIMIT:
+        await emit_error(sid, "Game limit exceeded. Please try again later")
     current_games[game_id] = Game(
         players=[sid],
         board=Board(),
