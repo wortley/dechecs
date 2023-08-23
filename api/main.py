@@ -19,7 +19,15 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_socketio import SocketManager
 
-from constants import AGREEMENT, DS_MINUTE, RESIGNATION, TIMEOUT
+from constants import (
+    AGREEMENT,
+    BUCKET_CAPACITY,
+    DS_MINUTE,
+    INITIAL_TOKENS,
+    REFILL_RATE_MINUTE,
+    RESIGNATION,
+    TIMEOUT,
+)
 from models import Castles, Game, Timer
 
 # store ongoing games in memory
@@ -27,11 +35,24 @@ current_games = {}
 # map of players to ongoing games
 players_to_games = {}
 
+# connection token bucket (rate limiting)
+token_bucket = INITIAL_TOKENS
+
+
+async def refill_tokens():
+    global token_bucket
+    while True:
+        await asyncio.sleep(60)
+        if token_bucket <= BUCKET_CAPACITY:
+            token_bucket += REFILL_RATE_MINUTE
+
 
 @asynccontextmanager
 async def lifespan(_):
+    refiller = asyncio.create_task(refill_tokens())
     yield
     # clean up
+    refiller.cancel()
     current_games.clear()
     players_to_games.clear()
 
@@ -120,7 +141,14 @@ async def countdown(game_id):
 
 @chess_api.sio.on("connect")
 async def connect(sid, _):
-    print(f"Client {sid} connected")
+    global token_bucket
+    if token_bucket > 0:
+        print(f"Client {sid} connected")
+        token_bucket -= 1
+    else:
+        await emit_error(sid, "Connection limit exceeded")
+        print(f"Connection limit exceeded. Disconnecting {sid}")
+        await chess_api.sio.disconnect(sid)
 
 
 @chess_api.sio.on("disconnect")
