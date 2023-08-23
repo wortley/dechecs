@@ -164,6 +164,7 @@ async def create(sid, time_control):
     chess_api.sio.enter_room(sid, game_id)  # create a room for the game
     if len(current_games) > GAME_LIMIT:
         await emit_error(sid, "Game limit exceeded. Please try again later")
+        return
     current_games[game_id] = Game(
         players=[sid],
         board=Board(),
