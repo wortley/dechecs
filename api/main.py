@@ -10,6 +10,7 @@ Logs: heroku logs --tail -a wchess-api
 """
 
 import asyncio
+import logging
 import random
 import uuid
 from contextlib import asynccontextmanager
@@ -30,6 +31,9 @@ from constants import (
     TIMEOUT,
 )
 from models import Castles, Game, Timer
+
+# logger
+logger = logging.getLogger("uvicorn")
 
 # store ongoing games in memory
 current_games = {}
@@ -144,18 +148,18 @@ async def countdown(game_id):
 async def connect(sid, _):
     global token_bucket
     if token_bucket > 0:
-        print(f"Client {sid} connected")
+        logger.info(f"Client {sid} connected")
         token_bucket -= 1
     else:
         await emit_error(sid, "Connection limit exceeded")
-        print(f"Connection limit exceeded. Disconnecting {sid}")
+        logger.warning(f"Connection limit exceeded. Disconnecting {sid}")
         await chess_api.sio.disconnect(sid)
 
 
 @chess_api.sio.on("disconnect")
 async def disconnect(sid):
     clear_game(players_to_games.get(sid, None))
-    print(f"Client {sid} disconnected")
+    logger.info(f"Client {sid} disconnected")
 
 
 @chess_api.sio.on("create")
