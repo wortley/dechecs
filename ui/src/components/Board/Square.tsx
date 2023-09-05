@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useDrop } from "react-dnd";
 import { DraggableTypes } from "../../constants";
 import styles from "./board.module.css";
@@ -12,50 +13,56 @@ type SquareProps = {
   children?: React.ReactNode; // current piece on square
 };
 
-export default function Square({
-  id,
-  onClick,
-  selected,
-  onDrop,
-  isLegalMove,
-  wasPrevMove,
-  children,
-}: SquareProps) {
-  const [{ isOver }, drop] = useDrop(
-    () => ({
-      accept: DraggableTypes.PIECE,
-      drop: () => onDrop(),
-      canDrop: () => isLegalMove,
-      collect: (monitor) => ({
-        isOver: !!monitor.isOver(),
+const Square = memo(
+  ({
+    id,
+    onClick,
+    selected,
+    onDrop,
+    isLegalMove,
+    wasPrevMove,
+    children,
+  }: SquareProps) => {
+    const [{ isOver }, drop] = useDrop(
+      () => ({
+        accept: DraggableTypes.PIECE,
+        drop: () => onDrop(),
+        canDrop: () => isLegalMove,
+        collect: (monitor) => ({
+          isOver: !!monitor.isOver(),
+        }),
       }),
-    }),
-    [onDrop, isLegalMove]
-  );
+      [onDrop, isLegalMove]
+    );
 
-  return (
-    <div
-      id={id}
-      ref={drop}
-      className={`${styles.square} ${isLegalMove && styles.legalMove}`}
-      onClick={onClick}
-      onContextMenu={(e) => e.preventDefault()}
-    >
-      <div className={`${styles.squareChild} ${styles.piece}`}>{children}</div>
-      {selected ? (
-        <div className={`${styles.squareChild} ${styles.overlay}`} />
-      ) : wasPrevMove ? (
-        <div
-          className={`${styles.squareChild} ${styles.overlay} ${styles.prevMove}`}
-        />
-      ) : null}
-      {isLegalMove && (
-        <div
-          className={`${styles.squareChild} ${styles.option} ${
-            children && styles.pieceOnSquare
-          }`}
-        />
-      )}
-    </div>
-  );
-}
+    return (
+      <div
+        id={id}
+        ref={drop}
+        className={`${styles.square} ${isLegalMove && styles.legalMove}`}
+        onClick={onClick}
+        onContextMenu={(e) => e.preventDefault()}
+      >
+        <div className={`${styles.squareChild} ${styles.piece}`}>
+          {children}
+        </div>
+        {selected ? (
+          <div className={`${styles.squareChild} ${styles.overlay}`} />
+        ) : wasPrevMove ? (
+          <div
+            className={`${styles.squareChild} ${styles.overlay} ${styles.prevMove}`}
+          />
+        ) : null}
+        {isLegalMove && (
+          <div
+            className={`${styles.squareChild} ${styles.option} ${
+              children && styles.pieceOnSquare
+            }`}
+          />
+        )}
+      </div>
+    );
+  }
+);
+
+export default Square;
