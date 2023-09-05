@@ -7,6 +7,7 @@ import {
   Colour,
   Move,
   Outcome,
+  PieceInfo,
   PieceRef,
   PieceType,
 } from "../../types";
@@ -23,7 +24,7 @@ type BoardProps = {
   setWinner(winner?: Colour): void;
 };
 
-const initialState = [
+const initialState: (PieceInfo | null)[][] = [
   [
     { pieceType: PieceType.ROOK, colour: Colour.WHITE },
     { pieceType: PieceType.KNIGHT, colour: Colour.WHITE },
@@ -107,7 +108,7 @@ export default function Board({
   const squareCoords = useRef<Map<string, { x: number; y: number }>>();
 
   const [selectedPiece, setSelectedPiece] = useState<PieceRef>();
-  const [state, setState] = useState(initialState);
+  const [state, setState] = useState<(PieceInfo | null)[][]>(initialState);
   const [prevMove, setPrevMove] = useState("");
   const [legalMoves, setLegalMoves] = useState<Move[]>(initialLegalMoves);
 
@@ -442,23 +443,23 @@ export default function Board({
                     getAlgebraicNotation(7 - rank_idx, file_idx)
                   )}
                 >
-                  {state[7 - rank_idx][file_idx]?.pieceType && (
+                  {state[7 - rank_idx][file_idx] != null && (
                     <Piece
-                      pieceType={state[7 - rank_idx][file_idx].pieceType}
-                      colour={state[7 - rank_idx][file_idx].colour}
+                      pieceType={state[7 - rank_idx][file_idx]!.pieceType}
+                      colour={state[7 - rank_idx][file_idx]!.colour}
                       onClick={() => {
-                        if (state[7 - rank_idx][file_idx].colour === colour) {
+                        if (state[7 - rank_idx][file_idx]!.colour === colour) {
                           setSelectedPiece({
-                            ...state[7 - rank_idx][file_idx],
+                            ...state[7 - rank_idx][file_idx]!,
                             rank: 7 - rank_idx,
                             file: file_idx,
                           });
                         }
                       }}
                       onDrag={() => {
-                        if (state[7 - rank_idx][file_idx].colour === colour) {
+                        if (state[7 - rank_idx][file_idx]!.colour === colour) {
                           setSelectedPiece({
-                            ...state[7 - rank_idx][file_idx],
+                            ...state[7 - rank_idx][file_idx]!,
                             rank: 7 - rank_idx,
                             file: file_idx,
                           });
@@ -497,23 +498,23 @@ export default function Board({
                     getAlgebraicNotation(rank_idx, 7 - file_idx)
                   )}
                 >
-                  {state[rank_idx][7 - file_idx]?.pieceType && (
+                  {state[rank_idx][7 - file_idx] != null && (
                     <Piece
-                      pieceType={state[rank_idx][7 - file_idx].pieceType}
-                      colour={state[rank_idx][7 - file_idx].colour}
+                      pieceType={state[rank_idx][7 - file_idx]!.pieceType}
+                      colour={state[rank_idx][7 - file_idx]!.colour}
                       onClick={() => {
-                        if (state[rank_idx][7 - file_idx].colour === colour) {
+                        if (state[rank_idx][7 - file_idx]!.colour === colour) {
                           setSelectedPiece({
-                            ...state[rank_idx][7 - file_idx],
+                            ...state[rank_idx][7 - file_idx]!,
                             rank: rank_idx,
                             file: 7 - file_idx,
                           });
                         }
                       }}
                       onDrag={() => {
-                        if (state[rank_idx][7 - file_idx].colour === colour) {
+                        if (state[rank_idx][7 - file_idx]!.colour === colour) {
                           setSelectedPiece({
-                            ...state[rank_idx][7 - file_idx],
+                            ...state[rank_idx][7 - file_idx]!,
                             rank: rank_idx,
                             file: 7 - file_idx,
                           });

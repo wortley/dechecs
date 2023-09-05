@@ -33,6 +33,11 @@ export enum Outcome {
   AGREEMENT = 13,
 }
 
+export type PieceInfo = {
+  pieceType: PieceType;
+  colour: Colour;
+};
+
 export type PieceRef = {
   pieceType: PieceType;
   colour: Colour;
