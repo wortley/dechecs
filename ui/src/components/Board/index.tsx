@@ -104,13 +104,12 @@ export default function Board({
 }: BoardProps) {
   const boardRef = useRef<HTMLDivElement>(null);
   const animating = useRef(false);
+  const squareCoords = useRef<Map<string, { x: number; y: number }>>();
 
   const [selectedPiece, setSelectedPiece] = useState<PieceRef>();
   const [state, setState] = useState(initialState);
   const [prevMove, setPrevMove] = useState("");
   const [legalMoves, setLegalMoves] = useState<Move[]>(initialLegalMoves);
-  const [squareCoords, setSquareCoords] =
-    useState<Map<string, { x: number; y: number }>>();
 
   function onResize() {
     const boardRect = boardRef?.current?.getBoundingClientRect();
@@ -155,7 +154,7 @@ export default function Board({
         }
       }
 
-      setSquareCoords(newSquareCoords);
+      squareCoords.current = newSquareCoords;
     }
   }
 
@@ -169,8 +168,8 @@ export default function Board({
     const pieceEl = document
       .getElementById(fromSquareNotation)
       ?.getElementsByTagName(`img`)[0];
-    const fromCoords = squareCoords?.get(fromSquareNotation);
-    const toCoords = squareCoords?.get(toSquareNotation);
+    const fromCoords = squareCoords.current?.get(fromSquareNotation);
+    const toCoords = squareCoords.current?.get(toSquareNotation);
 
     if (pieceEl && fromCoords && toCoords) {
       animating.current = true;
@@ -288,7 +287,7 @@ export default function Board({
     return () => {
       socket.off("move", onMove);
     };
-  }, [squareCoords, state]);
+  }, [squareCoords.current, state]);
 
   function isEnPassant(rank_idx: number, file_idx: number) {
     return (
