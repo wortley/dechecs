@@ -44,6 +44,9 @@ token_bucket = INITIAL_TOKENS
 
 
 async def refill_tokens():
+    """
+    Refills tokens in the token bucket every minute based on REFILL_RATE_MINUTE.
+    """
     global token_bucket
     while True:
         await asyncio.sleep(60)
@@ -53,6 +56,7 @@ async def refill_tokens():
 
 @asynccontextmanager
 async def lifespan(_):
+    """Handles startup/shutdown"""
     refiller = asyncio.create_task(refill_tokens())
     yield
     # clean up
@@ -80,6 +84,7 @@ socket_manager = SocketManager(app=chess_api)
 
 
 def clear_game(game_id):
+    """Clears a game from memory"""
     game = current_games.get(game_id, None)
     if game:
         for p in game.players:
@@ -90,6 +95,7 @@ def clear_game(game_id):
 
 
 async def emit_error(sid, message="Something went wrong"):
+    """Emits an error event to a client"""
     await chess_api.sio.emit("error", message, to=sid)
 
 
@@ -107,6 +113,7 @@ async def player_flagged(game_id, winner):
 
 
 async def countdown(game_id):
+    """Coroutine that counts down game timer and emits time events to clients in the game room"""
     game = current_games.get(game_id, None)
     while True:
         turn = int(game.board.turn)
@@ -333,4 +340,5 @@ async def accept_rematch(sid):
 
 @chess_api.sio.on("exit")
 async def exit(sid):
+    """When a client exits the app, clear the game from memory"""
     clear_game(players_to_games.get(sid, None))
