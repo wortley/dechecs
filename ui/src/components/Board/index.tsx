@@ -415,6 +415,8 @@ export default function Board({
     }
   }
 
+  // TODO: Fix square rerenders
+
   return (
     <div ref={boardRef} className={styles.board}>
       {colour === Colour.WHITE ? (
