@@ -16,10 +16,6 @@ import uuid
 from contextlib import asynccontextmanager
 
 from chess import Board, Move
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi_socketio import SocketManager
-
 from constants import (
     AGREEMENT,
     BUCKET_CAPACITY,
@@ -30,6 +26,9 @@ from constants import (
     RESIGNATION,
     TIMEOUT,
 )
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi_socketio import SocketManager
 from models import Castles, Game, Timer
 
 # logger
@@ -94,6 +93,19 @@ async def emit_error(sid, message="Something went wrong"):
     await chess_api.sio.emit("error", message, to=sid)
 
 
+async def player_flagged(game_id, winner):
+    game = current_games.get(game_id, None)
+    await chess_api.sio.emit(
+        "move",
+        {
+            "winner": winner,
+            "outcome": TIMEOUT,
+        },
+        room=game_id,
+    )
+    game.timer.task.cancel()
+
+
 async def countdown(game_id):
     game = current_games.get(game_id, None)
     while True:
@@ -105,30 +117,14 @@ async def countdown(game_id):
                 game.timer.black -= 1
             else:
                 # black flagged
-                await chess_api.sio.emit(
-                    "move",
-                    {
-                        "winner": 1,
-                        "outcome": TIMEOUT,
-                    },
-                    room=game_id,
-                )
-                game.timer.task.cancel()
+                player_flagged(game_id, 1)
         else:
             # white
             if game.timer.white > 0:
                 game.timer.white -= 1
             else:
                 # white flagged
-                await chess_api.sio.emit(
-                    "move",
-                    {
-                        "winner": 0,
-                        "outcome": TIMEOUT,
-                    },
-                    room=game_id,
-                )
-                game.timer.task.cancel()
+                player_flagged(game_id, 0)
 
         if (turn == 0 and game.timer.black % 10 == 0) or (
             turn == 1 and game.timer.white % 10 == 0
