@@ -414,69 +414,69 @@ export default function Board({
   }
 
   const squares = useMemo(() => {
+    const boardArray = Array.from({ length: 8 }, () => Array(8).fill(null));
+
     return colour === Colour.WHITE ? (
       <>
         {/* WHITE */}
-        {cloneDeep(state)
-          .reverse()
-          .map((rank, rank_idx) => (
-            <div className={styles.rank} key={rank_idx}>
-              {rank.map((piece, file_idx) => (
-                <Square
-                  id={getAlgebraicNotation(7 - rank_idx, file_idx)}
-                  key={file_idx}
-                  onClick={() => onSquareClick(7 - rank_idx, file_idx)}
-                  onDrop={() => onSquareClick(7 - rank_idx, file_idx, true)}
-                  selected={
-                    selectedPiece?.rank === 7 - rank_idx &&
-                    selectedPiece.file === file_idx
-                  }
-                  isLegalMove={legalMoves.some(
-                    (m) =>
-                      m.fromSquare[0] === selectedPiece?.rank &&
-                      m.fromSquare[1] === selectedPiece?.file &&
-                      m.toSquare[0] === 7 - rank_idx &&
-                      m.toSquare[1] === file_idx
-                  )}
-                  wasPrevMove={prevMove.includes(
-                    getAlgebraicNotation(7 - rank_idx, file_idx)
-                  )}
-                >
-                  {piece?.pieceType && (
-                    <Piece
-                      pieceType={piece.pieceType}
-                      colour={piece.colour}
-                      onClick={() => {
-                        if (piece.colour === colour) {
-                          setSelectedPiece({
-                            ...piece,
-                            rank: 7 - rank_idx,
-                            file: file_idx,
-                          });
-                        }
-                      }}
-                      onDrag={() => {
-                        if (piece.colour === colour) {
-                          setSelectedPiece({
-                            ...piece,
-                            rank: 7 - rank_idx,
-                            file: file_idx,
-                          });
-                        }
-                      }}
-                    />
-                  )}
-                </Square>
-              ))}
-            </div>
-          ))}
+        {boardArray.map((rank, rank_idx) => (
+          <div className={styles.rank} key={rank_idx}>
+            {rank.map((_, file_idx) => (
+              <Square
+                id={getAlgebraicNotation(7 - rank_idx, file_idx)}
+                key={file_idx}
+                onClick={() => onSquareClick(7 - rank_idx, file_idx)}
+                onDrop={() => onSquareClick(7 - rank_idx, file_idx, true)}
+                selected={
+                  selectedPiece?.rank === 7 - rank_idx &&
+                  selectedPiece.file === file_idx
+                }
+                isLegalMove={legalMoves.some(
+                  (m) =>
+                    m.fromSquare[0] === selectedPiece?.rank &&
+                    m.fromSquare[1] === selectedPiece?.file &&
+                    m.toSquare[0] === 7 - rank_idx &&
+                    m.toSquare[1] === file_idx
+                )}
+                wasPrevMove={prevMove.includes(
+                  getAlgebraicNotation(7 - rank_idx, file_idx)
+                )}
+              >
+                {state[7 - rank_idx][file_idx]?.pieceType && (
+                  <Piece
+                    pieceType={state[7 - rank_idx][file_idx].pieceType}
+                    colour={state[7 - rank_idx][file_idx].colour}
+                    onClick={() => {
+                      if (state[7 - rank_idx][file_idx].colour === colour) {
+                        setSelectedPiece({
+                          ...state[7 - rank_idx][file_idx],
+                          rank: 7 - rank_idx,
+                          file: file_idx,
+                        });
+                      }
+                    }}
+                    onDrag={() => {
+                      if (state[7 - rank_idx][file_idx].colour === colour) {
+                        setSelectedPiece({
+                          ...state[7 - rank_idx][file_idx],
+                          rank: 7 - rank_idx,
+                          file: file_idx,
+                        });
+                      }
+                    }}
+                  />
+                )}
+              </Square>
+            ))}
+          </div>
+        ))}
       </>
     ) : (
       <>
         {/* BLACK */}
-        {state.map((rank, rank_idx) => (
+        {boardArray.map((rank, rank_idx) => (
           <div className={styles.rank} key={rank_idx}>
-            {[...rank].reverse().map((piece, file_idx) => (
+            {rank.map((_, file_idx) => (
               <Square
                 id={getAlgebraicNotation(rank_idx, 7 - file_idx)}
                 key={file_idx}
@@ -497,23 +497,23 @@ export default function Board({
                   getAlgebraicNotation(rank_idx, 7 - file_idx)
                 )}
               >
-                {piece?.pieceType && (
+                {state[rank_idx][7 - file_idx]?.pieceType && (
                   <Piece
-                    pieceType={piece.pieceType}
-                    colour={piece.colour}
+                    pieceType={state[rank_idx][7 - file_idx].pieceType}
+                    colour={state[rank_idx][7 - file_idx].colour}
                     onClick={() => {
-                      if (piece.colour === colour) {
+                      if (state[rank_idx][7 - file_idx].colour === colour) {
                         setSelectedPiece({
-                          ...piece,
+                          ...state[rank_idx][7 - file_idx],
                           rank: rank_idx,
                           file: 7 - file_idx,
                         });
                       }
                     }}
                     onDrag={() => {
-                      if (piece.colour === colour) {
+                      if (state[rank_idx][7 - file_idx].colour === colour) {
                         setSelectedPiece({
-                          ...piece,
+                          ...state[rank_idx][7 - file_idx],
                           rank: rank_idx,
                           file: 7 - file_idx,
                         });
