@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { XYCoord, useDrag, useDragLayer } from "react-dnd";
 import { getEmptyImage } from "react-dnd-html5-backend";
 import blackBishop from "../../assets/pieces/B_b.svg";
@@ -115,7 +115,12 @@ export function CustomPreview() {
   );
 }
 
-const Piece = memo(({ pieceType, colour, onClick, onDrag }: PieceProps) => {
+export default function Piece({
+  pieceType,
+  colour,
+  onClick,
+  onDrag,
+}: PieceProps) {
   const [{ isDragging }, drag, preview] = useDrag(
     () => ({
       type: DraggableTypes.PIECE,
@@ -144,6 +149,4 @@ const Piece = memo(({ pieceType, colour, onClick, onDrag }: PieceProps) => {
       }}
     />
   );
-});
-
-export default Piece;
+}
