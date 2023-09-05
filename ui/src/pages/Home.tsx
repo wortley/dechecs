@@ -9,7 +9,7 @@ export default function Home() {
   const [creating, setCreating] = useState(false);
   const [joining, setJoining] = useState(false);
   const [joiningGameId, setJoiningGameId] = useState("");
-  const [timeControl, setTimeControl] = useState<number>();
+  const [timeControl, setTimeControl] = useState<number>(-1);
 
   useEffect(() => {
     function onGameId(gameId: string) {
@@ -35,7 +35,7 @@ export default function Home() {
   }, []);
 
   function onCreateGame() {
-    socket.timeout(2000).emit("create", timeControl);
+    if (timeControl > 0) socket.timeout(2000).emit("create", timeControl);
   }
 
   function onSubmitGameId() {
@@ -52,17 +52,19 @@ export default function Home() {
             value={timeControl}
             onChange={(e) => setTimeControl(parseInt(e.currentTarget.value))}
           >
-            <option value={undefined} selected disabled hidden></option>
+            <option value={-1} disabled hidden></option>
             <option value={3}>3m Blitz</option>
             <option value={5}>5m Blitz</option>
             <option value={10}>10m Rapid</option>
             <option value={30}>30m Classical</option>
           </select>
-          <button onClick={onCreateGame}>Generate code</button>
+          <button onClick={onCreateGame} disabled={timeControl < 0}>
+            Generate code
+          </button>
           <button
             onClick={() => {
               setCreating(false);
-              setTimeControl(undefined);
+              setTimeControl(-1);
             }}
           >
             Back
