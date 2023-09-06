@@ -12,6 +12,7 @@ import {
   PieceType,
 } from "../../types";
 import { getAlgebraicNotation, moveToUci, uciToMove } from "../../utils";
+import { isCastles, isEnPassant } from "../../utils/board";
 import Piece from "../Piece";
 import Square from "./Square";
 import styles from "./board.module.css";
@@ -293,28 +294,6 @@ export default function Board({
     };
   }, [squareCoords.current, state]);
 
-  function isEnPassant(rank_idx: number, file_idx: number) {
-    return (
-      selectedPiece?.pieceType === PieceType.PAWN &&
-      state[rank_idx][file_idx] === null &&
-      file_idx !== selectedPiece?.file &&
-      rank_idx !== selectedPiece?.rank
-    );
-  }
-
-  function isCastles(file_idx: number) {
-    return (
-      selectedPiece?.pieceType === PieceType.KING &&
-      ((colour === Colour.WHITE &&
-        selectedPiece.rank === 0 &&
-        selectedPiece.file === 4) ||
-        (colour === Colour.BLACK &&
-          selectedPiece.rank === 7 &&
-          selectedPiece.file === 4)) &&
-      Math.abs(file_idx - selectedPiece.file) === 2
-    );
-  }
-
   function onSquareClick(rank_idx: number, file_idx: number, dropped = false) {
     if (selectedPiece && turn === colour) {
       const fromSquare: [number, number] = [
@@ -352,7 +331,7 @@ export default function Board({
           pieceType: PieceType.QUEEN,
           colour,
         };
-      } else if (isCastles(file_idx)) {
+      } else if (isCastles(file_idx, colour, selectedPiece)) {
         // castles
         if (file_idx === 6) {
           // short castles
@@ -373,7 +352,7 @@ export default function Board({
           };
           animateCastles(rank_idx, Castles.QUEENSIDE);
         }
-      } else if (isEnPassant(rank_idx, file_idx)) {
+      } else if (isEnPassant(rank_idx, file_idx, state, selectedPiece)) {
         // en passant
         newState[colour === Colour.WHITE ? rank_idx - 1 : rank_idx + 1][
           file_idx
