@@ -1,6 +1,5 @@
 from asyncio import Task
 from dataclasses import dataclass
-from enum import Enum
 from typing import List, Optional
 
 from chess import Board
