@@ -26,10 +26,11 @@ from constants import (
     RESIGNATION,
     TIMEOUT,
 )
+from enums import Castles
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_socketio import SocketManager
-from models import Castles, Game, Timer
+from models import Game, Timer
 
 # logger
 logger = logging.getLogger("uvicorn")

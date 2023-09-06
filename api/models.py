@@ -19,8 +19,3 @@ class Game:
     board: Board
     time_control: int
     timer: Timer
-
-
-class Castles(Enum):
-    KINGSIDE = "K"
-    QUEENSIDE = "Q"
