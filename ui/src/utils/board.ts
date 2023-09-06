@@ -1,4 +1,4 @@
-import { Colour, PieceInfo, PieceRef, PieceType } from "../types";
+import { Colour, Move, PieceInfo, PieceRef, PieceType } from "../types";
 
 export function isEnPassant(
   rank_idx: number,
@@ -31,6 +31,33 @@ export function isCastles(
   );
 }
 
-export function onSquareClick() {
-  // TODO
+export function isPromotion(
+  selectedPiece: PieceRef,
+  rank_idx: number,
+  turn: Colour
+) {
+  return (
+    selectedPiece.pieceType == PieceType.PAWN &&
+    ((turn == Colour.WHITE && rank_idx == 7) ||
+      (turn == Colour.BLACK && rank_idx == 0))
+  );
+}
+
+export function isIllegalMove(
+  selectedPiece: PieceRef,
+  fromSquare: [number, number],
+  toSquare: [number, number],
+  legalMoves: Move[]
+) {
+  return (
+    (selectedPiece.rank === toSquare[0] &&
+      selectedPiece.file === toSquare[1]) ||
+    !legalMoves.some(
+      (m) =>
+        m.fromSquare[0] === fromSquare[0] &&
+        m.fromSquare[1] === fromSquare[1] &&
+        m.toSquare[0] === toSquare[0] &&
+        m.toSquare[1] === toSquare[1]
+    )
+  );
 }

@@ -12,7 +12,12 @@ import {
   PieceType,
 } from "../../types";
 import { getAlgebraicNotation, moveToUci, uciToMove } from "../../utils";
-import { isCastles, isEnPassant } from "../../utils/board";
+import {
+  isCastles,
+  isEnPassant,
+  isIllegalMove,
+  isPromotion,
+} from "../../utils/board";
 import Piece from "../Piece";
 import Square from "./Square";
 import styles from "./board.module.css";
@@ -294,6 +299,60 @@ export default function Board({
     };
   }, [squareCoords.current, state]);
 
+  function handleCastles(
+    newState: (PieceInfo | null)[][],
+    selectedPiece: PieceRef,
+    rank_idx: number,
+    file_idx: number
+  ) {
+    if (file_idx === 6) {
+      // short castles
+      newState[rank_idx][7] = null;
+      newState[rank_idx][file_idx] = selectedPiece as PieceInfo;
+      newState[rank_idx][file_idx - 1] = {
+        pieceType: PieceType.ROOK,
+        colour,
+      };
+      animateCastles(rank_idx, Castles.KINGSIDE);
+    } else if (file_idx === 2) {
+      // long castles
+      newState[rank_idx][0] = null;
+      newState[rank_idx][file_idx] = selectedPiece;
+      newState[rank_idx][file_idx + 1] = {
+        pieceType: PieceType.ROOK,
+        colour,
+      };
+      animateCastles(rank_idx, Castles.QUEENSIDE);
+    }
+    return newState;
+  }
+
+  function handleEnPassant(
+    newState: (PieceInfo | null)[][],
+    selectedPiece: PieceRef,
+    rank_idx: number,
+    file_idx: number
+  ) {
+    newState[colour === Colour.WHITE ? rank_idx - 1 : rank_idx + 1][file_idx] =
+      null;
+    newState[rank_idx][file_idx] = selectedPiece as PieceInfo;
+    return newState;
+  }
+
+  function handlePromotion(
+    newState: (PieceInfo | null)[][],
+    promotion: PieceType,
+    rank_idx: number,
+    file_idx: number,
+    colour: Colour
+  ) {
+    newState[rank_idx][file_idx] = {
+      pieceType: promotion,
+      colour,
+    };
+    return newState;
+  }
+
   function onSquareClick(rank_idx: number, file_idx: number, dropped = false) {
     if (selectedPiece && turn === colour) {
       const fromSquare: [number, number] = [
@@ -302,80 +361,43 @@ export default function Board({
       ];
       const toSquare: [number, number] = [rank_idx, file_idx];
       const fromSquareNotation = getAlgebraicNotation(
-        selectedPiece.rank,
-        selectedPiece.file
+        fromSquare[0],
+        fromSquare[1]
       );
-      const toSquareNotation = getAlgebraicNotation(rank_idx, file_idx);
+      const toSquareNotation = getAlgebraicNotation(toSquare[0], toSquare[1]);
 
-      if (
-        (selectedPiece.rank === rank_idx && selectedPiece.file === file_idx) ||
-        !legalMoves.some(
-          (m) =>
-            m.fromSquare[0] === fromSquare[0] &&
-            m.fromSquare[1] === fromSquare[1] &&
-            m.toSquare[0] === toSquare[0] &&
-            m.toSquare[1] === toSquare[1]
-        )
-      ) {
-        // if piece in same position or illegal move
+      if (isIllegalMove(selectedPiece, fromSquare, toSquare, legalMoves)) {
         return;
       }
 
-      const newState = cloneDeep(state);
+      let newState = cloneDeep(state);
       newState[selectedPiece.rank][selectedPiece.file] = null;
       let promotion: PieceType | null = null;
 
-      if (
-        selectedPiece.pieceType == PieceType.PAWN &&
-        ((turn == Colour.WHITE && rank_idx == 7) ||
-          (turn == Colour.BLACK && rank_idx == 0))
-      ) {
-        // if pawn promotion, auto-promote to queen
+      if (isPromotion(selectedPiece, rank_idx, turn)) {
+        // auto-promote to queen
         promotion = PieceType.QUEEN;
-        newState[rank_idx][file_idx] = {
-          pieceType: PieceType.QUEEN,
-          colour,
-        };
+        newState = handlePromotion(
+          newState,
+          promotion,
+          rank_idx,
+          file_idx,
+          colour
+        );
       } else if (isCastles(file_idx, colour, selectedPiece)) {
-        // castles
-        if (file_idx === 6) {
-          // short castles
-          newState[rank_idx][7] = null;
-          newState[rank_idx][file_idx] = selectedPiece;
-          newState[rank_idx][file_idx - 1] = {
-            pieceType: PieceType.ROOK,
-            colour,
-          };
-          animateCastles(rank_idx, Castles.KINGSIDE);
-        } else if (file_idx === 2) {
-          // long castles
-          newState[rank_idx][0] = null;
-          newState[rank_idx][file_idx] = selectedPiece;
-          newState[rank_idx][file_idx + 1] = {
-            pieceType: PieceType.ROOK,
-            colour,
-          };
-          animateCastles(rank_idx, Castles.QUEENSIDE);
-        }
+        newState = handleCastles(newState, selectedPiece, rank_idx, file_idx);
       } else if (isEnPassant(rank_idx, file_idx, state, selectedPiece)) {
-        // en passant
-        newState[colour === Colour.WHITE ? rank_idx - 1 : rank_idx + 1][
-          file_idx
-        ] = null;
-        newState[rank_idx][file_idx] = selectedPiece;
-        if (!dropped) {
-          animateMove(fromSquareNotation, toSquareNotation);
-        }
+        newState = handleEnPassant(newState, selectedPiece, rank_idx, file_idx);
       } else {
         // regular move (not promotion, en passant or castling)
-        if (!dropped) {
-          animateMove(fromSquareNotation, toSquareNotation);
-        }
-
         newState[rank_idx][file_idx] = {
           pieceType: selectedPiece.pieceType,
           colour: selectedPiece.colour,
         };
+      }
+
+      if (!dropped && !isCastles(file_idx, colour, selectedPiece)) {
+        animateMove(fromSquareNotation, toSquareNotation);
       }
 
       // send move to server
@@ -391,7 +413,6 @@ export default function Board({
       } else {
         setState(newState);
       }
-
       setSelectedPiece(undefined);
     }
   }
