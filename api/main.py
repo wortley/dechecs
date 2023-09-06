@@ -19,8 +19,8 @@ from chess import Board, Move
 from constants import (
     AGREEMENT,
     BUCKET_CAPACITY,
-    DS_MINUTE,
-    GAME_LIMIT,
+    CONCURRENT_GAME_LIMIT,
+    DECISECONDS_PER_MINUTE,
     INITIAL_TOKENS,
     REFILL_RATE_MINUTE,
     RESIGNATION,
@@ -169,14 +169,17 @@ async def disconnect(sid):
 async def create(sid, time_control):
     game_id = str(uuid.uuid4())
     chess_api.sio.enter_room(sid, game_id)  # create a room for the game
-    if len(current_games) > GAME_LIMIT:
+    if len(current_games) > CONCURRENT_GAME_LIMIT:
         await emit_error(sid, "Game limit exceeded. Please try again later")
         return
     current_games[game_id] = Game(
         players=[sid],
         board=Board(),
         time_control=time_control,
-        timer=Timer(white=time_control * DS_MINUTE, black=time_control * DS_MINUTE),
+        timer=Timer(
+            white=time_control * DECISECONDS_PER_MINUTE,
+            black=time_control * DECISECONDS_PER_MINUTE,
+        ),
     )
     players_to_games[sid] = game_id
 
@@ -324,7 +327,8 @@ async def accept_rematch(sid):
         game.board.reset()
         game.players.reverse()  # switch white and black
         game.timer = Timer(
-            white=game.time_control * DS_MINUTE, black=game.time_control * DS_MINUTE
+            white=game.time_control * DECISECONDS_PER_MINUTE,
+            black=game.time_control * DECISECONDS_PER_MINUTE,
         )  # reset timer
 
         game.timer.task = asyncio.create_task(countdown(game_id))

@@ -1,6 +1,6 @@
 # general
-DS_MINUTE = 600  # deciseconds in a minute
-GAME_LIMIT = 100  # concurrent game limit
+DECISECONDS_PER_MINUTE = 600
+CONCURRENT_GAME_LIMIT = 100
 
 # game outcomes
 TIMEOUT = 11
