@@ -9,10 +9,12 @@ type TimerProps = {
   timeControl: number;
 };
 
+const DECISECONDS_IN_MINUTE = 600;
+
 export default function Timer({ side, timeControl }: TimerProps) {
   const [timer, setTimer] = useState<TimerData>({
-    white: timeControl * 60,
-    black: timeControl * 60,
+    white: timeControl * DECISECONDS_IN_MINUTE,
+    black: timeControl * DECISECONDS_IN_MINUTE,
   });
 
   useEffect(() => {
