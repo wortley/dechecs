@@ -10,15 +10,13 @@ type TimerProps = {
 };
 
 export default function Timer({ side, timeControl }: TimerProps) {
-  const [white, setWhite] = useState(timeControl.toString() + ":00");
-  const [black, setBlack] = useState(timeControl.toString() + ":00");
+  const [timer, setTimer] = useState<TimerData>({
+    white: timeControl * 60,
+    black: timeControl * 60,
+  });
 
   useEffect(() => {
-    function onTime(data: TimerData) {
-      setWhite(decisecondsToTimeFormat(data.white));
-      setBlack(decisecondsToTimeFormat(data.black));
-    }
-
+    const onTime = (data: TimerData) => setTimer(data);
     socket.on("time", onTime);
 
     return () => {
@@ -26,11 +24,17 @@ export default function Timer({ side, timeControl }: TimerProps) {
     };
   }, []);
 
-  return (
+  return side === Colour.WHITE ? (
     <div className={styles.timer}>
-      <div className={styles.side}>{side === Colour.WHITE ? black : white}</div>
+      <div className={styles.side}>{decisecondsToTimeFormat(timer.black)}</div>
       <hr />
-      <div className={styles.side}>{side === Colour.WHITE ? white : black}</div>
+      <div className={styles.side}>{decisecondsToTimeFormat(timer.white)}</div>
+    </div>
+  ) : (
+    <div className={styles.timer}>
+      <div className={styles.side}>{decisecondsToTimeFormat(timer.white)}</div>
+      <hr />
+      <div className={styles.side}>{decisecondsToTimeFormat(timer.black)}</div>
     </div>
   );
 }
