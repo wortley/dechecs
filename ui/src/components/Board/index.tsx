@@ -301,6 +301,11 @@ export default function Board({
         selectedPiece.file,
       ];
       const toSquare: [number, number] = [rank_idx, file_idx];
+      const fromSquareNotation = getAlgebraicNotation(
+        selectedPiece.rank,
+        selectedPiece.file
+      );
+      const toSquareNotation = getAlgebraicNotation(rank_idx, file_idx);
 
       if (
         (selectedPiece.rank === rank_idx && selectedPiece.file === file_idx) ||
@@ -358,18 +363,12 @@ export default function Board({
           file_idx
         ] = null;
         newState[rank_idx][file_idx] = selectedPiece;
-        animateMove(
-          getAlgebraicNotation(selectedPiece?.rank, selectedPiece?.file),
-          getAlgebraicNotation(rank_idx, file_idx)
-        );
+        if (!dropped) {
+          animateMove(fromSquareNotation, toSquareNotation);
+        }
       } else {
         // regular move (not promotion, en passant or castling)
         if (!dropped) {
-          const fromSquareNotation = getAlgebraicNotation(
-            selectedPiece.rank,
-            selectedPiece.file
-          );
-          const toSquareNotation = getAlgebraicNotation(rank_idx, file_idx);
           animateMove(fromSquareNotation, toSquareNotation);
         }
 
