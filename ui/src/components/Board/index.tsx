@@ -106,6 +106,9 @@ export default function Board({
   const boardRef = useRef<HTMLDivElement>(null);
   const animating = useRef(false);
   const squareCoords = useRef<Map<string, { x: number; y: number }>>();
+  const oppositeColour = useRef(
+    colour === Colour.WHITE ? Colour.BLACK : Colour.WHITE
+  );
 
   const [selectedPiece, setSelectedPiece] = useState<PieceRef>();
   const [state, setState] = useState<(PieceInfo | null)[][]>(initialState);
@@ -218,7 +221,7 @@ export default function Board({
           // replace with queen
           newState[move.toSquare[0]][move.toSquare[1]] = {
             pieceType: PieceType.QUEEN,
-            colour: colour === Colour.WHITE ? Colour.BLACK : Colour.WHITE,
+            colour: oppositeColour.current,
           };
           animateMove(data.move.slice(0, 2), data.move.slice(2, 4));
         } else if (data.castles) {
@@ -227,11 +230,11 @@ export default function Board({
             newState[rank_idx][7] = null;
             newState[rank_idx][6] = {
               pieceType: PieceType.KING,
-              colour: colour === Colour.WHITE ? Colour.BLACK : Colour.WHITE,
+              colour: oppositeColour.current,
             };
             newState[rank_idx][5] = {
               pieceType: PieceType.ROOK,
-              colour: colour === Colour.WHITE ? Colour.BLACK : Colour.WHITE,
+              colour: oppositeColour.current,
             };
             animateCastles(rank_idx, Castles.KINGSIDE);
           } else {
@@ -239,11 +242,11 @@ export default function Board({
             newState[rank_idx][0] = null;
             newState[rank_idx][2] = {
               pieceType: PieceType.KING,
-              colour: colour === Colour.WHITE ? Colour.BLACK : Colour.WHITE,
+              colour: oppositeColour.current,
             };
             newState[rank_idx][3] = {
               pieceType: PieceType.ROOK,
-              colour: colour === Colour.WHITE ? Colour.BLACK : Colour.WHITE,
+              colour: oppositeColour.current,
             };
             animateCastles(rank_idx, Castles.QUEENSIDE);
           }
@@ -347,7 +350,7 @@ export default function Board({
         promotion = PieceType.QUEEN;
         newState[rank_idx][file_idx] = {
           pieceType: PieceType.QUEEN,
-          colour: colour,
+          colour,
         };
       } else if (isCastles(file_idx)) {
         // castles
@@ -357,7 +360,7 @@ export default function Board({
           newState[rank_idx][file_idx] = selectedPiece;
           newState[rank_idx][file_idx - 1] = {
             pieceType: PieceType.ROOK,
-            colour: colour,
+            colour,
           };
           animateCastles(rank_idx, Castles.KINGSIDE);
         } else if (file_idx === 2) {
@@ -366,7 +369,7 @@ export default function Board({
           newState[rank_idx][file_idx] = selectedPiece;
           newState[rank_idx][file_idx + 1] = {
             pieceType: PieceType.ROOK,
-            colour: colour,
+            colour,
           };
           animateCastles(rank_idx, Castles.QUEENSIDE);
         }
