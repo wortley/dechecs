@@ -1,5 +1,5 @@
 import cloneDeep from "lodash/cloneDeep";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { socket } from "../../socket";
 import {
   BoardState,
@@ -417,7 +417,7 @@ export default function Board({
     }
   }
 
-  function generateBoard() {
+  const generateBoard = useCallback(() => {
     let getRank: (rank_idx: number) => number;
     let getFile: (file_idx: number) => number;
 
@@ -490,7 +490,7 @@ export default function Board({
         ))}
       </div>
     ));
-  }
+  }, [colour, legalMoves, selectedPiece, state, prevMove]);
 
   return (
     <div ref={boardRef} className={styles.board}>
