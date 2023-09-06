@@ -124,14 +124,14 @@ async def countdown(game_id):
                 game.timer.black -= 1
             else:
                 # black flagged
-                player_flagged(game_id, 1)
+                await player_flagged(game_id, 1)
         else:
             # white
             if game.timer.white > 0:
                 game.timer.white -= 1
             else:
                 # white flagged
-                player_flagged(game_id, 0)
+                await player_flagged(game_id, 0)
 
         if (turn == 0 and game.timer.black % 10 == 0) or (
             turn == 1 and game.timer.white % 10 == 0
