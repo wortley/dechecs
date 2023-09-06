@@ -322,11 +322,8 @@ export default function Board({
       } else if (isEnPassant(rank_idx, file_idx, state, selectedPiece)) {
         newState = handleEnPassant(newState, selectedPiece, rank_idx, file_idx);
       } else {
-        // regular move (not promotion, en passant or castling)
-        newState[rank_idx][file_idx] = {
-          pieceType: selectedPiece.pieceType,
-          colour: selectedPiece.colour,
-        };
+        // all other moves
+        newState[rank_idx][file_idx] = selectedPiece as PieceInfo;
       }
 
       if (!dropped && !isCastles(file_idx, colour, selectedPiece)) {
