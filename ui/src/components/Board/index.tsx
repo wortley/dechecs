@@ -417,8 +417,6 @@ export default function Board({
     }
   }
 
-  // TODO: Fix square rerenders
-
   function generateBoard() {
     let getRank: (rank_idx: number) => number;
     let getFile: (file_idx: number) => number;
