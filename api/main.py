@@ -21,10 +21,12 @@ from enums import Castles, Outcome
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_socketio import SocketManager
+from log_formatting import custom_formatter
 from models import Game, Timer
 
-# logger
+# logging config (override uvicorn default)
 logger = logging.getLogger("uvicorn")
+logger.handlers[0].setFormatter(custom_formatter)
 
 # store ongoing games in memory
 current_games = {}
