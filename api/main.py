@@ -16,17 +16,8 @@ import uuid
 from contextlib import asynccontextmanager
 
 from chess import Board, Move
-from constants import (
-    AGREEMENT,
-    BUCKET_CAPACITY,
-    CONCURRENT_GAME_LIMIT,
-    DECISECONDS_PER_MINUTE,
-    INITIAL_TOKENS,
-    REFILL_RATE_MINUTE,
-    RESIGNATION,
-    TIMEOUT,
-)
-from enums import Castles
+from constants import AppConstants, RateLimitConfig
+from enums import Castles, Outcome
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_socketio import SocketManager
@@ -41,7 +32,7 @@ current_games = {}
 players_to_games = {}
 
 # connection token bucket (rate limiting)
-token_bucket = INITIAL_TOKENS
+token_bucket = RateLimitConfig.INITIAL_TOKENS
 
 
 async def refill_tokens():
@@ -51,8 +42,8 @@ async def refill_tokens():
     global token_bucket
     while True:
         await asyncio.sleep(60)
-        if token_bucket <= BUCKET_CAPACITY:
-            token_bucket += REFILL_RATE_MINUTE
+        if token_bucket <= RateLimitConfig.BUCKET_CAPACITY:
+            token_bucket += RateLimitConfig.REFILL_RATE_MINUTE
 
 
 @asynccontextmanager
@@ -106,7 +97,7 @@ async def player_flagged(game_id, winner):
         "move",
         {
             "winner": winner,
-            "outcome": TIMEOUT,
+            "outcome": Outcome.TIMEOUT,
         },
         room=game_id,
     )
@@ -170,7 +161,7 @@ async def disconnect(sid):
 async def create(sid, time_control):
     game_id = str(uuid.uuid4())
     chess_api.sio.enter_room(sid, game_id)  # create a room for the game
-    if len(current_games) > CONCURRENT_GAME_LIMIT:
+    if len(current_games) > RateLimitConfig.CONCURRENT_GAME_LIMIT:
         await emit_error(sid, "Game limit exceeded. Please try again later")
         return
     current_games[game_id] = Game(
@@ -178,8 +169,8 @@ async def create(sid, time_control):
         board=Board(),
         time_control=time_control,
         timer=Timer(
-            white=time_control * DECISECONDS_PER_MINUTE,
-            black=time_control * DECISECONDS_PER_MINUTE,
+            white=time_control * AppConstants.DECISECONDS_PER_MINUTE,
+            black=time_control * AppConstants.DECISECONDS_PER_MINUTE,
         ),
     )
     players_to_games[sid] = game_id
@@ -280,7 +271,7 @@ async def accept_draw(sid):
             "move",
             {
                 "winner": None,
-                "outcome": AGREEMENT,
+                "outcome": Outcome.AGREEMENT,
             },
             room=game_id,
         )
@@ -299,7 +290,7 @@ async def resign(sid):
             "move",
             {
                 "winner": game.players.index(sid),
-                "outcome": RESIGNATION,
+                "outcome": Outcome.RESIGNATION,
             },
             room=game_id,
         )
@@ -328,8 +319,8 @@ async def accept_rematch(sid):
         game.board.reset()
         game.players.reverse()  # switch white and black
         game.timer = Timer(
-            white=game.time_control * DECISECONDS_PER_MINUTE,
-            black=game.time_control * DECISECONDS_PER_MINUTE,
+            white=game.time_control * AppConstants.DECISECONDS_PER_MINUTE,
+            black=game.time_control * AppConstants.DECISECONDS_PER_MINUTE,
         )  # reset timer
 
         game.timer.task = asyncio.create_task(countdown(game_id))
