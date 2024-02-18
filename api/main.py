@@ -82,7 +82,7 @@ def opponent_ind(turn: int):
 
 
 async def get_game(sid, emiterr=True):
-    "Get game record from memory using player ID"
+    """Get game record from memory using player ID"""
     gid = players_to_games.get(sid, None)
     game = current_games.get(gid, None)
     if not game and emiterr:
@@ -90,8 +90,8 @@ async def get_game(sid, emiterr=True):
     return game, gid
 
 
-async def clear_games(sid):
-    """Clears a user's games from memory"""
+async def clear_game(sid):
+    """Clears a user's game(s) from memory"""
     game, gid = await get_game(sid, emiterr=False)
     if not game:
         return
@@ -159,7 +159,7 @@ async def connect(sid, _):
 
 @chess_api.sio.on("disconnect")
 async def disconnect(sid):
-    clear_games(sid)
+    clear_game(sid)
     logger.info(f"Client {sid} disconnected")
 
 
@@ -324,4 +324,4 @@ async def accept_rematch(sid):
 @chess_api.sio.on("exit")
 async def exit(sid):
     """When a client exits the app, clear the game from memory"""
-    clear_games(sid)
+    clear_game(sid)
