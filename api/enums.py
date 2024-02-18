@@ -1,6 +1,11 @@
 from enum import Enum
 
 
+class Colour(Enum):
+    WHITE = 1
+    BLACK = 0
+
+
 class Castles(Enum):
     KINGSIDE = "K"
     QUEENSIDE = "Q"

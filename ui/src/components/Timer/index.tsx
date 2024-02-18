@@ -13,8 +13,8 @@ const DECISECONDS_IN_MINUTE = 600;
 
 export default function Timer({ side, timeControl }: TimerProps) {
   const [timer, setTimer] = useState<TimerData>({
-    white: timeControl * DECISECONDS_IN_MINUTE,
-    black: timeControl * DECISECONDS_IN_MINUTE,
+    1: timeControl * DECISECONDS_IN_MINUTE,
+    0: timeControl * DECISECONDS_IN_MINUTE,
   });
 
   useEffect(() => {
@@ -28,15 +28,15 @@ export default function Timer({ side, timeControl }: TimerProps) {
 
   return side === Colour.WHITE ? (
     <div className={styles.timer}>
-      <div className={styles.side}>{decisecondsToTimeFormat(timer.black)}</div>
+      <div className={styles.side}>{decisecondsToTimeFormat(timer[0])}</div>
       <hr />
-      <div className={styles.side}>{decisecondsToTimeFormat(timer.white)}</div>
+      <div className={styles.side}>{decisecondsToTimeFormat(timer[1])}</div>
     </div>
   ) : (
     <div className={styles.timer}>
-      <div className={styles.side}>{decisecondsToTimeFormat(timer.white)}</div>
+      <div className={styles.side}>{decisecondsToTimeFormat(timer[1])}</div>
       <hr />
-      <div className={styles.side}>{decisecondsToTimeFormat(timer.black)}</div>
+      <div className={styles.side}>{decisecondsToTimeFormat(timer[0])}</div>
     </div>
   );
 }
