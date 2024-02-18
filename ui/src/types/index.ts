@@ -68,6 +68,6 @@ export type StartData = {
 };
 
 export type TimerData = {
-  1: number;
-  0: number;
+  white: number;
+  black: number;
 };

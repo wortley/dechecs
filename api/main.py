@@ -77,18 +77,22 @@ socket_manager = SocketManager(app=chess_api)
 # helper functions
 
 
-async def get_game(sid):
+def opponent_ind(turn: int):
+    return int(not bool(turn))
+
+
+async def get_game(sid, emiterr=True):
     "Get game record from memory using player ID"
     gid = players_to_games.get(sid, None)
     game = current_games.get(gid, None)
-    if not game:
+    if not game and emiterr:
         await emit_error(sid)
     return game, gid
 
 
-def clear_game(gid):
-    """Clears a game from memory"""
-    game = current_games.get(gid, None)
+async def clear_games(sid):
+    """Clears a user's games from memory"""
+    game, gid = await get_game(sid, emiterr=False)
     if not game:
         return
     for p in game.players:
@@ -108,8 +112,8 @@ async def player_flagged(gid, flagged):
     await chess_api.sio.emit(
         "move",
         {
-            "winner": flagged.value,
-            "outcome": Outcome.TIMEOUT,
+            "winner": opponent_ind(flagged),
+            "outcome": Outcome.TIMEOUT.value,
         },
         room=gid,
     )
@@ -121,20 +125,19 @@ async def countdown(gid):
     game = current_games.get(gid, None)
     while True:
         turn = int(game.board.turn)
-        colour = Colour(turn)
-        opponent_colour = Colour(int(not bool(turn)))
+        colour = list(Colour)[turn].value[1]
+        opponent_colour = list(Colour)[opponent_ind(turn)].value[1]
         await asyncio.sleep(0.1)
-        if game.timer[colour] > 0:
-            game.timer[colour] -= 1
+        if getattr(game.timer, colour) > 0:
+            setattr(game.timer, colour, getattr(game.timer, colour) - 1)
         else:
-            # player flagged
-            await player_flagged(gid, turn)
+            await player_flagged(gid, turn)  # flagged
 
-        if game.timer[colour] % 10 == 0:
+        if getattr(game.timer, colour) % 10 == 0:
             # if multiple of 10 ds (1s), emit timer state
             await chess_api.sio.emit(
                 "time",
-                {colour: game.timer[colour], opponent_colour: game.timer[opponent_colour]},
+                {colour: getattr(game.timer, colour), opponent_colour: getattr(game.timer, opponent_colour)},
                 room=gid,
             )
 
@@ -156,7 +159,7 @@ async def connect(sid, _):
 
 @chess_api.sio.on("disconnect")
 async def disconnect(sid):
-    clear_game(players_to_games.get(sid, None))
+    clear_games(sid)
     logger.info(f"Client {sid} disconnected")
 
 
@@ -200,8 +203,12 @@ async def join(sid, gid):
     # start timer
     game.timer.task = asyncio.create_task(countdown(gid))
     # start game
-    await chess_api.sio.emit("start", {"colour": 1, "timeControl": game.time_control}, to=game.players[0])
-    await chess_api.sio.emit("start", {"colour": 0, "timeControl": game.time_control}, to=game.players[1])
+    await chess_api.sio.emit(
+        "start", {"colour": Colour.WHITE.value[0], "timeControl": game.time_control}, to=game.players[0]
+    )
+    await chess_api.sio.emit(
+        "start", {"colour": Colour.BLACK.value[0], "timeControl": game.time_control}, to=game.players[1]
+    )
 
 
 @chess_api.sio.on("move")
@@ -263,7 +270,7 @@ async def accept_draw(sid):
         "move",
         {
             "winner": None,
-            "outcome": Outcome.AGREEMENT,
+            "outcome": Outcome.AGREEMENT.value,
         },
         room=gid,
     )
@@ -279,7 +286,7 @@ async def resign(sid):
         "move",
         {
             "winner": int(game.players.index(sid)),
-            "outcome": Outcome.RESIGNATION,
+            "outcome": Outcome.RESIGNATION.value,
         },
         room=gid,
     )
@@ -306,11 +313,15 @@ async def accept_rematch(sid):
     )  # reset timer
 
     game.timer.task = asyncio.create_task(countdown(gid))
-    await chess_api.sio.emit("start", {"colour": 1, "timeControl": game.time_control}, to=game.players[0])
-    await chess_api.sio.emit("start", {"colour": 0, "timeControl": game.time_control}, to=game.players[1])
+    await chess_api.sio.emit(
+        "start", {"colour": Colour.WHITE.value[0], "timeControl": game.time_control}, to=game.players[0]
+    )
+    await chess_api.sio.emit(
+        "start", {"colour": Colour.BLACK.value[0], "timeControl": game.time_control}, to=game.players[1]
+    )
 
 
 @chess_api.sio.on("exit")
 async def exit(sid):
     """When a client exits the app, clear the game from memory"""
-    clear_game(players_to_games.get(sid, None))
+    clear_games(sid)

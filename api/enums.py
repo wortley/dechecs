@@ -2,8 +2,8 @@ from enum import Enum
 
 
 class Colour(Enum):
-    WHITE = 1
-    BLACK = 0
+    BLACK = (0, "black")
+    WHITE = (1, "white")
 
 
 class Castles(Enum):
