@@ -19,6 +19,7 @@ export default function Timer({ side, timeControl }: TimerProps) {
 
   useEffect(() => {
     const onTime = (data: TimerData) => setTimer(data);
+
     socket.on("time", onTime);
 
     return () => {
