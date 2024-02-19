@@ -94,10 +94,30 @@ def opponent_ind(turn: int):
 async def get_game(sid, emiterr=True):
     """Get game state from redis with player ID"""
     gid = players_to_games.get(sid, None)
-    game = deserialise_game_state(redis_client.get(f"game:{gid}"))
+    try:
+        game = deserialise_game_state(redis_client.get(f"game:{gid}"))
+    except redis.RedisError as e:
+        logger.error(e)
+        if emiterr:
+            await emit_error(sid)
+        return
     if not game and emiterr:
         await emit_error(sid)
+        logger.error(f"Game not found for player {sid}")
     return game, gid
+
+
+async def get_game_by_gid(gid, sid):
+    """Get game state from redis with game ID"""
+    try:
+        game = deserialise_game_state(redis_client.get(f"game:{gid}"))
+    except redis.RedisError as e:
+        logger.error(e)
+        return
+    if not game:
+        await emit_error(sid)
+        return
+    return game
 
 
 async def save_game(gid, game, sid):
@@ -139,6 +159,8 @@ async def player_flagged(gid, flagged):
 
 def serialise_game_state(game):
     """Serialise game state to JSON string for storage in Redis"""
+    if not game:
+        return
     game.board = game.board.fen()
     game_dict = game.__dict__
     return json.dumps(game_dict)
@@ -146,6 +168,8 @@ def serialise_game_state(game):
 
 def deserialise_game_state(game):
     """Deserialise game state from Redis JSON string"""
+    if not game:
+        return
     game_dict = json.loads(game)
     game_dict["board"] = Board(game_dict["board"])
     return Game(**game_dict)
