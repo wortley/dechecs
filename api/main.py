@@ -41,8 +41,7 @@ players_to_games = {}
 # connection token bucket (rate limiting)
 token_bucket = RateLimitConfig.INITIAL_TOKENS
 
-# redis client setup
-# TODO: Heroku Redis
+# Redis client setup
 redis_client = redis.from_url(os.getenv("REDIS_URL"))
 
 
