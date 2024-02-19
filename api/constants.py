@@ -1,5 +1,6 @@
 class AppConstants:
     DECISECONDS_PER_MINUTE = 600
+    MILLISECONDS_PER_MINUTE = 60000
 
 
 class RateLimitConfig:

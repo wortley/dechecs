@@ -24,7 +24,8 @@ export default function ResultModal({
       navigate("/r", {
         state: {
           colour: data.colour,
-          timeControl: data.timeControl,
+          timeRemaining: data.timeRemaining,
+          initTimestamp: data.initTimestamp,
         },
       });
     }
@@ -90,15 +91,15 @@ export default function ResultModal({
       : "Draw";
 
   function onOfferRematch() {
-    socket.timeout(2000).emit("offerRematch");
+    socket.emit("offerRematch");
   }
 
   function onAcceptRematch() {
-    socket.timeout(2000).emit("acceptRematch");
+    socket.emit("acceptRematch");
   }
 
   function onExit() {
-    socket.timeout(2000).emit("exit");
+    socket.emit("exit");
     navigate("/");
   }
 

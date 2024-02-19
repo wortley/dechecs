@@ -59,19 +59,18 @@ export function getAlgebraicNotation(rank_idx: number, file_idx: number) {
 }
 
 /**
- * Converts an integer number of deciseconds to a time string in the format "mm:ss".
+ * Converts an integer number of milliseconds to a time string in the format "mm:ss".
  *
- * @param {number} deciseconds - The total number of deciseconds.
+ * @param {number} milliseconds
  * @returns {string} The time format string in the format "mm:ss".
  */
-export function decisecondsToTimeFormat(deciseconds: number) {
-  const minutes = Math.floor(deciseconds / 600);
-  const remainingDeciseconds = deciseconds % 600;
-
-  const seconds = Math.ceil(remainingDeciseconds / 10);
+export function millisecondsToTimeFormat(milliseconds: number) {
+  const seconds = Math.floor(milliseconds / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
 
   const minutesString = minutes.toString();
-  const secondsString = seconds.toString().padStart(2, "0");
+  const secondsString = remainingSeconds.toString().padStart(2, "0");
 
   return `${minutesString}:${secondsString}`;
 }
