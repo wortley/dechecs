@@ -9,4 +9,5 @@ export const socket = io(URL ?? "", {
   path: "/ws/socket.io",
   transports: ["websocket"],
   autoConnect: false,
+  timeout: 2000,
 });

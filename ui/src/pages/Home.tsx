@@ -20,7 +20,8 @@ export default function Home() {
       navigate("/play", {
         state: {
           colour: data.colour,
-          timeControl: data.timeControl,
+          timeRemaining: data.timeRemaining,
+          initTimestamp: data.initTimestamp,
         },
       });
     }
@@ -35,11 +36,11 @@ export default function Home() {
   }, []);
 
   function onCreateGame() {
-    if (timeControl > 0) socket.timeout(2000).emit("create", timeControl);
+    if (timeControl > 0) socket.emit("create", timeControl);
   }
 
   function onSubmitGameId() {
-    socket.timeout(2000).emit("join", joiningGameId);
+    socket.emit("join", joiningGameId);
   }
 
   return (

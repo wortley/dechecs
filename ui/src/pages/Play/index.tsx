@@ -17,18 +17,19 @@ export default function Play() {
   const [drawOffer, setDrawOffer] = useState(false);
 
   const colour = location.state.colour;
-  const timeControl = location.state.timeControl;
+  const timeControl = location.state.timeRemaining;
+  const initTimestamp = location.state.initTimestamp;
 
   function onOfferDraw() {
-    socket.timeout(2000).emit("offerDraw");
+    socket.emit("offerDraw");
   }
 
   function onAcceptDraw() {
-    socket.timeout(2000).emit("acceptDraw");
+    socket.emit("acceptDraw");
   }
 
   function onResign() {
-    socket.timeout(2000).emit("resign");
+    socket.emit("resign");
   }
 
   useEffect(() => {
@@ -54,6 +55,7 @@ export default function Play() {
               setTurn={setTurn}
               setOutcome={setOutcome}
               setWinner={setWinner}
+              initTimestamp={initTimestamp}
             />
           )}
           <div>

@@ -60,11 +60,15 @@ export type BoardState = {
   enPassant: boolean;
   legalMoves: string[];
   moveStack?: string[];
+  turnStartTime: number;
+  timeRemainingWhite?: number;
+  timeRemainingBlack?: number;
 };
 
 export type StartData = {
   colour: Colour;
-  timeControl: number;
+  timeRemaining: number;
+  initTimestamp: number;
 };
 
 export type TimerData = {
