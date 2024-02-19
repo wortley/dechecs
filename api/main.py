@@ -93,12 +93,23 @@ def opponent_ind(turn: int):
 
 
 async def get_game(sid, emiterr=True):
-    """Get game record from memory using player ID"""
+    """Get game state from redis with player ID"""
     gid = players_to_games.get(sid, None)
     game = deserialise_game_state(redis_client.get(f"game:{gid}"))
     if not game and emiterr:
         await emit_error(sid)
     return game, gid
+
+
+async def save_game(gid, game, sid):
+    """Set game state in Redis"""
+    try:
+        redis_client.set(f"game:{gid}", serialise_game_state(game))
+        return 0
+    except redis.RedisError as e:
+        await emit_error(sid, "An error occurred while saving game state")
+        logger.error(e)
+        return 1
 
 
 async def clear_game(sid):
@@ -184,8 +195,8 @@ async def create(sid, time_control):
     )
 
     players_to_games[sid] = gid
-    # TODO: Handle redis errors
-    redis_client.set(f"game:{gid}", serialise_game_state(game))
+    if await save_game(gid, game, sid):  # if error saving game state
+        return
 
     # send game id to client
     await chess_api.sio.emit("gameId", gid, room=gid)
@@ -219,7 +230,7 @@ async def join(sid, gid):
         to=game.players[1],
     )
 
-    redis_client.set(f"game:{gid}", serialise_game_state(game))
+    await save_game(gid, game, sid)
 
 
 # Move
@@ -227,7 +238,6 @@ async def join(sid, gid):
 
 @chess_api.sio.on("move")
 async def move(sid, uci, start_end):
-    print("start_end", start_end[1] / 1000 - start_end[0] / 1000)
     game, gid = await get_game(sid)
     if not game:
         return
@@ -273,7 +283,7 @@ async def move(sid, uci, start_end):
     # send updated game state to clients in room
     await chess_api.sio.emit("move", data, room=gid)
 
-    redis_client.set(f"game:{gid}", serialise_game_state(game))
+    await save_game(gid, game, sid)
 
 
 # Draws
