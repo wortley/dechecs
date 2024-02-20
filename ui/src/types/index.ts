@@ -58,6 +58,7 @@ export type BoardState = {
   move: string;
   castles: Castles;
   enPassant: boolean;
+  isCheck: boolean;
   legalMoves: string[];
   moveStack?: string[];
   turnStartTime: number;

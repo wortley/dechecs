@@ -56,6 +56,7 @@ export default function Board({
   const [prevMove, setPrevMove] = useState("");
   const [legalMoves, setLegalMoves] = useState<Move[]>(initialLegalMoves);
   const [turnStartTime, setTurnStartTime] = useState(initTimestamp); // stores starting timestamp of each turn
+  const [isCheck, setIsCheck] = useState(false);
 
   function onResize() {
     const boardRect = boardRef?.current?.getBoundingClientRect();
@@ -153,6 +154,7 @@ export default function Board({
       if (data.turn == colour && data.move) {
         // if other player just moved
         setPrevMove(data.moveStack?.at(-1) ?? "");
+
         const move = uciToMove(data.move);
         const newState = cloneDeep(state);
 
@@ -221,6 +223,7 @@ export default function Board({
 
       setTurnStartTime(data.turnStartTime);
       setTurn(data.turn);
+      setIsCheck(data.isCheck);
 
       // process outcome
       if (data.outcome) {
@@ -387,6 +390,12 @@ export default function Board({
             wasPrevMove={prevMove.includes(
               getAlgebraicNotation(getRank(rank_idx), getFile(file_idx))
             )}
+            isCheckedKing={
+              state[getRank(rank_idx)][getFile(file_idx)]?.pieceType ===
+                PieceType.KING &&
+              isCheck &&
+              state[getRank(rank_idx)][getFile(file_idx)]?.colour === turn
+            }
           >
             {state[getRank(rank_idx)][getFile(file_idx)] != null && (
               <Piece

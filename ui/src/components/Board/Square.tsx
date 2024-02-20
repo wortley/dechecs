@@ -10,6 +10,7 @@ type SquareProps = {
   selected: boolean;
   isLegalMove: boolean;
   wasPrevMove: boolean;
+  isCheckedKing: boolean;
   children?: React.ReactNode; // current piece on square
 };
 
@@ -21,6 +22,7 @@ const Square = memo(
     onDrop,
     isLegalMove,
     wasPrevMove,
+    isCheckedKing,
     children,
   }: SquareProps) => {
     const [{ isOver }, drop] = useDrop(
@@ -48,6 +50,10 @@ const Square = memo(
         </div>
         {selected ? (
           <div className={`${styles.squareChild} ${styles.overlay}`} />
+        ) : isCheckedKing ? (
+          <div
+            className={`${styles.squareChild} ${styles.overlay} ${styles.check}`}
+          />
         ) : wasPrevMove ? (
           <div
             className={`${styles.squareChild} ${styles.overlay} ${styles.prevMove}`}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useLocation } from "react-router-dom";
 import Board from "../../components/Board";
@@ -15,6 +15,9 @@ export default function Play() {
   const [outcome, setOutcome] = useState<Outcome>();
   const [winner, setWinner] = useState<Colour>();
   const [drawOffer, setDrawOffer] = useState(false);
+
+  const outcomeRef = useRef(outcome);
+  outcomeRef.current = outcome;
 
   const colour = location.state.colour;
   const timeControl = location.state.timeRemaining;
@@ -37,10 +40,21 @@ export default function Play() {
       setDrawOffer(true);
     }
 
+    function onBeforeUnload(event: BeforeUnloadEvent) {
+      if (outcomeRef.current !== undefined) {
+        return;
+      }
+      event.preventDefault();
+      event.returnValue = "";
+    }
+
     socket.on("drawOffer", onReceiveDrawOffer);
+
+    window.addEventListener("beforeunload", onBeforeUnload);
 
     return () => {
       socket.off("drawOffer", onReceiveDrawOffer);
+      window.removeEventListener("beforeunload", onBeforeUnload);
     };
   }, []);
 
