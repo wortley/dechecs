@@ -73,13 +73,14 @@ async def lifespan(_):
                 if event.to in players_to_games:  # if recipient client is connected to this worker, emit event to it
                     await chess_api.sio.emit(event.name, event.data, to=event.to)
 
-    asyncio.create_task(_background_listen())
+    listener = asyncio.create_task(_background_listen())
     yield
 
     # Clean up before shutdown
     refiller.cancel()
     players_to_games.clear()
     # clear event queue
+    listener.cancel()
     await pubsub.close()
     # clear all games from redis cache
     async for key in redis_client.scan_iter("game:*"):
