@@ -18,16 +18,16 @@ import uuid
 from contextlib import asynccontextmanager
 from time import time_ns
 
-import redis
+import aioredis
 from chess import Board, Move
-from constants import AppConstants, RateLimitConfig
+from constants import SIO_QUEUE_NAME, RateLimitConfig, TimeConstants
 from dotenv import load_dotenv
 from enums import Castles, Colour, Outcome
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_socketio import SocketManager
 from log_formatting import custom_formatter
-from models import Game
+from models import Event, Game
 
 load_dotenv()
 
@@ -42,7 +42,7 @@ players_to_games = {}
 token_bucket = RateLimitConfig.INITIAL_TOKENS
 
 # Redis client setup
-redis_client = redis.from_url(os.getenv("REDIS_URL"))
+redis_client = aioredis.Redis.from_url(os.environ.get("REDIS_URL"))
 
 
 async def refill_tokens():
@@ -60,13 +60,28 @@ async def refill_tokens():
 async def lifespan(_):
     """Handles startup/shutdown"""
     refiller = asyncio.create_task(refill_tokens())
+
+    # Subscribe to MQ (for sending events from clients connected to other service workers)
+    pubsub = redis_client.pubsub(ignore_subscribe_messages=True)
+    await pubsub.subscribe(SIO_QUEUE_NAME)
+
+    async def _background_listen():
+        logger.info("Listening to SIO event queue...")
+        async for message in pubsub.listen():
+            if message["type"] == "message":
+                event = Event(**json.loads(message["data"]))
+                if event.to in players_to_games:  # if recipient client is connected to this worker, emit event to it
+                    await chess_api.sio.emit(event.name, event.data, to=event.to)
+
+    asyncio.create_task(_background_listen())
     yield
-    # clean up
+
+    # Clean up before shutdown
     refiller.cancel()
     players_to_games.clear()
     # clear all games from redis cache
     for key in redis_client.scan_iter("game:*"):
-        redis_client.delete(key)
+        await redis_client.delete(key)
 
 
 chess_api = FastAPI(lifespan=lifespan)
@@ -95,8 +110,8 @@ async def get_game(sid, emiterr=True):
     """Get game state from redis with player ID"""
     gid = players_to_games.get(sid, None)
     try:
-        game = deserialise_game_state(redis_client.get(f"game:{gid}"))
-    except redis.RedisError as e:
+        game = deserialise_game_state(await redis_client.get(f"game:{gid}"))
+    except aioredis.RedisError as e:
         logger.error(e)
         if emiterr:
             await emit_error(sid)
@@ -110,8 +125,8 @@ async def get_game(sid, emiterr=True):
 async def get_game_by_gid(gid, sid):
     """Get game state from redis with game ID"""
     try:
-        game = deserialise_game_state(redis_client.get(f"game:{gid}"))
-    except redis.RedisError as e:
+        game = deserialise_game_state(await redis_client.get(f"game:{gid}"))
+    except aioredis.RedisError as e:
         logger.error(e)
         return
     if not game:
@@ -123,9 +138,9 @@ async def get_game_by_gid(gid, sid):
 async def save_game(gid, game, sid):
     """Set game state in Redis"""
     try:
-        redis_client.set(f"game:{gid}", serialise_game_state(game))
+        await redis_client.set(f"game:{gid}", serialise_game_state(game))
         return 0
-    except redis.RedisError as e:
+    except aioredis.RedisError as e:
         await emit_error(sid, "An error occurred while saving game state")
         logger.error(e)
         return 1
@@ -138,23 +153,12 @@ async def clear_game(sid):
         return
     for p in game.players:
         players_to_games.pop(p, None)
-    redis_client.delete(f"game:{gid}")
+    await redis_client.delete(f"game:{gid}")
 
 
 async def emit_error(sid, message="Something went wrong"):
     """Emits an error event to a client"""
-    await chess_api.sio.emit("error", message, to=sid)
-
-
-async def player_flagged(gid, flagged):
-    await chess_api.sio.emit(
-        "move",
-        {
-            "winner": opponent_ind(flagged),
-            "outcome": Outcome.TIMEOUT.value,
-        },
-        room=gid,
-    )
+    await redis_client.publish(Event("error", message, sid).__dict__)
 
 
 def serialise_game_state(game):
@@ -205,29 +209,34 @@ async def disconnect(sid):
 async def create(sid, time_control):
     gid = str(uuid.uuid4())
     chess_api.sio.enter_room(sid, gid)  # create a room for the game
-    games_inpr = sum(1 for _ in redis_client.scan_iter("game:*"))
+
+    games_inpr = 0
+    async for _ in redis_client.scan_iter("game:*"):  # count games in progress
+        games_inpr += 1
     if games_inpr > RateLimitConfig.CONCURRENT_GAME_LIMIT:
         await emit_error(sid, "Game limit exceeded. Please try again later")
         return
+
     game = Game(
         players=[sid],
         board=Board(),
-        tr_w=time_control * AppConstants.MILLISECONDS_PER_MINUTE,
-        tr_b=time_control * AppConstants.MILLISECONDS_PER_MINUTE,
+        tr_w=time_control * TimeConstants.MILLISECONDS_PER_MINUTE,
+        tr_b=time_control * TimeConstants.MILLISECONDS_PER_MINUTE,
         start_end=(-1, -1),
+        time_control=time_control,
     )
 
     players_to_games[sid] = gid
-    if await save_game(gid, game, sid):  # if error saving game state
+    if await save_game(gid, game, sid) > 0:  # if error saving game state
         return
 
     # send game id to client
-    await chess_api.sio.emit("gameId", gid, room=gid)
+    await chess_api.sio.emit("gameId", gid, room=gid)  # N.B no need to publish this to MQ
 
 
 @chess_api.sio.on("join")
 async def join(sid, gid):
-    game = deserialise_game_state(redis_client.get(f"game:{gid}"))
+    game = await get_game_by_gid(gid, sid)
     if not game:
         await emit_error(sid, "Game not found")
         return
@@ -242,15 +251,25 @@ async def join(sid, gid):
 
     game.start_end = (time_ns() / 1_000_000, -1)
 
-    await chess_api.sio.emit(
-        "start",
-        {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w, "initTimestamp": game.start_end[0]},
-        to=game.players[0],
+    await redis_client.publish(
+        SIO_QUEUE_NAME,
+        json.dumps(
+            Event(
+                "start",
+                {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w, "initTimestamp": game.start_end[0]},
+                game.players[0],
+            ).__dict__
+        ),
     )
-    await chess_api.sio.emit(
-        "start",
-        {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b, "initTimestamp": game.start_end[0]},
-        to=game.players[1],
+    await redis_client.publish(
+        SIO_QUEUE_NAME,
+        json.dumps(
+            Event(
+                "start",
+                {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b, "initTimestamp": game.start_end[0]},
+                game.players[1],
+            ).__dict__
+        ),
     )
 
     await save_game(gid, game, sid)
@@ -304,7 +323,11 @@ async def move(sid, uci, start_end):
     }
 
     # send updated game state to clients in room
-    await chess_api.sio.emit("move", data, room=gid)
+    for pid in game.players:
+        await redis_client.publish(
+            SIO_QUEUE_NAME,
+            json.dumps(Event("move", data, pid).__dict__),
+        )
 
     await save_game(gid, game, sid)
 
@@ -317,23 +340,31 @@ async def offer_draw(sid):
     game, _ = await get_game(sid)
     if not game:
         return
-    chess_api.sio.emit("drawOffer", to=next(p for p in game.players if p != sid))
+    await redis_client.publish(
+        SIO_QUEUE_NAME,
+        json.dumps(Event("drawOffer", None, next(p for p in game.players if p != sid)).__dict__),
+    )
 
 
 @chess_api.sio.on("acceptDraw")
 async def accept_draw(sid):
-    game, gid = await get_game(sid)
+    game, _ = await get_game(sid)
     if not game:
         return
-
-    chess_api.sio.emit(
-        "move",
-        {
-            "winner": None,
-            "outcome": Outcome.AGREEMENT.value,
-        },
-        room=gid,
-    )
+    for pid in game.players:
+        await redis_client.publish(
+            SIO_QUEUE_NAME,
+            json.dumps(
+                Event(
+                    "move",
+                    {
+                        "winner": None,
+                        "outcome": Outcome.AGREEMENT.value,
+                    },
+                    pid,
+                ).__dict__
+            ),
+        )
 
 
 # Resign
@@ -341,17 +372,23 @@ async def accept_draw(sid):
 
 @chess_api.sio.on("resign")
 async def resign(sid):
-    game, gid = await get_game(sid)
+    game, _ = await get_game(sid)
     if not game:
         return
-    await chess_api.sio.emit(
-        "move",
-        {
-            "winner": int(game.players.index(sid)),
-            "outcome": Outcome.RESIGNATION.value,
-        },
-        room=gid,
-    )
+    for pid in game.players:
+        await redis_client.publish(
+            SIO_QUEUE_NAME,
+            json.dumps(
+                Event(
+                    "move",
+                    {
+                        "winner": int(game.players.index(sid)),
+                        "outcome": Outcome.RESIGNATION.value,
+                    },
+                    pid,
+                ).__dict__
+            ),
+        )
 
 
 # Flag
@@ -362,7 +399,20 @@ async def flag(sid, flagged):
     game, gid = await get_game(sid)
     if not game:
         return
-    await player_flagged(gid, flagged)
+    for pid in game.players:
+        await redis_client.publish(
+            SIO_QUEUE_NAME,
+            json.dumps(
+                Event(
+                    "move",
+                    {
+                        "winner": opponent_ind(flagged),
+                        "outcome": Outcome.TIMEOUT.value,
+                    },
+                    pid,
+                ).__dict__
+            ),
+        )
 
 
 # Rematch (offer and accept)
@@ -372,7 +422,10 @@ async def flag(sid, flagged):
 async def offer_rematch(sid):
     game, _ = await get_game(sid)
     if game:
-        chess_api.sio.emit("rematchOffer", 1, to=next(p for p in game.players if p != sid))
+        await redis_client.publish(
+            SIO_QUEUE_NAME,
+            json.dumps(Event("rematchOffer", 1, next(p for p in game.players if p != sid)).__dict__),
+        )
 
 
 @chess_api.sio.on("acceptRematch")
@@ -382,16 +435,28 @@ async def accept_rematch(sid):
         return
     game.board.reset()
     game.players.reverse()  # switch white and black
+    game.tr_w, game.tr_b = TimeConstants.MILLISECONDS_PER_MINUTE * game.time_control
+    game.start_end = (time_ns() / 1_000_000, -1)
 
-    await chess_api.sio.emit(
-        "start",
-        {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w, "initTimestamp": game.start_end[0]},
-        to=game.players[0],
+    await redis_client.publish(
+        SIO_QUEUE_NAME,
+        json.dumps(
+            Event(
+                "start",
+                {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w, "initTimestamp": game.start_end[0]},
+                game.players[0],
+            ).__dict__
+        ),
     )
-    await chess_api.sio.emit(
-        "start",
-        {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b, "initTimestamp": game.start_end[0]},
-        to=game.players[1],
+    await redis_client.publish(
+        SIO_QUEUE_NAME,
+        json.dumps(
+            Event(
+                "start",
+                {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b, "initTimestamp": game.start_end[0]},
+                game.players[1],
+            ).__dict__
+        ),
     )
 
 

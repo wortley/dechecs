@@ -17,6 +17,7 @@ export default function Home() {
     }
 
     function onStart(data: StartData) {
+      console.log("Start event received with data", data);
       navigate("/play", {
         state: {
           colour: data.colour,
