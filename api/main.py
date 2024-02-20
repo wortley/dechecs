@@ -317,6 +317,7 @@ async def move(sid, uci, start_end):
         "outcome": outcome.termination.value if outcome else None,
         "move": str(board.peek()),
         "castles": castles.value if castles else None,
+        "isCheck": board.is_check(),
         "enPassant": en_passant,
         "legalMoves": [str(m) for m in board.legal_moves],
         "moveStack": [str(m) for m in board.move_stack],
@@ -469,4 +470,4 @@ async def accept_rematch(sid):
 @chess_api.sio.on("exit")
 async def exit(sid):
     """When a client exits the game, clear it from memory"""
-    clear_game(sid)
+    await clear_game(sid)

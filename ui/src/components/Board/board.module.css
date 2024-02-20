@@ -37,6 +37,11 @@
       opacity: 0.6;
       background-color: orange;
     }
+
+    &.check {
+      border-radius: 50%;
+      background: radial-gradient(circle, red 20%, red 50%, transparent 75%);
+    }
   }
 
   &.option {
