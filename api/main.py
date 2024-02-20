@@ -79,6 +79,8 @@ async def lifespan(_):
     # Clean up before shutdown
     refiller.cancel()
     players_to_games.clear()
+    # clear event queue
+    await pubsub.close()
     # clear all games from redis cache
     async for key in redis_client.scan_iter("game:*"):
         await redis_client.delete(key)
