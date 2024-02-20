@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List
+from typing import Any, List, Optional
 
 from chess import Board
 
@@ -11,3 +11,11 @@ class Game:
     start_end: (float, float)  # timestamp trackers for start and end time of each turn
     tr_w: int  # time remaining for white
     tr_b: int  # time remaining for black
+    time_control: int  # time control (minutes)
+
+
+@dataclass
+class Event:
+    name: str
+    data: Any
+    to: str

@@ -1,4 +1,4 @@
-class AppConstants:
+class TimeConstants:
     DECISECONDS_PER_MINUTE = 600
     MILLISECONDS_PER_MINUTE = 60000
 
@@ -8,3 +8,6 @@ class RateLimitConfig:
     BUCKET_CAPACITY = 100
     INITIAL_TOKENS = 20
     REFILL_RATE_MINUTE = 4
+
+
+SIO_QUEUE_NAME = "sio_events"

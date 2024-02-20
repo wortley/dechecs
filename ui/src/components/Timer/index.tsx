@@ -18,7 +18,6 @@ export default function Timer({ side, timeControl }: TimerProps) {
 
   useEffect(() => {
     const onMove = (data: BoardState) => {
-      console.log(data.timeRemainingWhite, data.timeRemainingBlack);
       setTurn(data.turn);
       if (data.timeRemainingWhite && data.timeRemainingBlack) {
         setTimer({
