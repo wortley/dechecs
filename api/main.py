@@ -231,7 +231,7 @@ async def create(sid, time_control):
         return
 
     # send game id to client
-    await chess_api.sio.emit("gameId", gid, room=gid)  # N.B no need to publish this to MQ
+    await chess_api.sio.emit("gameId", gid, to=sid)  # N.B no need to publish this to MQ
 
 
 @chess_api.sio.on("join")
