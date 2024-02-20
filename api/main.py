@@ -161,7 +161,7 @@ async def clear_game(sid):
 
 async def emit_error(sid, message="Something went wrong"):
     """Emits an error event to a client"""
-    await redis_client.publish(SIO_QUEUE_NAME, Event("error", message, sid).__dict__)
+    await publish_event(Event("error", message, sid))
 
 
 def serialise_game_state(game):
@@ -180,6 +180,10 @@ def deserialise_game_state(game):
     game_dict = json.loads(game)
     game_dict["board"] = Board(game_dict["board"])
     return Game(**game_dict)
+
+
+async def publish_event(event: Event):
+    await redis_client.publish(SIO_QUEUE_NAME, json.dumps(event.__dict__))
 
 
 # WebSocket event handlers
@@ -256,25 +260,19 @@ async def join(sid, gid):
 
     await save_game(gid, game, sid)
 
-    await redis_client.publish(
-        SIO_QUEUE_NAME,
-        json.dumps(
-            Event(
-                "start",
-                {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w, "initTimestamp": game.start_end[0]},
-                game.players[0],
-            ).__dict__
-        ),
+    await publish_event(
+        Event(
+            "start",
+            {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w, "initTimestamp": game.start_end[0]},
+            game.players[0],
+        )
     )
-    await redis_client.publish(
-        SIO_QUEUE_NAME,
-        json.dumps(
-            Event(
-                "start",
-                {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b, "initTimestamp": game.start_end[0]},
-                game.players[1],
-            ).__dict__
-        ),
+    await publish_event(
+        Event(
+            "start",
+            {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b, "initTimestamp": game.start_end[0]},
+            game.players[1],
+        )
     )
 
 
@@ -328,10 +326,7 @@ async def move(sid, uci, start_end):
 
     # send updated game state to clients in room
     for pid in game.players:
-        await redis_client.publish(
-            SIO_QUEUE_NAME,
-            json.dumps(Event("move", data, pid).__dict__),
-        )
+        await publish_event(Event("move", data, pid))
 
     await save_game(gid, game, sid)
 
@@ -344,10 +339,7 @@ async def offer_draw(sid):
     game, _ = await get_game(sid)
     if not game:
         return
-    await redis_client.publish(
-        SIO_QUEUE_NAME,
-        json.dumps(Event("drawOffer", None, next(p for p in game.players if p != sid)).__dict__),
-    )
+    await publish_event(Event("drawOffer", None, next(p for p in game.players if p != sid)))
 
 
 @chess_api.sio.on("acceptDraw")
@@ -356,19 +348,7 @@ async def accept_draw(sid):
     if not game:
         return
     for pid in game.players:
-        await redis_client.publish(
-            SIO_QUEUE_NAME,
-            json.dumps(
-                Event(
-                    "move",
-                    {
-                        "winner": None,
-                        "outcome": Outcome.AGREEMENT.value,
-                    },
-                    pid,
-                ).__dict__
-            ),
-        )
+        await publish_event(Event("move", {"winner": None, "outcome": Outcome.AGREEMENT.value}, pid))
 
 
 # Resign
@@ -380,18 +360,8 @@ async def resign(sid):
     if not game:
         return
     for pid in game.players:
-        await redis_client.publish(
-            SIO_QUEUE_NAME,
-            json.dumps(
-                Event(
-                    "move",
-                    {
-                        "winner": int(game.players.index(sid)),
-                        "outcome": Outcome.RESIGNATION.value,
-                    },
-                    pid,
-                ).__dict__
-            ),
+        await publish_event(
+            Event("move", {"winner": int(game.players.index(sid)), "outcome": Outcome.RESIGNATION.value}, pid)
         )
 
 
@@ -404,19 +374,7 @@ async def flag(sid, flagged):
     if not game:
         return
     for pid in game.players:
-        await redis_client.publish(
-            SIO_QUEUE_NAME,
-            json.dumps(
-                Event(
-                    "move",
-                    {
-                        "winner": opponent_ind(flagged),
-                        "outcome": Outcome.TIMEOUT.value,
-                    },
-                    pid,
-                ).__dict__
-            ),
-        )
+        await publish_event(Event("move", {"winner": opponent_ind(flagged), "outcome": Outcome.TIMEOUT.value}, pid))
 
 
 # Rematch (offer and accept)
@@ -426,10 +384,7 @@ async def flag(sid, flagged):
 async def offer_rematch(sid):
     game, _ = await get_game(sid)
     if game:
-        await redis_client.publish(
-            SIO_QUEUE_NAME,
-            json.dumps(Event("rematchOffer", 1, next(p for p in game.players if p != sid)).__dict__),
-        )
+        await publish_event(Event("rematchOffer", 1, next(p for p in game.players if p != sid)))
 
 
 @chess_api.sio.on("acceptRematch")
@@ -445,25 +400,20 @@ async def accept_rematch(sid):
 
     await save_game(gid, game, sid)
 
-    await redis_client.publish(
-        SIO_QUEUE_NAME,
-        json.dumps(
-            Event(
-                "start",
-                {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w, "initTimestamp": game.start_end[0]},
-                game.players[0],
-            ).__dict__
-        ),
+    await publish_event(
+        Event(
+            "start",
+            {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w, "initTimestamp": game.start_end[0]},
+            game.players[0],
+        )
     )
-    await redis_client.publish(
-        SIO_QUEUE_NAME,
-        json.dumps(
-            Event(
-                "start",
-                {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b, "initTimestamp": game.start_end[0]},
-                game.players[1],
-            ).__dict__
-        ),
+
+    await publish_event(
+        Event(
+            "start",
+            {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b, "initTimestamp": game.start_end[0]},
+            game.players[1],
+        )
     )
 
 
