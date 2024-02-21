@@ -2,7 +2,7 @@ import { io } from "socket.io-client";
 
 const URL =
   process.env.NODE_ENV === "production"
-    ? "https://wchess-api-cfefaaa24159.herokuapp.com"
+    ? "https://unichess-api-62644c9d9bf1.herokuapp.com"
     : "http://localhost:8000";
 
 export const socket = io(URL ?? "", {

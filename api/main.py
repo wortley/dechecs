@@ -1,11 +1,11 @@
 """
-WCHESS API
+UNICHESS BACKEND
 
 Run locally: uvicorn main:chess_api --reload
 Swagger docs: http://localhost:8000/docs
 
 Manually push to heroku: git subtree push --prefix api heroku master
-Logs: heroku logs --tail -a wchess-api
+Logs: heroku logs --tail -a unichess-api
 
 """
 
@@ -83,7 +83,7 @@ chess_api = FastAPI(lifespan=lifespan)
 chess_api.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://wchess.netlify.app",
+        "https://unichess.netlify.app",
         "http://localhost:5173",
     ],
     allow_credentials=True,
@@ -99,13 +99,19 @@ socket_manager = SocketManager(app=chess_api)
 async def init_listener(gid):
     if gid.encode() in pubsub.channels:  # if pubsub is already listening to this channel
         return
+    logger.info("Initialising listener for game " + gid)
 
-    await pubsub.subscribe(gid)
+    try:
+        await pubsub.subscribe(gid)
+    except (aioredis.RedisError, aioredis.ResponseError) as e:
+        logger.error(e)
+        return
 
     async def _background_listen():
         async for message in pubsub.listen():
             if message["type"] == "message" and message["channel"] == gid.encode():
                 event = Event(**json.loads(message["data"]))
+                logger.debug(event)
                 recipients = event.to if isinstance(event.to, list) else [event.to]
                 for pid in recipients:
                     if pid in players_to_games:
@@ -294,6 +300,7 @@ async def join(sid, gid):
             game.players[0],
         ),
     )
+    # FIXME: This event not being received by other client on some occasions
     await publish_event(
         gid,
         Event(
