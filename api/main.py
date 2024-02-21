@@ -70,6 +70,8 @@ async def lifespan(_):
     refiller.cancel()
     players_to_games.clear()
     # close MQ
+    for task in gids_to_listeners.values():
+        task.cancel()
     await pubsub.close()
     # clear all games from redis cache
     async for key in redis_client.scan_iter("game:*"):
@@ -106,7 +108,8 @@ async def init_listener(gid):
                 event = Event(**json.loads(message["data"]))
                 recipients = event.to if isinstance(event.to, list) else [event.to]
                 for pid in recipients:
-                    await chess_api.sio.emit(event.name, event.data, to=pid)
+                    if pid in players_to_games:
+                        await chess_api.sio.emit(event.name, event.data, to=pid)
 
     gids_to_listeners[gid] = asyncio.create_task(_background_listen())
 
