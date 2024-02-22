@@ -36,10 +36,10 @@ logger = logging.getLogger("uvicorn")
 logger.handlers[0].setFormatter(custom_formatter)
 
 # map of players to ongoing games
-players_to_games = {}
+players_to_games = dict()
 
 # map of game IDs to asyncio pubsub listener tasks
-gids_to_listeners = {}
+gids_to_listeners = dict()
 
 # connection token bucket (rate limiting)
 token_bucket = RateLimitConfig.INITIAL_TOKENS
@@ -98,8 +98,9 @@ socket_manager = SocketManager(app=chess_api)
 
 async def init_listener(gid):
     if gid.encode() in pubsub.channels:  # if pubsub is already listening to this channel
-        return
-    logger.info("Initialising listener for game " + gid)
+        logger.warning("Listener already initialised for game " + gid)
+    else:
+        logger.info("Initialising listener for game " + gid)
 
     try:
         await pubsub.subscribe(gid)
@@ -111,11 +112,9 @@ async def init_listener(gid):
         async for message in pubsub.listen():
             if message["type"] == "message" and message["channel"] == gid.encode():
                 event = Event(**json.loads(message["data"]))
-                logger.debug(event)
                 recipients = event.to if isinstance(event.to, list) else [event.to]
                 for pid in recipients:
-                    if pid in players_to_games:
-                        await chess_api.sio.emit(event.name, event.data, to=pid)
+                    await chess_api.sio.emit(event.name, event.data, to=pid)
 
     gids_to_listeners[gid] = asyncio.create_task(_background_listen())
 
@@ -300,7 +299,6 @@ async def join(sid, gid):
             game.players[0],
         ),
     )
-    # FIXME: This event not being received by other client on some occasions
     await publish_event(
         gid,
         Event(
