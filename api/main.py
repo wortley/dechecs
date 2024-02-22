@@ -76,7 +76,6 @@ def on_channel_open(ch):
     logger.info("Channel opened")
     channel = ch
     channel.add_on_close_callback(on_channel_closed)
-    # channel.exchange_declare(exchange=EVENT_EXCHANGE, exchange_type="direct")
 
 
 rmq_params = pika.URLParameters(os.environ.get("CLOUDAMQP_URL"))
