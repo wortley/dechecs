@@ -15,13 +15,14 @@ import logging
 import os
 import random
 import uuid
+from collections import defaultdict
 from contextlib import asynccontextmanager
 from time import time_ns
 
 import aioredis
 import pika
 from chess import Board, Move
-from constants import EVENT_EXCHANGE, RateLimitConfig, TimeConstants
+from constants import MAX_EMIT_RETRIES, RateLimitConfig, TimeConstants
 from dotenv import load_dotenv
 from enums import Castles, Colour, Outcome
 from fastapi import FastAPI
@@ -39,6 +40,9 @@ logger.handlers[0].setFormatter(custom_formatter)
 
 # map of players to ongoing games
 players_to_games = dict()
+
+# map of game ids to consumer tags
+gids_to_ctags = defaultdict(list)
 
 # connection token bucket (rate limiting)
 token_bucket = RateLimitConfig.INITIAL_TOKENS
@@ -72,7 +76,7 @@ def on_channel_open(ch):
     logger.info("Channel opened")
     channel = ch
     channel.add_on_close_callback(on_channel_closed)
-    channel.exchange_declare(exchange=EVENT_EXCHANGE, exchange_type="direct")
+    # channel.exchange_declare(exchange=EVENT_EXCHANGE, exchange_type="direct")
 
 
 rmq_params = pika.URLParameters(os.environ.get("CLOUDAMQP_URL"))
@@ -106,6 +110,7 @@ async def lifespan(_):
     # Clean up before shutdown
     refiller.cancel()
     players_to_games.clear()
+    gids_to_ctags.clear()
     # close MQ
     if channel is not None and channel.is_open:
         channel.close()  # NOTE: this will also close the RMQ connection via CB
@@ -133,21 +138,40 @@ socket_manager = SocketManager(app=chess_api)
 # Helper functions
 
 
-async def init_listener(gid):
-    if gid in channel.consumer_tags:  # if worker is already listening to this channel
-        logger.warning("Listener already initialised for game " + gid)
-        return
+def get_queue_name(gid, player):
+    return f"{gid}::{player}"
 
-    logger.info("Initialising listener for game " + gid)
+
+def on_emit_done(task, event, pid, attempts):
+    try:
+        task.result()  # This will raise an exception if the task failed
+    except Exception as e:
+        if attempts < MAX_EMIT_RETRIES:
+            logger.error(f"Emit event failed with exception: {e}, retrying...")
+            new_task = asyncio.create_task(chess_api.sio.emit(event.name, event.data, to=pid))
+            new_task.add_done_callback(lambda t, pid=pid: on_emit_done(t, event, pid, attempts + 1))
+        else:
+            logger.error(f"Emit event failed {MAX_EMIT_RETRIES} times, giving up")
+
+
+async def init_listener(gid, player):
+    logger.info(
+        "Initialising listener for game " + gid + ", player " + str(player) + ", on process ID " + str(os.getpid())
+    )
 
     def on_message(_, __, ___, body):
         message = json.loads(body)
         event = Event(**message)
+        # logger.debug(event)
         recipients = event.to if isinstance(event.to, list) else [event.to]
         for pid in recipients:
-            asyncio.create_task(chess_api.sio.emit(event.name, event.data, to=pid))
+            if pid in players_to_games:
+                task = asyncio.create_task(chess_api.sio.emit(event.name, event.data, to=pid))
+                task.add_done_callback(lambda t, pid=pid: on_emit_done(t, event, pid, 1))
 
-    channel.basic_consume(queue=gid, on_message_callback=on_message, auto_ack=True)
+    gids_to_ctags[gid].append(
+        channel.basic_consume(queue=get_queue_name(gid, player), on_message_callback=on_message, auto_ack=True)
+    )
 
 
 def opponent_ind(turn: int):
@@ -201,7 +225,10 @@ async def clear_game(sid):
         return
     for p in game.players:
         players_to_games.pop(p, None)
-    channel.basic_cancel(consumer_tag=gid)
+    for ctag in gids_to_ctags[gid]:
+        channel.basic_cancel(consumer_tag=ctag)
+    gids_to_ctags.pop(gid, None)
+    channel.exchange_delete(exchange=gid)
     await redis_client.delete(f"game:{gid}")
 
 
@@ -234,7 +261,7 @@ def deserialise_game_state(game):
 
 
 async def publish_event(gid, event: Event):
-    channel.basic_publish(exchange=EVENT_EXCHANGE, routing_key=gid, body=json.dumps(event.__dict__))
+    channel.basic_publish(exchange=gid, routing_key="", body=json.dumps(event.__dict__))
 
 
 # WebSocket event handlers
@@ -291,14 +318,18 @@ async def create(sid, time_control):
     # send game id to client
     await chess_api.sio.emit("gameId", gid, to=sid)  # N.B no need to publish this to MQ
 
-    # create channel
-    channel.queue_declare(queue=gid)
+    # create fanout exchange for game
+    channel.exchange_declare(exchange=gid, exchange_type="fanout")
 
-    # bind the queue to the exchange
-    channel.queue_bind(exchange=EVENT_EXCHANGE, queue=gid, routing_key=gid)
+    player = 1
+
+    # create player 1 queue
+    channel.queue_declare(queue=get_queue_name(gid, player))
+    # bind the queue to the game exchange
+    channel.queue_bind(exchange=gid, queue=get_queue_name(gid, player), routing_key=str(player))
 
     # init listener
-    await init_listener(gid)
+    await init_listener(gid, player)
 
 
 @chess_api.sio.on("join")
@@ -320,7 +351,14 @@ async def join(sid, gid):
 
     await save_game(gid, game, sid)
 
-    await init_listener(gid)
+    player = 2
+
+    # create player 2 queue
+    channel.queue_declare(queue=get_queue_name(gid, player))
+    # bind the queue to the game exchange
+    channel.queue_bind(exchange=gid, queue=get_queue_name(gid, player), routing_key=str(player))
+
+    await init_listener(gid, player)
 
     await publish_event(
         gid,

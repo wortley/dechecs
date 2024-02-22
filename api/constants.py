@@ -10,4 +10,4 @@ class RateLimitConfig:
     REFILL_RATE_MINUTE = 4
 
 
-EVENT_EXCHANGE = "unichess:event-exchange"
+MAX_EMIT_RETRIES = 5
