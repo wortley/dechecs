@@ -22,7 +22,8 @@ from time import time_ns
 import aioredis
 import pika
 from chess import Board, Move
-from constants import MAX_EMIT_RETRIES, RateLimitConfig, TimeConstants
+from constants import (BROADCAST_KEY, MAX_EMIT_RETRIES, RateLimitConfig,
+                       TimeConstants)
 from dotenv import load_dotenv
 from enums import Castles, Colour, Outcome
 from fastapi import FastAPI
@@ -50,7 +51,7 @@ token_bucket = RateLimitConfig.INITIAL_TOKENS
 # Redis client and MQ setup
 redis_client = aioredis.Redis.from_url(os.environ.get("REDIS_URL"))
 
-# RabbitMQ setup
+# RabbitMQ setup and callbacks
 
 channel = None
 
@@ -137,39 +138,34 @@ socket_manager = SocketManager(app=chess_api)
 # Helper functions
 
 
-def get_queue_name(gid, player):
-    return f"{gid}::{player}"
+def get_queue_name(gid, sid):
+    return f"{gid}::{sid}"
 
 
-def on_emit_done(task, event, pid, attempts):
+def on_emit_done(task, event, sid, attempts):
     try:
         task.result()  # This will raise an exception if the task failed
     except Exception as e:
         if attempts < MAX_EMIT_RETRIES:
             logger.error(f"Emit event failed with exception: {e}, retrying...")
-            new_task = asyncio.create_task(chess_api.sio.emit(event.name, event.data, to=pid))
-            new_task.add_done_callback(lambda t, pid=pid: on_emit_done(t, event, pid, attempts + 1))
+            new_task = asyncio.create_task(chess_api.sio.emit(event.name, event.data, to=sid))
+            new_task.add_done_callback(lambda t, sid=sid: on_emit_done(t, event, sid, attempts + 1))
         else:
             logger.error(f"Emit event failed {MAX_EMIT_RETRIES} times, giving up")
 
 
-async def init_listener(gid, player):
-    logger.info(
-        "Initialising listener for game " + gid + ", player " + str(player) + ", on process ID " + str(os.getpid())
-    )
+async def init_listener(gid, sid):
+    logger.info("Initialising listener for game " + gid + ", user " + sid + ", on process ID " + str(os.getpid()))
 
     def on_message(_, __, ___, body):
         message = json.loads(body)
         event = Event(**message)
         # logger.debug(event)
-        recipients = event.to if isinstance(event.to, list) else [event.to]
-        for pid in recipients:
-            if pid in players_to_games:
-                task = asyncio.create_task(chess_api.sio.emit(event.name, event.data, to=pid))
-                task.add_done_callback(lambda t, pid=pid: on_emit_done(t, event, pid, 1))
+        task = asyncio.create_task(chess_api.sio.emit(event.name, event.data, to=sid))
+        task.add_done_callback(lambda t, sid=sid: on_emit_done(t, event, sid, 1))
 
     gids_to_ctags[gid].append(
-        channel.basic_consume(queue=get_queue_name(gid, player), on_message_callback=on_message, auto_ack=True)
+        channel.basic_consume(queue=get_queue_name(gid, sid), on_message_callback=on_message, auto_ack=True)
     )
 
 
@@ -222,8 +218,10 @@ async def clear_game(sid):
     game, gid = await get_game(sid, emiterr=False)
     if not game:
         return
-    for p in game.players:
-        players_to_games.pop(p, None)
+    for pid in game.players:
+        players_to_games.pop(pid, None)
+        channel.queue_unbind(get_queue_name(gid, pid), exchange=gid, routing_key=pid)
+        channel.queue_unbind(get_queue_name(gid, pid), exchange=gid, routing_key=BROADCAST_KEY)
     for ctag in gids_to_ctags[gid]:
         channel.basic_cancel(consumer_tag=ctag)
     gids_to_ctags.pop(gid, None)
@@ -233,7 +231,7 @@ async def clear_game(sid):
 
 async def emit_error(gid, sid, message="Something went wrong"):
     """Emits an error event to game channel"""
-    await publish_event(gid, Event("error", message, sid))
+    await publish_event(gid, Event("error", message), sid)
 
 
 async def emit_error_local(sid, message="Something went wrong"):
@@ -259,8 +257,8 @@ def deserialise_game_state(game):
     return Game(**game_dict)
 
 
-async def publish_event(gid, event: Event):
-    channel.basic_publish(exchange=gid, routing_key="", body=json.dumps(event.__dict__))
+async def publish_event(gid, event: Event, rk=BROADCAST_KEY):
+    channel.basic_publish(exchange=gid, routing_key=rk, body=json.dumps(event.__dict__))
 
 
 # WebSocket event handlers
@@ -318,17 +316,16 @@ async def create(sid, time_control):
     await chess_api.sio.emit("gameId", gid, to=sid)  # N.B no need to publish this to MQ
 
     # create fanout exchange for game
-    channel.exchange_declare(exchange=gid, exchange_type="fanout")
-
-    player = 1
+    channel.exchange_declare(exchange=gid, exchange_type="topic")
 
     # create player 1 queue
-    channel.queue_declare(queue=get_queue_name(gid, player))
+    channel.queue_declare(queue=get_queue_name(gid, sid))
     # bind the queue to the game exchange
-    channel.queue_bind(exchange=gid, queue=get_queue_name(gid, player), routing_key=str(player))
+    channel.queue_bind(exchange=gid, queue=get_queue_name(gid, sid), routing_key=sid)
+    channel.queue_bind(exchange=gid, queue=get_queue_name(gid, sid), routing_key=BROADCAST_KEY)
 
     # init listener
-    await init_listener(gid, player)
+    await init_listener(gid, sid)
 
 
 @chess_api.sio.on("join")
@@ -350,30 +347,27 @@ async def join(sid, gid):
 
     await save_game(gid, game, sid)
 
-    player = 2
-
     # create player 2 queue
-    channel.queue_declare(queue=get_queue_name(gid, player))
+    channel.queue_declare(queue=get_queue_name(gid, sid))
     # bind the queue to the game exchange
-    channel.queue_bind(exchange=gid, queue=get_queue_name(gid, player), routing_key=str(player))
+    channel.queue_bind(exchange=gid, queue=get_queue_name(gid, sid), routing_key=sid)
+    channel.queue_bind(exchange=gid, queue=get_queue_name(gid, sid), routing_key=BROADCAST_KEY)
 
-    await init_listener(gid, player)
+    await init_listener(gid, sid)
 
     await publish_event(
         gid,
         Event(
-            "start",
-            {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w, "initTimestamp": game.start_end[0]},
-            game.players[0],
+            "start", {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w, "initTimestamp": game.start_end[0]}
         ),
+        game.players[0],
     )
     await publish_event(
         gid,
         Event(
-            "start",
-            {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b, "initTimestamp": game.start_end[0]},
-            game.players[1],
+            "start", {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b, "initTimestamp": game.start_end[0]}
         ),
+        game.players[1],
     )
 
 
@@ -426,7 +420,7 @@ async def move(sid, uci, start_end):
     }
 
     # send updated game state to clients in room
-    await publish_event(gid, Event("move", data, game.players))
+    await publish_event(gid, Event("move", data))
 
     await save_game(gid, game, sid)
 
@@ -439,7 +433,7 @@ async def offer_draw(sid):
     game, gid = await get_game(sid)
     if not game:
         return
-    await publish_event(gid, Event("drawOffer", None, next(p for p in game.players if p != sid)))
+    await publish_event(gid, Event("drawOffer", None), next(p for p in game.players if p != sid))
 
 
 @chess_api.sio.on("acceptDraw")
@@ -448,7 +442,7 @@ async def accept_draw(sid):
     if not game:
         return
 
-    await publish_event(gid, Event("move", {"winner": None, "outcome": Outcome.AGREEMENT.value}, game.players))
+    await publish_event(gid, Event("move", {"winner": None, "outcome": Outcome.AGREEMENT.value}))
 
 
 # Resign
@@ -460,8 +454,7 @@ async def resign(sid):
     if not game:
         return
     await publish_event(
-        gid,
-        Event("move", {"winner": int(game.players.index(sid)), "outcome": Outcome.RESIGNATION.value}, game.players),
+        gid, Event("move", {"winner": int(game.players.index(sid)), "outcome": Outcome.RESIGNATION.value})
     )
 
 
@@ -473,9 +466,7 @@ async def flag(sid, flagged):
     game, gid = await get_game(sid)
     if not game:
         return
-    await publish_event(
-        gid, Event("move", {"winner": opponent_ind(flagged), "outcome": Outcome.TIMEOUT.value}, game.players)
-    )
+    await publish_event(gid, Event("move", {"winner": opponent_ind(flagged), "outcome": Outcome.TIMEOUT.value}))
 
 
 # Rematch (offer and accept)
@@ -485,7 +476,7 @@ async def flag(sid, flagged):
 async def offer_rematch(sid):
     game, gid = await get_game(sid)
     if game:
-        await publish_event(gid, Event("rematchOffer", 1, next(p for p in game.players if p != sid)))
+        await publish_event(gid, Event("rematchOffer", 1), next(p for p in game.players if p != sid))
 
 
 @chess_api.sio.on("acceptRematch")
@@ -504,19 +495,17 @@ async def accept_rematch(sid):
     await publish_event(
         gid,
         Event(
-            "start",
-            {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w, "initTimestamp": game.start_end[0]},
-            game.players[0],
+            "start", {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w, "initTimestamp": game.start_end[0]}
         ),
+        game.players[0],
     )
 
     await publish_event(
         gid,
         Event(
-            "start",
-            {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b, "initTimestamp": game.start_end[0]},
-            game.players[1],
+            "start", {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b, "initTimestamp": game.start_end[0]}
         ),
+        game.players[1],
     )
 
 

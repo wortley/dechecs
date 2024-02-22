@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, List, Optional
+from typing import Any, List
 
 from chess import Board
 
@@ -18,4 +18,3 @@ class Game:
 class Event:
     name: str
     data: Any
-    to: str | List[str]
