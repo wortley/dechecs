@@ -9,5 +9,6 @@ class RateLimitConfig:
     INITIAL_TOKENS = 20
     REFILL_RATE_MINUTE = 4
 
-    
+
 MAX_EMIT_RETRIES = 5
+BROADCAST_KEY = "all"
