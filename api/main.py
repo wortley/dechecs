@@ -19,8 +19,9 @@ from contextlib import asynccontextmanager
 from time import time_ns
 
 import aioredis
+import pika
 from chess import Board, Move
-from constants import RateLimitConfig, TimeConstants
+from constants import EVENT_EXCHANGE, RateLimitConfig, TimeConstants
 from dotenv import load_dotenv
 from enums import Castles, Colour, Outcome
 from fastapi import FastAPI
@@ -28,6 +29,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi_socketio import SocketManager
 from log_formatting import custom_formatter
 from models import Event, Game
+from pika.adapters.asyncio_connection import AsyncioConnection
 
 load_dotenv()
 
@@ -38,15 +40,48 @@ logger.handlers[0].setFormatter(custom_formatter)
 # map of players to ongoing games
 players_to_games = dict()
 
-# map of game IDs to asyncio pubsub listener tasks
-gids_to_listeners = dict()
-
 # connection token bucket (rate limiting)
 token_bucket = RateLimitConfig.INITIAL_TOKENS
 
 # Redis client and MQ setup
 redis_client = aioredis.Redis.from_url(os.environ.get("REDIS_URL"))
-pubsub = redis_client.pubsub(ignore_subscribe_messages=True)
+
+# RabbitMQ setup
+
+channel = None
+
+
+def setup_rmq(conn):
+    conn.channel(on_open_callback=on_channel_open)
+
+
+def on_connection_open_error(_, err):
+    logger.error("Connection open failed: %s", err)
+
+
+def on_connection_closed(_, reason):
+    logger.warning("Connection closed: %s", reason)
+
+
+def on_channel_closed(_, __):
+    rmq_conn.close()
+
+
+def on_channel_open(ch):
+    global channel
+    logger.info("Channel opened")
+    channel = ch
+    channel.add_on_close_callback(on_channel_closed)
+    channel.exchange_declare(exchange=EVENT_EXCHANGE, exchange_type="direct")
+
+
+rmq_params = pika.URLParameters(os.environ.get("CLOUDAMQP_URL"))
+rmq_conn = AsyncioConnection(
+    rmq_params,
+    on_open_callback=setup_rmq,
+    on_open_error_callback=on_connection_open_error,
+    on_close_callback=on_connection_closed,
+)
 
 
 async def refill_tokens():
@@ -63,19 +98,21 @@ async def refill_tokens():
 @asynccontextmanager
 async def lifespan(_):
     """Handles startup/shutdown"""
+    # Start token refiller
     refiller = asyncio.create_task(refill_tokens())
+
     yield
 
     # Clean up before shutdown
     refiller.cancel()
     players_to_games.clear()
     # close MQ
-    for task in gids_to_listeners.values():
-        task.cancel()
-    await pubsub.close()
+    if channel is not None and channel.is_open:
+        channel.close()  # NOTE: this will also close the RMQ connection via CB
     # clear all games from redis cache
     async for key in redis_client.scan_iter("game:*"):
         await redis_client.delete(key)
+    await redis_client.close()
 
 
 chess_api = FastAPI(lifespan=lifespan)
@@ -97,26 +134,20 @@ socket_manager = SocketManager(app=chess_api)
 
 
 async def init_listener(gid):
-    if gid.encode() in pubsub.channels:  # if pubsub is already listening to this channel
+    if gid in channel.consumer_tags:  # if worker is already listening to this channel
         logger.warning("Listener already initialised for game " + gid)
-    else:
-        logger.info("Initialising listener for game " + gid)
-
-    try:
-        await pubsub.subscribe(gid)
-    except (aioredis.RedisError, aioredis.ResponseError) as e:
-        logger.error(e)
         return
 
-    async def _background_listen():
-        async for message in pubsub.listen():
-            if message["type"] == "message" and message["channel"] == gid.encode():
-                event = Event(**json.loads(message["data"]))
-                recipients = event.to if isinstance(event.to, list) else [event.to]
-                for pid in recipients:
-                    await chess_api.sio.emit(event.name, event.data, to=pid)
+    logger.info("Initialising listener for game " + gid)
 
-    gids_to_listeners[gid] = asyncio.create_task(_background_listen())
+    def on_message(_, __, ___, body):
+        message = json.loads(body)
+        event = Event(**message)
+        recipients = event.to if isinstance(event.to, list) else [event.to]
+        for pid in recipients:
+            asyncio.create_task(chess_api.sio.emit(event.name, event.data, to=pid))
+
+    channel.basic_consume(queue=gid, on_message_callback=on_message, auto_ack=True)
 
 
 def opponent_ind(turn: int):
@@ -170,10 +201,7 @@ async def clear_game(sid):
         return
     for p in game.players:
         players_to_games.pop(p, None)
-    listener = gids_to_listeners.pop(gid, None)
-    if listener:
-        listener.cancel()
-    await pubsub.unsubscribe(gid)
+    channel.basic_cancel(consumer_tag=gid)
     await redis_client.delete(f"game:{gid}")
 
 
@@ -206,7 +234,7 @@ def deserialise_game_state(game):
 
 
 async def publish_event(gid, event: Event):
-    await redis_client.publish(gid, json.dumps(event.__dict__))
+    channel.basic_publish(exchange=EVENT_EXCHANGE, routing_key=gid, body=json.dumps(event.__dict__))
 
 
 # WebSocket event handlers
@@ -264,7 +292,10 @@ async def create(sid, time_control):
     await chess_api.sio.emit("gameId", gid, to=sid)  # N.B no need to publish this to MQ
 
     # create channel
-    await redis_client.publish(gid, "")
+    channel.queue_declare(queue=gid)
+
+    # bind the queue to the exchange
+    channel.queue_bind(exchange=EVENT_EXCHANGE, queue=gid, routing_key=gid)
 
     # init listener
     await init_listener(gid)
