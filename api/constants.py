@@ -8,3 +8,6 @@ class RateLimitConfig:
     BUCKET_CAPACITY = 100
     INITIAL_TOKENS = 20
     REFILL_RATE_MINUTE = 4
+
+
+EVENT_EXCHANGE = "unichess:event-exchange"
