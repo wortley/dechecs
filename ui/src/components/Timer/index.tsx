@@ -56,7 +56,7 @@ export default function Timer({ side, timeControl }: TimerProps) {
     return () => {
       clearInterval(intervalId);
     };
-  }, [turn, timer]);
+  }, [turn]);
 
   return side === Colour.WHITE ? (
     <div className={styles.timer}>

@@ -61,7 +61,6 @@ export type BoardState = {
   isCheck: boolean;
   legalMoves: string[];
   moveStack?: string[];
-  turnStartTime: number;
   timeRemainingWhite?: number;
   timeRemainingBlack?: number;
 };
