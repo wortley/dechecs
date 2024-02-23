@@ -9,7 +9,6 @@ Logs: heroku logs --tail -a unichess-api
 
 """
 
-# TODO: Fix timing issues
 # TODO: OOP
 
 import asyncio
