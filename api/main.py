@@ -24,7 +24,8 @@ from time import time_ns
 import aioredis
 import pika
 from chess import Board, Move
-from constants import BROADCAST_KEY, MAX_EMIT_RETRIES, RateLimitConfig, TimeConstants
+from constants import (BROADCAST_KEY, MAX_EMIT_RETRIES, RateLimitConfig,
+                       TimeConstants)
 from dotenv import load_dotenv
 from enums import Castles, Colour, Outcome
 from fastapi import FastAPI
@@ -364,7 +365,7 @@ async def join(sid, gid):
         gid,
         Event(
             "start",
-            {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w, "initTimestamp": game.turn_start_time},
+            {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w},
         ),
         game.players[0],
     )
@@ -372,7 +373,7 @@ async def join(sid, gid):
         gid,
         Event(
             "start",
-            {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b, "initTimestamp": game.turn_start_time},
+            {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b},
         ),
         game.players[1],
     )
@@ -503,7 +504,7 @@ async def accept_rematch(sid):
         gid,
         Event(
             "start",
-            {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w, "initTimestamp": game.turn_start_time},
+            {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w},
         ),
         game.players[0],
     )
@@ -512,7 +513,7 @@ async def accept_rematch(sid):
         gid,
         Event(
             "start",
-            {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b, "initTimestamp": game.turn_start_time},
+            {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b},
         ),
         game.players[1],
     )

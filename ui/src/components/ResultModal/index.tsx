@@ -25,7 +25,6 @@ export default function ResultModal({
         state: {
           colour: data.colour,
           timeRemaining: data.timeRemaining,
-          initTimestamp: data.initTimestamp,
         },
       });
     }

@@ -68,7 +68,6 @@ export type BoardState = {
 export type StartData = {
   colour: Colour;
   timeRemaining: number;
-  initTimestamp: number;
 };
 
 export type TimerData = {

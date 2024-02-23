@@ -21,7 +21,6 @@ export default function Play() {
 
   const colour = location.state.colour;
   const timeControl = location.state.timeRemaining;
-  const initTimestamp = location.state.initTimestamp;
 
   function onOfferDraw() {
     socket.emit("offerDraw");
@@ -69,7 +68,6 @@ export default function Play() {
               setTurn={setTurn}
               setOutcome={setOutcome}
               setWinner={setWinner}
-              initTimestamp={initTimestamp}
             />
           )}
           <div>
