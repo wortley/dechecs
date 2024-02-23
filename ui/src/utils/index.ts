@@ -65,9 +65,8 @@ export function getAlgebraicNotation(rank_idx: number, file_idx: number) {
  * @returns {string} The time format string in the format "mm:ss".
  */
 export function millisecondsToTimeFormat(milliseconds: number) {
-  const seconds = Math.floor(milliseconds / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
+  const minutes = Math.floor(milliseconds / 60000);
+  const remainingSeconds = Math.floor((milliseconds % 60000) / 1000);
 
   const minutesString = minutes.toString();
   const secondsString = remainingSeconds.toString().padStart(2, "0");

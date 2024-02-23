@@ -33,7 +33,6 @@ type BoardProps = {
   setTurn(colour: Colour): void;
   setOutcome(outcome: Outcome): void;
   setWinner(winner?: Colour): void;
-  initTimestamp: number;
 };
 
 export default function Board({
@@ -42,7 +41,6 @@ export default function Board({
   setTurn,
   setOutcome,
   setWinner,
-  initTimestamp,
 }: BoardProps) {
   const boardRef = useRef<HTMLDivElement>(null);
   const animating = useRef(false);
@@ -55,7 +53,6 @@ export default function Board({
   const [state, setState] = useState<(PieceInfo | null)[][]>(initialState);
   const [prevMove, setPrevMove] = useState("");
   const [legalMoves, setLegalMoves] = useState<Move[]>(initialLegalMoves);
-  const [turnStartTime, setTurnStartTime] = useState(initTimestamp); // stores starting timestamp of each turn
   const [isCheck, setIsCheck] = useState(false);
 
   function onResize() {
@@ -221,7 +218,6 @@ export default function Board({
         setLegalMoves(data.legalMoves.map((m) => uciToMove(m)));
       }
 
-      setTurnStartTime(data.turnStartTime);
       setTurn(data.turn);
       setIsCheck(data.isCheck);
 
@@ -340,7 +336,7 @@ export default function Board({
       // send move to server
       const uci = moveToUci({ fromSquare, toSquare, promotion });
       setPrevMove(uci);
-      socket.emit("move", uci, [turnStartTime, Date.now()]);
+      socket.emit("move", uci);
 
       if (animating.current) {
         setTimeout(() => {

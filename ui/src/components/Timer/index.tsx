@@ -45,8 +45,10 @@ export default function Timer({ side, timeControl }: TimerProps) {
         };
         if (turn === Colour.WHITE && newTimer.white <= 0) {
           socket.emit("flag", Colour.WHITE);
+          clearInterval(intervalId);
         } else if (turn === Colour.BLACK && newTimer.black <= 0) {
           socket.emit("flag", Colour.BLACK);
+          clearInterval(intervalId);
         }
 
         return newTimer;
@@ -56,7 +58,7 @@ export default function Timer({ side, timeControl }: TimerProps) {
     return () => {
       clearInterval(intervalId);
     };
-  }, [turn, timer]);
+  }, [turn]);
 
   return side === Colour.WHITE ? (
     <div className={styles.timer}>

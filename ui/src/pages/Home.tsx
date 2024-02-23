@@ -21,7 +21,6 @@ export default function Home() {
         state: {
           colour: data.colour,
           timeRemaining: data.timeRemaining,
-          initTimestamp: data.initTimestamp,
         },
       });
     }

@@ -9,6 +9,8 @@ Logs: heroku logs --tail -a unichess-api
 
 """
 
+# TODO: OOP
+
 import asyncio
 import json
 import logging
@@ -142,9 +144,13 @@ def get_queue_name(gid, sid):
     return f"{gid}::{sid}"
 
 
+def get_redis_key(gid):
+    return f"game:{gid}"
+
+
 def on_emit_done(task, event, sid, attempts):
     try:
-        task.result()  # This will raise an exception if the task failed
+        task.result()  #  raises exception if task failed
     except Exception as e:
         if attempts < MAX_EMIT_RETRIES:
             logger.error(f"Emit event failed with exception: {e}, retrying...")
@@ -177,7 +183,7 @@ async def get_game(sid, emiterr=True):
     """Get game state from redis with player ID"""
     gid = players_to_games.get(sid, None)
     try:
-        game = deserialise_game_state(await redis_client.get(f"game:{gid}"))
+        game = deserialise_game_state(await redis_client.get(get_redis_key(gid)))
     except aioredis.RedisError as e:
         logger.error(e)
         if emiterr:
@@ -192,7 +198,7 @@ async def get_game(sid, emiterr=True):
 async def get_game_by_gid(gid, sid):
     """Get game state from redis with game ID"""
     try:
-        game = deserialise_game_state(await redis_client.get(f"game:{gid}"))
+        game = deserialise_game_state(await redis_client.get(get_redis_key(gid)))
     except aioredis.RedisError as e:
         logger.error(e)
         return
@@ -205,7 +211,7 @@ async def get_game_by_gid(gid, sid):
 async def save_game(gid, game, sid):
     """Set game state in Redis"""
     try:
-        await redis_client.set(f"game:{gid}", serialise_game_state(game))
+        await redis_client.set(get_redis_key(gid), serialise_game_state(game))
         return 0
     except aioredis.RedisError as e:
         await emit_error(gid, sid, "An error occurred while saving game state")
@@ -226,7 +232,7 @@ async def clear_game(sid):
         channel.basic_cancel(consumer_tag=ctag)
     gids_to_ctags.pop(gid, None)
     channel.exchange_delete(exchange=gid)
-    await redis_client.delete(f"game:{gid}")
+    await redis_client.delete(get_redis_key(gid))
 
 
 async def emit_error(gid, sid, message="Something went wrong"):
@@ -304,7 +310,7 @@ async def create(sid, time_control):
         board=Board(),
         tr_w=time_control * TimeConstants.MILLISECONDS_PER_MINUTE,
         tr_b=time_control * TimeConstants.MILLISECONDS_PER_MINUTE,
-        start_end=(-1, -1),
+        turn_start_time=-1,
         time_control=time_control,
     )
 
@@ -343,7 +349,7 @@ async def join(sid, gid):
 
     random.shuffle(game.players)  # randomly pick white and black
 
-    game.start_end = (time_ns() / 1_000_000, -1)
+    game.turn_start_time = time_ns() / 1_000_000
 
     await save_game(gid, game, sid)
 
@@ -358,14 +364,16 @@ async def join(sid, gid):
     await publish_event(
         gid,
         Event(
-            "start", {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w, "initTimestamp": game.start_end[0]}
+            "start",
+            {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w},
         ),
         game.players[0],
     )
     await publish_event(
         gid,
         Event(
-            "start", {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b, "initTimestamp": game.start_end[0]}
+            "start",
+            {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b},
         ),
         game.players[1],
     )
@@ -375,7 +383,7 @@ async def join(sid, gid):
 
 
 @chess_api.sio.on("move")
-async def move(sid, uci, start_end):
+async def move(sid, uci):
     game, gid = await get_game(sid)
     if not game:
         return
@@ -397,12 +405,13 @@ async def move(sid, uci, start_end):
         await emit_error_local(sid, "Illegal move")
         return
 
+    time_now = time_ns() / 1_000_000
     if opponent_ind(game.board.turn) == 0:
-        game.tr_b -= start_end[1] - start_end[0]
+        game.tr_b -= time_now - game.turn_start_time
     else:
-        game.tr_w -= start_end[1] - start_end[0]
+        game.tr_w -= time_now - game.turn_start_time
 
-    game.start_end = (time_ns() / 1_000_000, -1)
+    game.turn_start_time = time_now
 
     data = {
         "turn": int(board.turn),  # 1: white, 0: black
@@ -414,7 +423,6 @@ async def move(sid, uci, start_end):
         "enPassant": en_passant,
         "legalMoves": [str(m) for m in board.legal_moves],
         "moveStack": [str(m) for m in board.move_stack],
-        "turnStartTime": game.start_end[0],
         "timeRemainingWhite": game.tr_w,
         "timeRemainingBlack": game.tr_b,
     }
@@ -488,14 +496,15 @@ async def accept_rematch(sid):
     game.players.reverse()  # switch white and black
     game.tr_w = TimeConstants.MILLISECONDS_PER_MINUTE * game.time_control
     game.tr_b = TimeConstants.MILLISECONDS_PER_MINUTE * game.time_control
-    game.start_end = (time_ns() / 1_000_000, -1)
+    game.turn_start_time = time_ns() / 1_000_000
 
     await save_game(gid, game, sid)
 
     await publish_event(
         gid,
         Event(
-            "start", {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w, "initTimestamp": game.start_end[0]}
+            "start",
+            {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w},
         ),
         game.players[0],
     )
@@ -503,7 +512,8 @@ async def accept_rematch(sid):
     await publish_event(
         gid,
         Event(
-            "start", {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b, "initTimestamp": game.start_end[0]}
+            "start",
+            {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b},
         ),
         game.players[1],
     )
