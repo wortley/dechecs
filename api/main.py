@@ -24,8 +24,7 @@ from time import time_ns
 import aioredis
 import pika
 from chess import Board, Move
-from constants import (BROADCAST_KEY, MAX_EMIT_RETRIES, RateLimitConfig,
-                       TimeConstants)
+from constants import BROADCAST_KEY, MAX_EMIT_RETRIES, RateLimitConfig, TimeConstants
 from dotenv import load_dotenv
 from enums import Castles, Colour, Outcome
 from fastapi import FastAPI
@@ -144,6 +143,10 @@ def get_queue_name(gid, sid):
     return f"{gid}::{sid}"
 
 
+def get_redis_key(gid):
+    return f"game:{gid}"
+
+
 def on_emit_done(task, event, sid, attempts):
     try:
         task.result()  #  raises exception if task failed
@@ -179,7 +182,7 @@ async def get_game(sid, emiterr=True):
     """Get game state from redis with player ID"""
     gid = players_to_games.get(sid, None)
     try:
-        game = deserialise_game_state(await redis_client.get(f"game:{gid}"))
+        game = deserialise_game_state(await redis_client.get(get_redis_key(gid)))
     except aioredis.RedisError as e:
         logger.error(e)
         if emiterr:
@@ -194,7 +197,7 @@ async def get_game(sid, emiterr=True):
 async def get_game_by_gid(gid, sid):
     """Get game state from redis with game ID"""
     try:
-        game = deserialise_game_state(await redis_client.get(f"game:{gid}"))
+        game = deserialise_game_state(await redis_client.get(get_redis_key(gid)))
     except aioredis.RedisError as e:
         logger.error(e)
         return
@@ -207,7 +210,7 @@ async def get_game_by_gid(gid, sid):
 async def save_game(gid, game, sid):
     """Set game state in Redis"""
     try:
-        await redis_client.set(f"game:{gid}", serialise_game_state(game))
+        await redis_client.set(get_redis_key(gid), serialise_game_state(game))
         return 0
     except aioredis.RedisError as e:
         await emit_error(gid, sid, "An error occurred while saving game state")
@@ -228,7 +231,7 @@ async def clear_game(sid):
         channel.basic_cancel(consumer_tag=ctag)
     gids_to_ctags.pop(gid, None)
     channel.exchange_delete(exchange=gid)
-    await redis_client.delete(f"game:{gid}")
+    await redis_client.delete(get_redis_key(gid))
 
 
 async def emit_error(gid, sid, message="Something went wrong"):
@@ -360,14 +363,16 @@ async def join(sid, gid):
     await publish_event(
         gid,
         Event(
-            "start", {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w, "initTimestamp": game.turn_start_time}
+            "start",
+            {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w, "initTimestamp": game.turn_start_time},
         ),
         game.players[0],
     )
     await publish_event(
         gid,
         Event(
-            "start", {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b, "initTimestamp": game.turn_start_time}
+            "start",
+            {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b, "initTimestamp": game.turn_start_time},
         ),
         game.players[1],
     )
