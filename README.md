@@ -12,10 +12,10 @@ Lightweight, performant multiplayer chess web app utilising Socket.IO, python-ch
 
 ### Backend
 
-1. Navigate to /api
-2. `venv/scripts/activate`
+1. Navigate to root dir
+2. Run `api/venv/scripts/activate`
 3. Open another terminal window and run `rabbitmq-server` to start RabbitMQ
-4. Run with single worker: `uvicorn main:chess_api --reload` or n workers: `uvicorn main:chess_api --workers n`
+4. Run with single worker: `uvicorn api.main:chess_api --reload` or n workers: `uvicorn api.main:chess_api --workers n`
 
 ### Frontend
 

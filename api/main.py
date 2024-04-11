@@ -17,12 +17,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_socketio import SocketManager
 
-from api.constants import BROADCAST_KEY, MAX_EMIT_RETRIES, RateLimitConfig, TimeConstants
+from api.constants import BROADCAST_KEY, MAX_EMIT_RETRIES, TimeConstants
 from api.log_formatter import custom_formatter
 from api.models import Castles, Colour, Event, Game, Outcome
+from api.rate_limit import RateLimitConfig, TokenBucketRateLimiter
 from api.rmq import RMQConnectionManager
 
-load_dotenv()
+load_dotenv("api/.env")
 
 # logging config (override uvicorn default)
 logger = logging.getLogger("uvicorn")
@@ -35,39 +36,25 @@ players_to_games = dict()
 gids_to_ctags = defaultdict(list)
 
 # connection token bucket (rate limiting)
-token_bucket = RateLimitConfig.INITIAL_TOKENS
+rate_limiter = TokenBucketRateLimiter()
 
 # Redis client and MQ setup
 redis_client = aioredis.Redis.from_url(os.environ.get("REDIS_URL"))
 
-# RabbitMQ setup
-
+# RabbitMQ connection manager (pika)
 rmq = RMQConnectionManager(os.environ.get("CLOUDAMQP_URL"), logger)
-
-# Token refill function (rate limiting)
-
-
-async def refill_tokens():
-    """
-    Refills tokens in the token bucket every minute based on REFILL_RATE_MINUTE.
-    """
-    global token_bucket
-    while True:
-        await asyncio.sleep(60)
-        if token_bucket <= RateLimitConfig.BUCKET_CAPACITY:
-            token_bucket += RateLimitConfig.REFILL_RATE_MINUTE
 
 
 @asynccontextmanager
 async def lifespan(_):
     """Handles startup/shutdown"""
     # Start token refiller
-    refiller = asyncio.create_task(refill_tokens())
+    rate_limiter.start_refiller()
 
     yield
 
     # Clean up before shutdown
-    refiller.cancel()
+    rate_limiter.stop_refiller()
     players_to_games.clear()
     gids_to_ctags.clear()
     # close MQ
@@ -228,10 +215,9 @@ async def publish_event(gid, event: Event, rk=BROADCAST_KEY):
 
 @chess_api.sio.on("connect")
 async def connect(sid, _):
-    global token_bucket
-    if token_bucket > 0:
+    if rate_limiter.bucket > 0:
         logger.info(f"Client {sid} connected")
-        token_bucket -= 1
+        rate_limiter.bucket -= 1
     else:
         await emit_error_local(sid, "Connection limit exceeded")
         logger.warning(f"Connection limit exceeded. Disconnecting {sid}")
