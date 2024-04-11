@@ -1,15 +1,4 @@
-"""
-UNICHESS BACKEND
-
-Run locally: uvicorn main:chess_api --reload
-Swagger docs: http://localhost:8000/docs
-
-Manually push to heroku: git subtree push --prefix api heroku master
-Logs: heroku logs --tail -a unichess-api
-
-"""
-
-# TODO: OOP
+# TODO: Split up, make modular
 
 import asyncio
 import json
@@ -22,18 +11,16 @@ from contextlib import asynccontextmanager
 from time import time_ns
 
 import aioredis
-import pika
 from chess import Board, Move
-from constants import (BROADCAST_KEY, MAX_EMIT_RETRIES, RateLimitConfig,
-                       TimeConstants)
 from dotenv import load_dotenv
-from enums import Castles, Colour, Outcome
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_socketio import SocketManager
-from log_formatting import custom_formatter
-from models import Event, Game
-from pika.adapters.asyncio_connection import AsyncioConnection
+
+from api.constants import BROADCAST_KEY, MAX_EMIT_RETRIES, RateLimitConfig, TimeConstants
+from api.log_formatter import custom_formatter
+from api.models import Castles, Colour, Event, Game, Outcome
+from api.rmq import RMQConnectionManager
 
 load_dotenv()
 
@@ -53,41 +40,11 @@ token_bucket = RateLimitConfig.INITIAL_TOKENS
 # Redis client and MQ setup
 redis_client = aioredis.Redis.from_url(os.environ.get("REDIS_URL"))
 
-# RabbitMQ setup and callbacks
+# RabbitMQ setup
 
-channel = None
+rmq = RMQConnectionManager(os.environ.get("CLOUDAMQP_URL"), logger)
 
-
-def setup_rmq(conn):
-    conn.channel(on_open_callback=on_channel_open)
-
-
-def on_connection_open_error(_, err):
-    logger.error("Connection open failed: %s", err)
-
-
-def on_connection_closed(_, reason):
-    logger.warning("Connection closed: %s", reason)
-
-
-def on_channel_closed(_, __):
-    rmq_conn.close()
-
-
-def on_channel_open(ch):
-    global channel
-    logger.info("Channel opened")
-    channel = ch
-    channel.add_on_close_callback(on_channel_closed)
-
-
-rmq_params = pika.URLParameters(os.environ.get("CLOUDAMQP_URL"))
-rmq_conn = AsyncioConnection(
-    rmq_params,
-    on_open_callback=setup_rmq,
-    on_open_error_callback=on_connection_open_error,
-    on_close_callback=on_connection_closed,
-)
+# Token refill function (rate limiting)
 
 
 async def refill_tokens():
@@ -114,8 +71,8 @@ async def lifespan(_):
     players_to_games.clear()
     gids_to_ctags.clear()
     # close MQ
-    if channel is not None and channel.is_open:
-        channel.close()  # NOTE: this will also close the RMQ connection via CB
+    if rmq.channel is not None and rmq.channel.is_open:
+        rmq.channel.close()
     # clear all games from redis cache
     async for key in redis_client.scan_iter("game:*"):
         await redis_client.delete(key)
@@ -166,13 +123,10 @@ async def init_listener(gid, sid):
     def on_message(_, __, ___, body):
         message = json.loads(body)
         event = Event(**message)
-        # logger.debug(event)
         task = asyncio.create_task(chess_api.sio.emit(event.name, event.data, to=sid))
         task.add_done_callback(lambda t, sid=sid: on_emit_done(t, event, sid, 1))
 
-    gids_to_ctags[gid].append(
-        channel.basic_consume(queue=get_queue_name(gid, sid), on_message_callback=on_message, auto_ack=True)
-    )
+    gids_to_ctags[gid].append(rmq.channel.basic_consume(queue=get_queue_name(gid, sid), on_message_callback=on_message, auto_ack=True))
 
 
 def opponent_ind(turn: int):
@@ -226,12 +180,12 @@ async def clear_game(sid):
         return
     for pid in game.players:
         players_to_games.pop(pid, None)
-        channel.queue_unbind(get_queue_name(gid, pid), exchange=gid, routing_key=pid)
-        channel.queue_unbind(get_queue_name(gid, pid), exchange=gid, routing_key=BROADCAST_KEY)
+        rmq.channel.queue_unbind(get_queue_name(gid, pid), exchange=gid, routing_key=pid)
+        rmq.channel.queue_unbind(get_queue_name(gid, pid), exchange=gid, routing_key=BROADCAST_KEY)
     for ctag in gids_to_ctags[gid]:
-        channel.basic_cancel(consumer_tag=ctag)
+        rmq.channel.basic_cancel(consumer_tag=ctag)
     gids_to_ctags.pop(gid, None)
-    channel.exchange_delete(exchange=gid)
+    rmq.channel.exchange_delete(exchange=gid)
     await redis_client.delete(get_redis_key(gid))
 
 
@@ -264,7 +218,7 @@ def deserialise_game_state(game):
 
 
 async def publish_event(gid, event: Event, rk=BROADCAST_KEY):
-    channel.basic_publish(exchange=gid, routing_key=rk, body=json.dumps(event.__dict__))
+    rmq.channel.basic_publish(exchange=gid, routing_key=rk, body=json.dumps(event.__dict__))
 
 
 # WebSocket event handlers
@@ -322,13 +276,13 @@ async def create(sid, time_control):
     await chess_api.sio.emit("gameId", gid, to=sid)  # N.B no need to publish this to MQ
 
     # create fanout exchange for game
-    channel.exchange_declare(exchange=gid, exchange_type="topic")
+    rmq.channel.exchange_declare(exchange=gid, exchange_type="topic")
 
     # create player 1 queue
-    channel.queue_declare(queue=get_queue_name(gid, sid))
+    rmq.channel.queue_declare(queue=get_queue_name(gid, sid))
     # bind the queue to the game exchange
-    channel.queue_bind(exchange=gid, queue=get_queue_name(gid, sid), routing_key=sid)
-    channel.queue_bind(exchange=gid, queue=get_queue_name(gid, sid), routing_key=BROADCAST_KEY)
+    rmq.channel.queue_bind(exchange=gid, queue=get_queue_name(gid, sid), routing_key=sid)
+    rmq.channel.queue_bind(exchange=gid, queue=get_queue_name(gid, sid), routing_key=BROADCAST_KEY)
 
     # init listener
     await init_listener(gid, sid)
@@ -354,10 +308,10 @@ async def join(sid, gid):
     await save_game(gid, game, sid)
 
     # create player 2 queue
-    channel.queue_declare(queue=get_queue_name(gid, sid))
+    rmq.channel.queue_declare(queue=get_queue_name(gid, sid))
     # bind the queue to the game exchange
-    channel.queue_bind(exchange=gid, queue=get_queue_name(gid, sid), routing_key=sid)
-    channel.queue_bind(exchange=gid, queue=get_queue_name(gid, sid), routing_key=BROADCAST_KEY)
+    rmq.channel.queue_bind(exchange=gid, queue=get_queue_name(gid, sid), routing_key=sid)
+    rmq.channel.queue_bind(exchange=gid, queue=get_queue_name(gid, sid), routing_key=BROADCAST_KEY)
 
     await init_listener(gid, sid)
 
@@ -461,9 +415,7 @@ async def resign(sid):
     game, gid = await get_game(sid)
     if not game:
         return
-    await publish_event(
-        gid, Event("move", {"winner": int(game.players.index(sid)), "outcome": Outcome.RESIGNATION.value})
-    )
+    await publish_event(gid, Event("move", {"winner": int(game.players.index(sid)), "outcome": Outcome.RESIGNATION.value}))
 
 
 # Flag
