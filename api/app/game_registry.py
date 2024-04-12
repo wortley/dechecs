@@ -2,6 +2,7 @@ from collections import defaultdict
 
 
 class GameRegistry:
+    """Stores two hash tables mapping player IDs to game IDs and game IDs to MQ consumer tags, respectively"""
 
     def __init__(self):
         self.players_to_gids = {}

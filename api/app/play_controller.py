@@ -10,7 +10,7 @@ from chess import Move
 
 @dataclass
 class MoveData:
-    # NOTE: we break naming conventions here to avoid unnecessary extra computation that comes with camel/snake case conversion
+    # NOTE: we break naming conventions here to avoid using hindering var name conversion
     turn: int
     winner: int
     outcome: int

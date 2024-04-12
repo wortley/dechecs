@@ -77,7 +77,6 @@ pc = PlayController(rmq, gc)
 
 sioexc = SocketIOExceptionHandler(chess_api.sio, rmq, logger)
 
-
 # Connect/disconnect handlers
 
 
@@ -169,5 +168,5 @@ async def accept_rematch(sid):
 @chess_api.sio.on("exit")
 @sioexc.sio_exception_handler
 async def exit(sid):
-    """When a client exits the game/match, clear it from the cache"""
+    """When a client exits the game/match, clear it from game registry and cache"""
     await gc.clear_game(sid)

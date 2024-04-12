@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, List
+from typing import List
 
 from chess import Board
 
@@ -34,4 +34,4 @@ class Game:
 @dataclass
 class Event:
     name: str
-    data: Any  # FIXME: use proper datatype
+    data: int | str | dict
