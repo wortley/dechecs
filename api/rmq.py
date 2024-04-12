@@ -1,6 +1,8 @@
 from pika import URLParameters
 from pika.adapters.asyncio_connection import AsyncioConnection
 
+# TODO: just use aio-pika - much easier than callback hell
+
 
 class RMQConnectionManager:
     def __init__(self, url, logger):

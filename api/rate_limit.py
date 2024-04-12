@@ -28,7 +28,7 @@ class TokenBucketRateLimiter:
         if self.refiller:
             self.refiller.cancel()
 
-    async def consume_token(self):
+    def consume_token(self):
         if self.bucket > 0:
             self.bucket -= 1
             return True

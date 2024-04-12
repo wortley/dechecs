@@ -70,11 +70,9 @@ chess_api.add_middleware(
 socket_manager = SocketManager(app=chess_api)
 
 # Game controller
-
 gc = GameController(rmq, redis_client, chess_api.sio, gr, logger)
 
 # Play (in game events) controller
-
 pc = PlayController(rmq, gc)
 
 # Error emit functions (TODO: global error catcher, rethrow errors)
@@ -88,6 +86,14 @@ async def emit_error(gid, sid, message="Something went wrong"):
 async def emit_error_local(sid, message="Something went wrong"):
     """Emits an error event to a client"""
     await chess_api.sio.emit("error", message, to=sid)
+
+
+# Global error handler (TODO: implement custom exception class to enable logic here)
+
+
+@chess_api.exception_handler(Exception)
+async def global_exception_handler(_, exc):
+    print(f"Global exception: {exc}")
 
 
 # Connect/disconnect handlers
@@ -153,7 +159,7 @@ async def flag(sid, flagged):
     await pc.flag(sid, flagged)
 
 
-# Rematch (offer and accept)
+# Rematch (game management)
 
 
 @chess_api.sio.on("offerRematch")
@@ -164,6 +170,9 @@ async def offer_rematch(sid):
 @chess_api.sio.on("acceptRematch")
 async def accept_rematch(sid):
     await gc.accept_rematch(sid)
+
+
+# Exit game handler
 
 
 @chess_api.sio.on("exit")
