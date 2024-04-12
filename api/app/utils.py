@@ -14,7 +14,6 @@ def get_redis_key(gid):
 
 
 def opponent_ind(turn: int):
-    # TODO: benchmark this - probs slower than using dict
     return int(not bool(turn))
 
 

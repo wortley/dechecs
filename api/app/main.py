@@ -3,11 +3,10 @@ import os
 from contextlib import asynccontextmanager
 
 import aioredis
-import app.utils as utils
+from app.exceptions import SocketIOExceptionHandler
 from app.game_controller import GameController
 from app.game_registry import GameRegistry
 from app.log_formatter import custom_formatter
-from app.models import Event
 from app.play_controller import PlayController
 from app.rate_limit import TokenBucketRateLimiter
 from app.rmq import RMQConnectionManager
@@ -74,25 +73,9 @@ gc = GameController(rmq, redis_client, chess_api.sio, gr, logger)
 # Play (in game events) controller
 pc = PlayController(rmq, gc)
 
-# Error emit functions (TODO: global error catcher, rethrow errors)
+# Global error handler
 
-
-async def emit_error(gid, sid, message="Something went wrong"):
-    """Emits an error event to game channel"""
-    await utils.publish_event(rmq.channel, gid, Event("error", message), sid)
-
-
-async def emit_error_local(sid, message="Something went wrong"):
-    """Emits an error event to a client"""
-    await chess_api.sio.emit("error", message, to=sid)
-
-
-# Global error handler (TODO: implement custom exception class to enable logic here)
-
-
-@chess_api.exception_handler(Exception)
-async def global_exception_handler(_, exc):
-    print(f"Global exception: {exc}")
+sioexc = SocketIOExceptionHandler(chess_api.sio, rmq, logger)
 
 
 # Connect/disconnect handlers
@@ -103,7 +86,7 @@ async def connect(sid, _):
     if rate_limiter.consume_token():
         logger.info(f"Client {sid} connected")
     else:
-        await emit_error_local(sid, "Connection limit exceeded")
+        await chess_api.sio.emit("error", "Connection limit exceeded", to=sid)
         logger.warning(f"Connection limit exceeded. Disconnecting {sid}")
         await chess_api.sio.disconnect(sid)
 
@@ -118,11 +101,13 @@ async def disconnect(sid):
 
 
 @chess_api.sio.on("create")
+@sioexc.sio_exception_handler
 async def create(sid, time_control):
     await gc.create(sid, time_control)
 
 
 @chess_api.sio.on("join")
+@sioexc.sio_exception_handler
 async def join(sid, gid):
     await gc.join(sid, gid)
 
@@ -131,21 +116,25 @@ async def join(sid, gid):
 
 
 @chess_api.sio.on("move")
+@sioexc.sio_exception_handler
 async def move(sid, uci):
     await pc.move(sid, uci)
 
 
 @chess_api.sio.on("offerDraw")
+@sioexc.sio_exception_handler
 async def offer_draw(sid):
     await pc.offer_draw(sid)
 
 
 @chess_api.sio.on("acceptDraw")
+@sioexc.sio_exception_handler
 async def accept_draw(sid):
     await pc.accept_draw(sid)
 
 
 @chess_api.sio.on("resign")
+@sioexc.sio_exception_handler
 async def resign(sid):
     await pc.resign(sid)
 
@@ -154,6 +143,7 @@ async def resign(sid):
 
 
 @chess_api.sio.on("flag")
+@sioexc.sio_exception_handler
 async def flag(sid, flagged):
     await pc.flag(sid, flagged)
 
@@ -162,11 +152,13 @@ async def flag(sid, flagged):
 
 
 @chess_api.sio.on("offerRematch")
+@sioexc.sio_exception_handler
 async def offer_rematch(sid):
     await gc.offer_rematch(sid)
 
 
 @chess_api.sio.on("acceptRematch")
+@sioexc.sio_exception_handler
 async def accept_rematch(sid):
     await gc.accept_rematch(sid)
 
@@ -175,6 +167,7 @@ async def accept_rematch(sid):
 
 
 @chess_api.sio.on("exit")
+@sioexc.sio_exception_handler
 async def exit(sid):
     """When a client exits the game/match, clear it from the cache"""
     await gc.clear_game(sid)

@@ -8,6 +8,7 @@ from time import time_ns
 import aioredis
 import app.utils as utils
 from app.constants import BROADCAST_KEY, MAX_EMIT_RETRIES, TimeConstants
+from app.exceptions import CustomException
 from app.models import Colour, Event, Game
 from app.rate_limit import RateLimitConfig
 from chess import Board
@@ -48,12 +49,10 @@ class GameController:
         """Get game state from redis by game ID"""
         try:
             game = utils.deserialise_game_state(await self.redis_client.get(utils.get_redis_key(gid)))
-        except aioredis.RedisError as e:
-            self.logger.error(e)
-            return
+        except aioredis.RedisError as exc:
+            raise CustomException(f"Redis error: {exc}", sid)
         if not game:
-            # await emit_error_local(sid)
-            return
+            raise CustomException("Game not found", sid)
         return game
 
     async def get_game_by_sid(self, sid):
@@ -62,15 +61,12 @@ class GameController:
         game = await self.get_game_by_gid(gid, sid)
         return game, gid
 
-    async def save_game(self, gid, game, sid):
-        """Set game state in Redis"""
+    async def save_game(self, gid, game, _):
+        """Save game state in Redis"""
         try:
             await self.redis_client.set(utils.get_redis_key(gid), utils.serialise_game_state(game))
-            return 0
-        except aioredis.RedisError as e:
-            # await emit_error(gid, sid, "An error occurred while saving game state")
-            self.logger.error(e)
-            return 1
+        except aioredis.RedisError as exc:
+            raise CustomException(f"Redis error: {exc}", emit_local=False, gid=gid)
 
     async def create(self, sid, time_control):
         gid = str(uuid.uuid4())
@@ -80,8 +76,7 @@ class GameController:
         async for _ in self.redis_client.scan_iter("game:*"):  # count games in progress
             games_inpr += 1
         if games_inpr > RateLimitConfig.CONCURRENT_GAME_LIMIT:
-            # await emit_error_local(sid, "Game limit exceeded. Please try again later")  TODO: global error net
-            return
+            raise CustomException("Server concurrent game limit reached. Please try again later", sid)
 
         tr = time_control * TimeConstants.MILLISECONDS_PER_MINUTE
         game = Game(
@@ -94,8 +89,7 @@ class GameController:
         )
 
         self.gr.add_player_gid_record(sid, gid)
-        if await self.save_game(gid, game, sid) > 0:  # if error saving game state
-            return
+        await self.save_game(gid, game, sid)
 
         # send game id to client
         await self.sio.emit("gameId", gid, to=sid)  # N.B no need to publish this to MQ
@@ -113,12 +107,9 @@ class GameController:
 
     async def join(self, sid, gid):
         game = await self.get_game_by_gid(gid, sid)
-        if not game:
-            # await emit_error_local(sid, "Game not found")
-            return
-        elif len(game.players) > 1:
-            # await emit_error_local(sid, "This game already has two players")
-            return
+        if len(game.players) > 1:
+            raise CustomException("This game already has two players", sid)
+
         self.sio.enter_room(sid, gid)  # join room
         game.players.append(sid)
 
@@ -165,8 +156,6 @@ class GameController:
     async def accept_rematch(self, sid):
         # TODO: check that player has actually been offered rematch
         game, gid = await self.get_game_by_sid(sid)
-        if not game:
-            return
         game.board.reset()
         game.players.reverse()  # switch white and black
         game.tr_w = game.tr_b = TimeConstants.MILLISECONDS_PER_MINUTE * game.time_control
@@ -197,8 +186,6 @@ class GameController:
     async def clear_game(self, sid):
         """Clears a user's game(s) from memory"""
         game, gid = await self.get_game_by_sid(sid)
-        if not game:
-            return
         for pid in game.players:
             self.gr.remove_player_gid_record(pid)
             self.rmq.channel.queue_unbind(utils.get_queue_name(gid, pid), exchange=gid, routing_key=pid)

@@ -3,6 +3,7 @@ from time import time_ns
 from typing import List, Optional
 
 import app.utils as utils
+from app.exceptions import CustomException
 from app.models import Castles, Event, Outcome
 from chess import Move
 
@@ -31,8 +32,6 @@ class PlayController:
 
     async def move(self, sid, uci):
         game, gid = await self.gc.get_game_by_sid(sid)
-        if not game:
-            return
         board = game.board
         move = Move.from_uci(uci)
         castles, en_passant = None, False
@@ -48,8 +47,7 @@ class PlayController:
             outcome = board.outcome(claim_draw=True)
         except AssertionError:
             # move not pseudo-legal
-            # await emit_error_local(sid, "Illegal move")
-            return
+            raise CustomException("Ilegal move", sid)
 
         time_now = time_ns() / 1_000_000
         if utils.opponent_ind(game.board.turn) == 0:
@@ -80,24 +78,16 @@ class PlayController:
 
     async def offer_draw(self, sid):
         game, gid = await self.gc.get_game_by_sid(sid)
-        if not game:
-            return
         await utils.publish_event(self.rmq.channel, gid, Event("drawOffer", None), next(p for p in game.players if p != sid))
 
     async def accept_draw(self, sid):
-        game, gid = await self.gc.get_game_by_sid(sid)
-        if not game:
-            return
+        _, gid = await self.gc.get_game_by_sid(sid)
         await utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": None, "outcome": Outcome.AGREEMENT.value}))
 
     async def resign(self, sid):
         game, gid = await self.gc.get_game_by_sid(sid)
-        if not game:
-            return
         await utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": int(game.players.index(sid)), "outcome": Outcome.RESIGNATION.value}))
 
     async def flag(self, sid, flagged):
-        game, gid = await self.gc.get_game_by_sid(sid)
-        if not game:
-            return
+        _, gid = await self.gc.get_game_by_sid(sid)
         await utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": utils.opponent_ind(flagged), "outcome": Outcome.TIMEOUT.value}))
