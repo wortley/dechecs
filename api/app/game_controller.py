@@ -185,13 +185,22 @@ class GameController:
 
     async def clear_game(self, sid):
         """Clears a user's game(s) from memory"""
+        if not self.gr.get_gid(sid):
+            # if player already removed from game or game deleted, return
+            return
+
         game, gid = await self.get_game_by_sid(sid)
-        for pid in game.players:
-            self.gr.remove_player_gid_record(pid)
-            self.rmq.channel.queue_unbind(utils.get_queue_name(gid, pid), exchange=gid, routing_key=pid)
-            self.rmq.channel.queue_unbind(utils.get_queue_name(gid, pid), exchange=gid, routing_key=BROADCAST_KEY)
-        for ctag in self.gr.get_game_ctags(gid):
-            self.rmq.channel.basic_cancel(consumer_tag=ctag)
-        self.gr.remove_all_game_ctags(gid)
-        self.rmq.channel.exchange_delete(exchange=gid)
-        await self.redis_client.delete(utils.get_redis_key(gid))
+
+        self.gr.remove_player_gid_record(sid)
+        self.rmq.channel.queue_unbind(utils.get_queue_name(gid, sid), exchange=gid, routing_key=sid)
+        self.rmq.channel.queue_unbind(utils.get_queue_name(gid, sid), exchange=gid, routing_key=BROADCAST_KEY)
+
+        if len(game.players) > 1:  # remove player from game.players
+            game.players.remove(sid)
+            await self.save_game(gid, game, sid)
+        else:  # last player to leave game
+            for ctag in self.gr.get_game_ctags(gid):
+                self.rmq.channel.basic_cancel(consumer_tag=ctag)
+            self.gr.remove_all_game_ctags(gid)
+            self.rmq.channel.exchange_delete(exchange=gid)
+            await self.redis_client.delete(utils.get_redis_key(gid))
