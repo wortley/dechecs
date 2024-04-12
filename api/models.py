@@ -24,7 +24,7 @@ class Outcome(Enum):
 @dataclass
 class Game:
     players: List[str]  # [0] white, [1] black
-    board: Board  # pychess board object
+    board: Board | str  # pychess board object or string when serialised
     tr_w: int  # time remaining for white
     tr_b: int  # time remaining for black
     turn_start_time: float  # timestamp when the turn started
@@ -34,4 +34,4 @@ class Game:
 @dataclass
 class Event:
     name: str
-    data: Any  # FIXME use proper datatype
+    data: Any  # FIXME: use proper datatype

@@ -2,6 +2,7 @@ from collections import defaultdict
 
 
 class GameRegistry:
+
     def __init__(self):
         self.players_to_gids = {}
         self.gids_to_ctags = defaultdict(list)
