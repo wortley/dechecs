@@ -1,9 +1,8 @@
 import json
 
+from app.constants import BROADCAST_KEY
+from app.models import Event, Game
 from chess import Board
-
-from api.constants import BROADCAST_KEY
-from api.models import Event, Game
 
 
 def get_queue_name(gid, sid):

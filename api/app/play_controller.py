@@ -2,10 +2,9 @@ from dataclasses import dataclass
 from time import time_ns
 from typing import List, Optional
 
+import app.utils as utils
+from app.models import Castles, Event, Outcome
 from chess import Move
-
-import api.utils as utils
-from api.models import Castles, Event, Outcome
 
 
 @dataclass

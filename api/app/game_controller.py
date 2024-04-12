@@ -6,12 +6,11 @@ import uuid
 from time import time_ns
 
 import aioredis
+import app.utils as utils
+from app.constants import BROADCAST_KEY, MAX_EMIT_RETRIES, TimeConstants
+from app.models import Colour, Event, Game
+from app.rate_limit import RateLimitConfig
 from chess import Board
-
-import api.utils as utils
-from api.constants import BROADCAST_KEY, MAX_EMIT_RETRIES, TimeConstants
-from api.models import Colour, Event, Game
-from api.rate_limit import RateLimitConfig
 
 
 class GameController:

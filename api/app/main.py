@@ -3,21 +3,20 @@ import os
 from contextlib import asynccontextmanager
 
 import aioredis
+import app.utils as utils
+from app.game_controller import GameController
+from app.game_registry import GameRegistry
+from app.log_formatter import custom_formatter
+from app.models import Event
+from app.play_controller import PlayController
+from app.rate_limit import TokenBucketRateLimiter
+from app.rmq import RMQConnectionManager
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_socketio import SocketManager
 
-import api.utils as utils
-from api.game_controller import GameController
-from api.game_registry import GameRegistry
-from api.log_formatter import custom_formatter
-from api.models import Event
-from api.play_controller import PlayController
-from api.rate_limit import TokenBucketRateLimiter
-from api.rmq import RMQConnectionManager
-
-load_dotenv("api/.env")
+load_dotenv()
 
 # logging config (override uvicorn default)
 logger = logging.getLogger("uvicorn")
