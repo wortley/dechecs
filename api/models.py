@@ -34,4 +34,4 @@ class Game:
 @dataclass
 class Event:
     name: str
-    data: Any
+    data: Any  # FIXME use proper datatype

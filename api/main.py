@@ -6,7 +6,6 @@ import logging
 import os
 import random
 import uuid
-from collections import defaultdict
 from contextlib import asynccontextmanager
 from time import time_ns
 
@@ -17,7 +16,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_socketio import SocketManager
 
+import api.utils as utils
 from api.constants import BROADCAST_KEY, MAX_EMIT_RETRIES, TimeConstants
+from api.game_registry import GameRegistry
 from api.log_formatter import custom_formatter
 from api.models import Castles, Colour, Event, Game, Outcome
 from api.rate_limit import RateLimitConfig, TokenBucketRateLimiter
@@ -29,11 +30,8 @@ load_dotenv("api/.env")
 logger = logging.getLogger("uvicorn")
 logger.handlers[0].setFormatter(custom_formatter)
 
-# map of players to ongoing games
-players_to_games = dict()
-
-# map of game ids to consumer tags
-gids_to_ctags = defaultdict(list)
+# game registry
+gr = GameRegistry()
 
 # connection token bucket (rate limiting)
 rate_limiter = TokenBucketRateLimiter()
@@ -55,15 +53,12 @@ async def lifespan(_):
 
     # Clean up before shutdown
     rate_limiter.stop_refiller()
-    players_to_games.clear()
-    gids_to_ctags.clear()
-    # close MQ
-    if rmq.channel is not None and rmq.channel.is_open:
+    gr.clear()  # clear game registry
+    if rmq.channel is not None and rmq.channel.is_open:  # close MQ
         rmq.channel.close()
-    # clear all games from redis cache
-    async for key in redis_client.scan_iter("game:*"):
+    async for key in redis_client.scan_iter("game:*"):  # clear all games from redis cache
         await redis_client.delete(key)
-    await redis_client.close()
+    await redis_client.close()  # close redis connection
 
 
 chess_api = FastAPI(lifespan=lifespan)
@@ -84,14 +79,6 @@ socket_manager = SocketManager(app=chess_api)
 # Helper functions
 
 
-def get_queue_name(gid, sid):
-    return f"{gid}::{sid}"
-
-
-def get_redis_key(gid):
-    return f"game:{gid}"
-
-
 def on_emit_done(task, event, sid, attempts):
     try:
         task.result()  #  raises exception if task failed
@@ -105,7 +92,7 @@ def on_emit_done(task, event, sid, attempts):
 
 
 async def init_listener(gid, sid):
-    logger.info("Initialising listener for game " + gid + ", user " + sid + ", on process ID " + str(os.getpid()))
+    logger.info("Initialising listener for game " + gid + ", user " + sid + ", on worker ID " + str(os.getpid()))
 
     def on_message(_, __, ___, body):
         message = json.loads(body)
@@ -113,18 +100,14 @@ async def init_listener(gid, sid):
         task = asyncio.create_task(chess_api.sio.emit(event.name, event.data, to=sid))
         task.add_done_callback(lambda t, sid=sid: on_emit_done(t, event, sid, 1))
 
-    gids_to_ctags[gid].append(rmq.channel.basic_consume(queue=get_queue_name(gid, sid), on_message_callback=on_message, auto_ack=True))
-
-
-def opponent_ind(turn: int):
-    return int(not bool(turn))
+    gr.add_game_ctag(gid, rmq.channel.basic_consume(queue=utils.get_queue_name(gid, sid), on_message_callback=on_message, auto_ack=True))
 
 
 async def get_game(sid, emiterr=True):
     """Get game state from redis with player ID"""
-    gid = players_to_games.get(sid, None)
+    gid = gr.get_gid(sid)
     try:
-        game = deserialise_game_state(await redis_client.get(get_redis_key(gid)))
+        game = deserialise_game_state(await redis_client.get(utils.get_redis_key(gid)))
     except aioredis.RedisError as e:
         logger.error(e)
         if emiterr:
@@ -139,7 +122,7 @@ async def get_game(sid, emiterr=True):
 async def get_game_by_gid(gid, sid):
     """Get game state from redis with game ID"""
     try:
-        game = deserialise_game_state(await redis_client.get(get_redis_key(gid)))
+        game = deserialise_game_state(await redis_client.get(utils.get_redis_key(gid)))
     except aioredis.RedisError as e:
         logger.error(e)
         return
@@ -152,7 +135,7 @@ async def get_game_by_gid(gid, sid):
 async def save_game(gid, game, sid):
     """Set game state in Redis"""
     try:
-        await redis_client.set(get_redis_key(gid), serialise_game_state(game))
+        await redis_client.set(utils.get_redis_key(gid), serialise_game_state(game))
         return 0
     except aioredis.RedisError as e:
         await emit_error(gid, sid, "An error occurred while saving game state")
@@ -166,14 +149,14 @@ async def clear_game(sid):
     if not game:
         return
     for pid in game.players:
-        players_to_games.pop(pid, None)
-        rmq.channel.queue_unbind(get_queue_name(gid, pid), exchange=gid, routing_key=pid)
-        rmq.channel.queue_unbind(get_queue_name(gid, pid), exchange=gid, routing_key=BROADCAST_KEY)
-    for ctag in gids_to_ctags[gid]:
+        gr.remove_player_gid_record(pid)
+        rmq.channel.queue_unbind(utils.get_queue_name(gid, pid), exchange=gid, routing_key=pid)
+        rmq.channel.queue_unbind(utils.get_queue_name(gid, pid), exchange=gid, routing_key=BROADCAST_KEY)
+    for ctag in gr.get_game_ctags(gid):
         rmq.channel.basic_cancel(consumer_tag=ctag)
-    gids_to_ctags.pop(gid, None)
+    gr.remove_all_game_ctags(gid)
     rmq.channel.exchange_delete(exchange=gid)
-    await redis_client.delete(get_redis_key(gid))
+    await redis_client.delete(utils.get_redis_key(gid))
 
 
 async def emit_error(gid, sid, message="Something went wrong"):
@@ -254,7 +237,8 @@ async def create(sid, time_control):
         time_control=time_control,
     )
 
-    players_to_games[sid] = gid
+    gr.add_player_gid_record(sid, gid)
+
     if await save_game(gid, game, sid) > 0:  # if error saving game state
         return
 
@@ -265,10 +249,10 @@ async def create(sid, time_control):
     rmq.channel.exchange_declare(exchange=gid, exchange_type="topic")
 
     # create player 1 queue
-    rmq.channel.queue_declare(queue=get_queue_name(gid, sid))
+    rmq.channel.queue_declare(queue=utils.get_queue_name(gid, sid))
     # bind the queue to the game exchange
-    rmq.channel.queue_bind(exchange=gid, queue=get_queue_name(gid, sid), routing_key=sid)
-    rmq.channel.queue_bind(exchange=gid, queue=get_queue_name(gid, sid), routing_key=BROADCAST_KEY)
+    rmq.channel.queue_bind(exchange=gid, queue=utils.get_queue_name(gid, sid), routing_key=sid)
+    rmq.channel.queue_bind(exchange=gid, queue=utils.get_queue_name(gid, sid), routing_key=BROADCAST_KEY)
 
     # init listener
     await init_listener(gid, sid)
@@ -285,7 +269,8 @@ async def join(sid, gid):
         return
     chess_api.sio.enter_room(sid, gid)  # join room
     game.players.append(sid)
-    players_to_games[sid] = gid
+
+    gr.add_player_gid_record(sid, gid)
 
     random.shuffle(game.players)  # randomly pick white and black
 
@@ -294,10 +279,10 @@ async def join(sid, gid):
     await save_game(gid, game, sid)
 
     # create player 2 queue
-    rmq.channel.queue_declare(queue=get_queue_name(gid, sid))
+    rmq.channel.queue_declare(queue=utils.get_queue_name(gid, sid))
     # bind the queue to the game exchange
-    rmq.channel.queue_bind(exchange=gid, queue=get_queue_name(gid, sid), routing_key=sid)
-    rmq.channel.queue_bind(exchange=gid, queue=get_queue_name(gid, sid), routing_key=BROADCAST_KEY)
+    rmq.channel.queue_bind(exchange=gid, queue=utils.get_queue_name(gid, sid), routing_key=sid)
+    rmq.channel.queue_bind(exchange=gid, queue=utils.get_queue_name(gid, sid), routing_key=BROADCAST_KEY)
 
     await init_listener(gid, sid)
 
@@ -346,7 +331,7 @@ async def move(sid, uci):
         return
 
     time_now = time_ns() / 1_000_000
-    if opponent_ind(game.board.turn) == 0:
+    if utils.opponent_ind(game.board.turn) == 0:
         game.tr_b -= time_now - game.turn_start_time
     else:
         game.tr_w -= time_now - game.turn_start_time
@@ -412,7 +397,7 @@ async def flag(sid, flagged):
     game, gid = await get_game(sid)
     if not game:
         return
-    await publish_event(gid, Event("move", {"winner": opponent_ind(flagged), "outcome": Outcome.TIMEOUT.value}))
+    await publish_event(gid, Event("move", {"winner": utils.opponent_ind(flagged), "outcome": Outcome.TIMEOUT.value}))
 
 
 # Rematch (offer and accept)
