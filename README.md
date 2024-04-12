@@ -8,19 +8,20 @@ Lightweight, performant multiplayer chess web app utilising Socket.IO, python-ch
 
 <!-- TODO: diagram and short description of architecture -->
 
-## Run locally
+## Running locally
 
 ### Backend
 
 1. Navigate to /api
 2. Run `venv/scripts/activate`
-3. Open another terminal window and run `rabbitmq-server` to start RabbitMQ
-4. Run with single worker: `uvicorn app.main:chess_api --reload` or n workers: `uvicorn app.main:chess_api --workers n`
+3. Ensure Memurai or Redis service is running in background or in another terminal window
+4. Open another terminal window and run `rabbitmq-server` to start RabbitMQ
+5. Run with single worker: `uvicorn app.main:chess_api --reload` or n workers: `uvicorn app.main:chess_api --workers n`
 
 ### Frontend
 
 1. Navigate to /ui
-2. `yarn dev`
+2. Run `yarn dev`
 
 ## Heroku management
 
