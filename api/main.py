@@ -95,9 +95,8 @@ async def emit_error_local(sid, message="Something went wrong"):
 
 @chess_api.sio.on("connect")
 async def connect(sid, _):
-    if rate_limiter.bucket > 0:
+    if rate_limiter.consume_token():
         logger.info(f"Client {sid} connected")
-        rate_limiter.bucket -= 1
     else:
         await emit_error_local(sid, "Connection limit exceeded")
         logger.warning(f"Connection limit exceeded. Disconnecting {sid}")

@@ -19,8 +19,7 @@ class TokenBucketRateLimiter:
         """
         while True:
             await asyncio.sleep(60)
-            if self.bucket <= RateLimitConfig.BUCKET_CAPACITY:
-                self.bucket += RateLimitConfig.REFILL_RATE_MINUTE
+            self.bucket = min(self.bucket + RateLimitConfig.REFILL_RATE_MINUTE, RateLimitConfig.BUCKET_CAPACITY)
 
     def start_refiller(self):
         asyncio.create_task(self.refill_tokens())
@@ -28,3 +27,9 @@ class TokenBucketRateLimiter:
     def stop_refiller(self):
         if self.refiller:
             self.refiller.cancel()
+
+    async def consume_token(self):
+        if self.bucket > 0:
+            self.bucket -= 1
+            return True
+        return False
