@@ -12,6 +12,9 @@ import Header from "./components/Header";
 import { CustomPreview } from "./components/Piece";
 import { socket } from "./socket";
 
+// METAMASK SDK TIPS AND TRICKS: https://medium.com/hackernoon/tips-and-tricks-for-adding-metamask-to-your-ui-32728b437194
+// TUTORIAL: https://www.youtube.com/watch?v=Y-njlhGmNMU&ab_channel=ETHGlobal
+
 function App() {
   const [connected, setConnected] = useState(false);
   const dndBackend = window.innerWidth <= 768 ? TouchBackend : HTML5Backend;
