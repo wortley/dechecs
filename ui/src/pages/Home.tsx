@@ -6,10 +6,12 @@ import { StartData } from "../types";
 export default function Home() {
   const navigate = useNavigate();
   const [newGameId, setNewGameId] = useState("");
-  const [creating, setCreating] = useState(false);
-  const [joining, setJoining] = useState(false);
+  const [creating, setCreating] = useState<boolean | undefined>();
   const [joiningGameId, setJoiningGameId] = useState("");
   const [timeControl, setTimeControl] = useState<number>(-1);
+  const [wagerAmount, setWagerAmount] = useState<number>(0);
+
+  // const { address, isConnected } = useAccount();
 
   useEffect(() => {
     function onGameId(gameId: string) {
@@ -35,20 +37,24 @@ export default function Home() {
   }, []);
 
   function onCreateGame() {
-    if (timeControl > 0) socket.emit("create", timeControl);
+    if (timeControl > 0)
+      socket.emit("create", timeControl, wagerAmount, address);
   }
 
   function onSubmitGameId() {
     socket.emit("join", joiningGameId);
   }
 
+  // TODO: split logic out into multiple pages
+
   return (
     <>
       {creating && !newGameId && (
-        <>
+        <div className="home-div">
           <h4>New game</h4>
-          Choose time control:{" "}
+          <label htmlFor="time-control">Time control:</label>
           <select
+            id="time-control"
             value={timeControl}
             onChange={(e) => setTimeControl(parseInt(e.currentTarget.value))}
           >
@@ -58,21 +64,29 @@ export default function Home() {
             <option value={10}>10m Rapid</option>
             <option value={30}>30m Classical</option>
           </select>
+          <label htmlFor="wager-amount">Wager amount (ETH):</label>
+          <input
+            type="number"
+            id="wager-amount"
+            value={wagerAmount}
+            max={100}
+            onChange={(e) => setWagerAmount(parseInt(e.currentTarget.value))}
+          />
           <button onClick={onCreateGame} disabled={timeControl < 0}>
             Generate code
           </button>
           <button
             onClick={() => {
-              setCreating(false);
+              setCreating(undefined);
               setTimeControl(-1);
             }}
           >
             Back
           </button>
-        </>
+        </div>
       )}
       {newGameId && (
-        <>
+        <div>
           <p>
             Share this code with a friend to play against them. Once they join,
             the game will start.
@@ -83,10 +97,10 @@ export default function Home() {
           >
             Copy code
           </button>
-        </>
+        </div>
       )}
-      {joining && (
-        <>
+      {creating === false && (
+        <div className="home-div">
           <h4>Join game</h4>
           <input
             type="text"
@@ -97,19 +111,19 @@ export default function Home() {
           <button onClick={onSubmitGameId}>Join</button>
           <button
             onClick={() => {
-              setJoining(false);
+              setCreating(undefined);
               setJoiningGameId("");
             }}
           >
             Back
           </button>
-        </>
+        </div>
       )}
-      {!joining && !creating && (
-        <>
+      {creating === undefined && (
+        <div className="home-div">
           <button onClick={() => setCreating(true)}>New game</button>
-          <button onClick={() => setJoining(true)}>Join game</button>
-        </>
+          <button onClick={() => setCreating(false)}>Join game</button>
+        </div>
       )}
     </>
   );
