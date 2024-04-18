@@ -2,7 +2,14 @@
   box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
   text-align: center;
   margin: 0;
-  padding: 1.1em;
+  padding: 1.3em;
+  position: relative;
+}
+
+.w3mContainer {
+  position: absolute;
+  right: 1em;
+  top: 1em;
 }
 
 .headerLogo {
