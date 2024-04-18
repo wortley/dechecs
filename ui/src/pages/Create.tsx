@@ -75,7 +75,6 @@ export default function Create() {
       toast.error(err);
       return;
     }
-    console.log("Wager amount: ", wagerAmount);
     socket.emit("create", timeControl, wagerAmount, address);
   }
 

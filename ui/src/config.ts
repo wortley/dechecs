@@ -1,6 +1,6 @@
 import { defaultWagmiConfig } from "@web3modal/wagmi/react/config";
 import "react-toastify/dist/ReactToastify.min.css";
-import { mainnet, sepolia } from "wagmi/chains";
+import { sepolia } from "wagmi/chains";
 import "./App.css";
 import { WC_PROJECT_ID } from "./constants";
 
@@ -11,7 +11,8 @@ const metadata = {
   icons: [],
 };
 
-const chains = [mainnet, sepolia] as const;
+// const chains = [mainnet, sepolia] as const;
+const chains = [sepolia] as const; // DEBUG
 
 export const config = defaultWagmiConfig({
   chains,
