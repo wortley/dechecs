@@ -168,7 +168,7 @@ class GameController:
         await self.init_listener(gid, sid)
 
         # start the game
-        await utils.publish_event(
+        utils.publish_event(
             self.rmq.channel,
             gid,
             Event(
@@ -177,7 +177,7 @@ class GameController:
             ),
             game.players[0],
         )
-        await utils.publish_event(
+        utils.publish_event(
             self.rmq.channel,
             gid,
             Event(
@@ -190,7 +190,7 @@ class GameController:
     async def offer_rematch(self, sid):
         game, gid = await self.get_game_by_sid(sid)
         if game:
-            await utils.publish_event(self.rmq.channel, gid, Event("rematchOffer", 1), next(p for p in game.players if p != sid))
+            utils.publish_event(self.rmq.channel, gid, Event("rematchOffer", 1), next(p for p in game.players if p != sid))
 
     async def accept_rematch(self, sid):
         # TODO: check that player has actually been offered rematch
@@ -202,7 +202,7 @@ class GameController:
 
         await self.save_game(gid, game, sid)
 
-        await utils.publish_event(
+        utils.publish_event(
             self.rmq.channel,
             gid,
             Event(
@@ -212,7 +212,7 @@ class GameController:
             game.players[0],
         )
 
-        await utils.publish_event(
+        utils.publish_event(
             self.rmq.channel,
             gid,
             Event(
@@ -233,11 +233,13 @@ class GameController:
         self.gr.remove_player_gid_record(sid)
         self.rmq.channel.queue_unbind(utils.get_queue_name(gid, sid), exchange=gid, routing_key=sid)
         self.rmq.channel.queue_unbind(utils.get_queue_name(gid, sid), exchange=gid, routing_key=BROADCAST_KEY)
+        self.sio.leave_room(sid, gid)
 
         if len(game.players) > 1:  # remove player from game.players
             game.players.remove(sid)
             await self.save_game(gid, game, sid)
         else:  # last player to leave game
+            self.sio.close_room(gid)
             for ctag in self.gr.get_game_ctags(gid):
                 self.rmq.channel.basic_cancel(consumer_tag=ctag)
             self.gr.remove_all_game_ctags(gid)

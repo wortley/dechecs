@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAccount, useBalance } from "wagmi";
 import { estimateFeesPerGas } from "wagmi/actions";
-import { mainnet } from "wagmi/chains";
 import { config } from "../config";
+import { chainId } from "../constants";
 import { socket } from "../socket";
 import { StartData } from "../types";
 import { GBPToETH } from "../utils/eth";
@@ -20,7 +20,7 @@ export default function Join() {
   const [gameInfo, setGameInfo] = useState<GameInfo | null>(null);
 
   const { address, isConnected } = useAccount();
-  const { data: balance } = useBalance({ address, chainId: mainnet.id });
+  const { data: balance } = useBalance({ address, chainId });
 
   useEffect(() => {
     function onStart(data: StartData) {
@@ -53,7 +53,7 @@ export default function Join() {
     if (!gameInfo) return "Something went wrong";
     if (!isConnected) return "Please connect your wallet.";
     const priceInfo = await estimateFeesPerGas(config, {
-      chainId: mainnet.id,
+      chainId,
       formatUnits: "ether",
     });
     const gasPrice = Number(priceInfo.formatted.maxFeePerGas);

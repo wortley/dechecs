@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAccount, useBalance } from "wagmi";
 import { estimateFeesPerGas } from "wagmi/actions";
-import { mainnet } from "wagmi/chains";
 import { config } from "../config";
+import { chainId } from "../constants";
 import { socket } from "../socket";
 import { StartData } from "../types";
 import { GBPToETH } from "../utils/eth";
@@ -18,7 +18,7 @@ export default function Create() {
   const [gasPrice, setGasPrice] = useState<number>(0);
 
   const { address, isConnected } = useAccount();
-  const { data: balance } = useBalance({ address, chainId: mainnet.id });
+  const { data: balance } = useBalance({ address, chainId });
 
   useEffect(() => {
     function onGameId(gameId: string) {
@@ -47,9 +47,9 @@ export default function Create() {
     async function fetchGasPrice() {
       if (isConnected) {
         const priceInfo = await estimateFeesPerGas(config, {
-          chainId: mainnet.id,
+          chainId,
           formatUnits: "ether",
-        }); // gets gas price for mainnet in ETH
+        }); // gets gas price for mainnet or testnet in ETH
         setGasPrice(Number(priceInfo.formatted.maxFeePerGas));
       }
     }
