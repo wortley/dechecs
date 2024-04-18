@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createWeb3Modal } from "@web3modal/wagmi/react";
 import { useEffect, useState } from "react";
 import { DndProvider } from "react-dnd";
@@ -19,6 +20,8 @@ import { socket } from "./socket";
 // METAMASK SDK TIPS AND TRICKS: https://medium.com/hackernoon/tips-and-tricks-for-adding-metamask-to-your-ui-32728b437194
 // TUTORIAL: https://www.youtube.com/watch?v=Y-njlhGmNMU&ab_channel=ETHGlobal
 // IMPERSONATE OTHER WALLETS: https://ethereum.stackexchange.com/questions/122695/fake-an-address-from-my-browser-metamask
+
+const queryClient = new QueryClient();
 
 createWeb3Modal({
   wagmiConfig: config,
@@ -63,23 +66,25 @@ function App() {
 
   return (
     <WagmiProvider config={config}>
-      <DndProvider backend={dndBackend} options={{ enableMouseEvents: true }}>
-        <CustomPreview />
-        <ToastContainer
-          autoClose={2500}
-          hideProgressBar
-          newestOnTop
-          closeOnClick
-          pauseOnFocusLoss
-          draggable={false}
-          pauseOnHover
-          theme="colored"
-        />
-        <Header />
-        <ConnectionStatus connected={connected} />
-        <Router />
-        <Footer />
-      </DndProvider>
+      <QueryClientProvider client={queryClient}>
+        <DndProvider backend={dndBackend} options={{ enableMouseEvents: true }}>
+          <CustomPreview />
+          <ToastContainer
+            autoClose={2500}
+            hideProgressBar
+            newestOnTop
+            closeOnClick
+            pauseOnFocusLoss
+            draggable={false}
+            pauseOnHover
+            theme="colored"
+          />
+          <Header />
+          <ConnectionStatus connected={connected} />
+          <Router />
+          <Footer />
+        </DndProvider>
+      </QueryClientProvider>
     </WagmiProvider>
   );
 }

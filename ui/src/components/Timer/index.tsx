@@ -9,7 +9,7 @@ type TimerProps = {
   timeControl: number;
 };
 
-export default function Timer({ side, timeControl }: TimerProps) {
+export default function Timer({ side, timeControl }: Readonly<TimerProps>) {
   const [timer, setTimer] = useState<TimerData>({
     white: timeControl,
     black: timeControl,

@@ -14,7 +14,7 @@ export default function ResultModal({
   outcome,
   winner,
   side,
-}: ResultModalProps) {
+}: Readonly<ResultModalProps>) {
   const navigate = useNavigate();
   const [rematchOffer, setRematchOffer] = useState(false);
   const dialog = document.getElementsByTagName("dialog")[0];

@@ -4,7 +4,9 @@ type ConnectionStatusProps = {
   connected: boolean;
 };
 
-export default function ConnectionStatus({ connected }: ConnectionStatusProps) {
+export default function ConnectionStatus({
+  connected,
+}: Readonly<ConnectionStatusProps>) {
   return (
     <div>
       <h6>

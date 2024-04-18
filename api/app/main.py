@@ -100,14 +100,20 @@ async def disconnect(sid):
 
 @chess_api.sio.on("create")
 @sioexc.sio_exception_handler
-async def create(sid, time_control):
-    await gc.create(sid, time_control)
+async def create(sid, time_control, wager, wallet_addr):
+    await gc.create(sid, time_control, wager, wallet_addr)
 
 
 @chess_api.sio.on("join")
 @sioexc.sio_exception_handler
 async def join(sid, gid):
     await gc.join(sid, gid)
+
+
+@chess_api.sio.on("acceptGame")
+@sioexc.sio_exception_handler
+async def accept_game(sid, gid, wallet_addr):
+    await gc.accept_game(sid, gid, wallet_addr)
 
 
 # In-game event handlers

@@ -65,10 +65,10 @@ export type BoardState = {
   timeRemainingBlack?: number;
 };
 
-export type StartData = {
+export interface StartData {
   colour: Colour;
   timeRemaining: number;
-};
+}
 
 export type TimerData = {
   white: number;

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import List
+from typing import Dict, List
 
 from chess import Board
 
@@ -29,6 +29,8 @@ class Game:
     tr_b: int  # time remaining for black
     turn_start_time: float  # timestamp when the turn started
     time_control: int  # time control (minutes)
+    wager: float  # wager amount
+    player_wallet_addrs: List[str]  # player wallet addresses (same order as players)
 
 
 @dataclass

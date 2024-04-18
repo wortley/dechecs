@@ -120,7 +120,7 @@ export default function Piece({
   colour,
   onClick,
   onDrag,
-}: PieceProps) {
+}: Readonly<PieceProps>) {
   const [{ isDragging }, drag, preview] = useDrag(
     () => ({
       type: DraggableTypes.PIECE,
