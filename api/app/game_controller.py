@@ -153,7 +153,10 @@ class GameController:
 
         self.gr.add_player_gid_record(sid, gid)
 
-        random.shuffle(game.players)  # randomly pick white and black
+        # randomly pick white and black (also need to shuffle wallet addresses; TODO: use a hashmap)
+        sids_and_wallets = list(zip(game.players, game.player_wallet_addrs))
+        random.shuffle(sids_and_wallets)
+        game.players, game.player_wallet_addrs = zip(*sids_and_wallets)
 
         game.turn_start_time = time_ns() / 1_000_000  # reset turn start time
 
@@ -197,6 +200,7 @@ class GameController:
         game, gid = await self.get_game_by_sid(sid)
         game.board.reset()
         game.players.reverse()  # switch white and black
+        game.player_wallet_addrs.reverse()  # switch wallet addresses
         game.tr_w = game.tr_b = TimeConstants.MILLISECONDS_PER_MINUTE * game.time_control
         game.turn_start_time = time_ns() / 1_000_000
 

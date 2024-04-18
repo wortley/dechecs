@@ -1,6 +1,7 @@
 import { sendTransaction } from "@wagmi/core";
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { toast } from "react-toastify";
 import { parseEther } from "viem";
 import { useAccount } from "wagmi";
 import Board from "../../components/Board";
@@ -56,14 +57,14 @@ export default function Play() {
         return;
       }
       payment.amount = await GBPToETH(payment.amount); // convert GBP to ETH
-      const result = await sendTransaction(config, {
+      const transactionHash = await sendTransaction(config, {
         account: address,
         to: payment.address,
         type: "eip1559",
         chainId,
         value: parseEther(payment.amount.toString()), // convert ETH to wei
       });
-      console.log(result);
+      toast.success(`Payment sent: ${transactionHash}`);
     }
 
     function onBeforeUnload(event: BeforeUnloadEvent) {

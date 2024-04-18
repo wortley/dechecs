@@ -26,8 +26,9 @@ class MoveData:
 
 class PlayController:
 
-    def __init__(self, rmq, gc):
+    def __init__(self, rmq, sio, gc):
         self.rmq = rmq
+        self.sio = sio
         self.gc = gc
 
     async def init_payment(self, winner, game):
@@ -94,7 +95,7 @@ class PlayController:
     async def resign(self, sid):
         game, gid = await self.gc.get_game_by_sid(sid)
         # outcome event
-        utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": int(game.players.index(sid)), "outcome": Outcome.RESIGNATION.value}))  # TODO: isn't this broken?
+        utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": int(game.players.index(sid)), "outcome": Outcome.RESIGNATION.value}))
         # send payment instruction to loser
         await self.init_payment(utils.opponent_ind(game.players.index(sid)), game)
 

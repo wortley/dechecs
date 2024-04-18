@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { socket } from "../../socket";
 import { Colour, Outcome, StartData } from "../../types";
@@ -16,7 +16,7 @@ export default function ResultModal({
   side,
 }: Readonly<ResultModalProps>) {
   const navigate = useNavigate();
-  const [rematchOffer, setRematchOffer] = useState(false);
+  // const [rematchOffer, setRematchOffer] = useState(false);
   const dialog = document.getElementsByTagName("dialog")[0];
 
   useEffect(() => {
@@ -29,16 +29,16 @@ export default function ResultModal({
       });
     }
 
-    function onRematchOffer() {
-      setRematchOffer(true);
-    }
+    // function onRematchOffer() {
+    //   setRematchOffer(true);
+    // }
 
     socket.on("start", onStart);
-    socket.on("rematchOffer", onRematchOffer);
+    // socket.on("rematchOffer", onRematchOffer);
 
     return () => {
       socket.off("start", onStart);
-      socket.off("rematchOffer", onRematchOffer);
+      // socket.off("rematchOffer", onRematchOffer);
     };
   }, []);
 
@@ -89,13 +89,13 @@ export default function ResultModal({
       ? "Black won"
       : "Draw";
 
-  function onOfferRematch() {
-    socket.emit("offerRematch");
-  }
+  // function onOfferRematch() {
+  //   socket.emit("offerRematch");
+  // }
 
-  function onAcceptRematch() {
-    socket.emit("acceptRematch");
-  }
+  // function onAcceptRematch() {
+  //   socket.emit("acceptRematch");
+  // }
 
   function onExit() {
     socket.emit("exit");
@@ -106,11 +106,16 @@ export default function ResultModal({
     <dialog className={styles.resultModal}>
       <h3>{winnerStr}</h3>
       <h4>{outcomeStr}</h4>
-      {rematchOffer ? (
+      <p>
+        {side === winner
+          ? "Congrats on your big win! You will receive your payment shortly!"
+          : "Unlucky! :( We'll let you know when your payment has completed!"}
+      </p>
+      {/* {rematchOffer ? (
         <button onClick={onAcceptRematch}>Accept rematch offer</button>
       ) : (
         <button onClick={onOfferRematch}>Offer rematch</button>
-      )}
+      )} */}
       <button onClick={onExit}>Exit</button>
     </dialog>
   );
