@@ -70,7 +70,12 @@ export interface StartData {
   timeRemaining: number;
 }
 
-export type TimerData = {
+export interface TimerData {
   white: number;
   black: number;
-};
+}
+
+interface GameInfo {
+  timeControl: number;
+  wagerAmount: number;
+}
