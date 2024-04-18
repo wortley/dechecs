@@ -41,7 +41,7 @@ export default function Board({
   setTurn,
   setOutcome,
   setWinner,
-}: BoardProps) {
+}: Readonly<BoardProps>) {
   const boardRef = useRef<HTMLDivElement>(null);
   const animating = useRef(false);
   const squareCoords = useRef<Map<string, { x: number; y: number }>>();

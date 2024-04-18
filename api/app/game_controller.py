@@ -68,7 +68,15 @@ class GameController:
         except aioredis.RedisError as exc:
             raise CustomException(f"Redis error: {exc}", emit_local=False, gid=gid)
 
-    async def create(self, sid, time_control):
+    async def create(self, sid, time_control, wager, wallet_addr):
+        """
+        Create a new game
+
+        :param sid: player's socket ID
+        :param time_control: time control in minutes
+        :param wager: wager amount (GBP)
+        :param wallet_addr: player's wallet address
+        """
         gid = str(uuid.uuid4())
         self.sio.enter_room(sid, gid)  # create a room for the game
 
@@ -82,6 +90,8 @@ class GameController:
         game = Game(
             players=[sid],
             board=Board(),
+            wager=wager,
+            player_wallets=[wallet_addr],
             tr_w=tr,
             tr_b=tr,
             turn_start_time=-1,
@@ -106,12 +116,40 @@ class GameController:
         await self.init_listener(gid, sid)
 
     async def join(self, sid, gid):
+        """
+        Player request to join a game
+
+        Returns game information (time control and wager amount)
+          - gives user joining game a chance to review and accept wager amount before joining
+          - this flow also allows for us to check other player has sufficient ETH balance
+
+        :param sid: player's socket ID
+        :param gid: game ID
+        """
         game = await self.get_game_by_gid(gid, sid)
         if len(game.players) > 1:
             raise CustomException("This game already has two players", sid)
 
+        game_info = {
+            "wager": game.wager,
+            "timeControl": game.time_control,
+        }
+        await self.sio.emit("gameInfo", game_info, to=sid)
+
+    async def accept_game(self, sid, gid, wallet_addr):
+        """
+        Accept game
+          - for when user has reviewed game info and is ready to start
+
+        :param sid: player's socket ID
+        :param gid: game ID
+        :param wallet_addr: player's wallet address
+        """
+        game = await self.get_game_by_gid(gid, sid)
+
         self.sio.enter_room(sid, gid)  # join room
         game.players.append(sid)
+        game.player_wallets.append(wallet_addr)
 
         self.gr.add_player_gid_record(sid, gid)
 
@@ -129,6 +167,7 @@ class GameController:
 
         await self.init_listener(gid, sid)
 
+        # start the game
         await utils.publish_event(
             self.rmq.channel,
             gid,
