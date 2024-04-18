@@ -63,7 +63,8 @@ export default function Create() {
   function validateGameCreation() {
     if (!isConnected) return "Please connect your wallet.";
     if (timeControl < 0) return "Please select a time control.";
-    if (wagerAmount <= 0) return "Please enter a wager amount.";
+    if (wagerAmount <= 0 || wagerAmountETH <= 0)
+      return "Please enter a wager amount.";
     if (wagerAmountETH >= Number(balance!.formatted) - gasPrice)
       return "Insufficient ETH balance.";
     return 0;
