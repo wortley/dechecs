@@ -4,9 +4,7 @@ export default function Header() {
   return (
     <header className={styles.header}>
       <w3m-button />
-      <h2>
-        <i>unichess</i>
-      </h2>
+      <h2 className={styles.headerLogo}>unichess</h2>
     </header>
   );
 }
