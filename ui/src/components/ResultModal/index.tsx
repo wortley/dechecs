@@ -109,6 +109,8 @@ export default function ResultModal({
       <p>
         {side === winner
           ? "Congrats on your big win! You will receive your payment shortly!"
+          : !winner
+          ? "Good game!"
           : "Unlucky! :( We'll let you know when your payment has completed!"}
       </p>
       {/* {rematchOffer ? (
