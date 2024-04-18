@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAccount } from "wagmi";
+import { getGasPrice } from "wagmi/actions";
+import { config } from "../config";
 import { socket } from "../socket";
 import { StartData } from "../types";
 
@@ -10,8 +13,9 @@ export default function Home() {
   const [joiningGameId, setJoiningGameId] = useState("");
   const [timeControl, setTimeControl] = useState<number>(-1);
   const [wagerAmount, setWagerAmount] = useState<number>(0);
+  const [gasPrice, setGasPrice] = useState<number>(0);
 
-  // const { address, isConnected } = useAccount();
+  const { address, isConnected } = useAccount();
 
   useEffect(() => {
     function onGameId(gameId: string) {
@@ -45,6 +49,17 @@ export default function Home() {
     socket.emit("join", joiningGameId);
   }
 
+  useEffect(() => {
+    async function fetchGasPrice() {
+      if (isConnected) {
+        const gasPrice = await getGasPrice(config, { chainId: 0x1 }); // gets gas price for mainnet in wei
+        const ethValue = Number(gasPrice) / 1e18; // convert to ETH
+        setGasPrice(ethValue);
+      }
+    }
+    fetchGasPrice();
+  }, [isConnected]);
+
   // TODO: split logic out into multiple pages
 
   return (
@@ -72,6 +87,7 @@ export default function Home() {
             max={100}
             onChange={(e) => setWagerAmount(parseInt(e.currentTarget.value))}
           />
+          <p>Gas price: {gasPrice} ETH</p>
           <button onClick={onCreateGame} disabled={timeControl < 0}>
             Generate code
           </button>
