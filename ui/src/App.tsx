@@ -37,14 +37,18 @@ if (!WC_PROJECT_ID) {
 
 const config = defaultWagmiConfig({
   chains,
-  projectId: WC_PROJECT_ID ?? "",
+  projectId: WC_PROJECT_ID,
   metadata,
 });
 
 createWeb3Modal({
   wagmiConfig: config,
-  projectId: WC_PROJECT_ID ?? "",
+  projectId: WC_PROJECT_ID,
   enableAnalytics: true,
+  themeMode: "light",
+  themeVariables: {
+    "--w3m-font-family": "'Red Hat Mono', monospace",
+  },
 });
 
 function App() {
