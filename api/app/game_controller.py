@@ -91,7 +91,7 @@ class GameController:
             players=[sid],
             board=Board(),
             wager=wager,
-            player_wallets=[wallet_addr],
+            player_wallet_addrs=[wallet_addr],
             tr_w=tr,
             tr_b=tr,
             turn_start_time=-1,
@@ -131,7 +131,7 @@ class GameController:
             raise CustomException("This game already has two players", sid)
 
         game_info = {
-            "wager": game.wager,
+            "wagerAmount": game.wager,
             "timeControl": game.time_control,
         }
         await self.sio.emit("gameInfo", game_info, to=sid)
@@ -149,7 +149,7 @@ class GameController:
 
         self.sio.enter_room(sid, gid)  # join room
         game.players.append(sid)
-        game.player_wallets.append(wallet_addr)
+        game.player_wallet_addrs.append(wallet_addr)
 
         self.gr.add_player_gid_record(sid, gid)
 

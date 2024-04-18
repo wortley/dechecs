@@ -75,7 +75,8 @@ export default function Create() {
       toast.error(err);
       return;
     }
-    socket.emit("create", timeControl, wagerAmount, wagerAmountETH, address);
+    console.log("Wager amount: ", wagerAmount);
+    socket.emit("create", timeControl, wagerAmount, address);
   }
 
   return (
@@ -121,12 +122,16 @@ export default function Create() {
       {newGameId && (
         <>
           <p>
-            Share this code with a friend to play against them. Once they join,
-            the game will start.
+            Share this code with a friend to play against them. Once they join
+            and accept the wager, the game will start.
           </p>
           <h4>{newGameId}</h4>
           <button
-            onClick={async () => await navigator.clipboard.writeText(newGameId)}
+            onClick={async () =>
+              await navigator.clipboard
+                .writeText(newGameId)
+                .then(() => toast.success("Code copied to clipboard."))
+            }
           >
             Copy code
           </button>

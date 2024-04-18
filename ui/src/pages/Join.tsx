@@ -90,9 +90,9 @@ export default function Join() {
       )}
       {gameInfo && (
         <>
-          <p>Game ID: {joiningGameId}</p>
-          <p>Time control: {gameInfo.timeControl}</p>
-          <p>Wager amount: {gameInfo.wagerAmount}</p>
+          <p>Game code: {joiningGameId}</p>
+          <p>Time control: {gameInfo.timeControl}m</p>
+          <p>Wager amount: £{gameInfo.wagerAmount.toFixed(2)}</p>
           <button onClick={onAcceptGame}>Accept and start game</button>
         </>
       )}

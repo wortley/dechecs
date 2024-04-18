@@ -27,6 +27,7 @@ createWeb3Modal({
   wagmiConfig: config,
   projectId: WC_PROJECT_ID,
   enableAnalytics: true,
+  enableOnramp: true,
   themeMode: "light",
   themeVariables: {
     "--w3m-font-family": "'Red Hat Mono', monospace",
