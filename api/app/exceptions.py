@@ -32,6 +32,6 @@ class SocketIOExceptionHandler:
                 if exc.emit_local:  # emit to single recipient on local SIO server
                     await self.sio.emit("error", exc.message, to=exc.sid)
                 else:  # emit to every player in game
-                    await utils.publish_event(self.rmq.channel, exc.gid, Event("error", exc.message))
+                    utils.publish_event(self.rmq.channel, exc.gid, Event("error", exc.message))
 
         return wrapper

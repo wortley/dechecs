@@ -30,6 +30,9 @@ class PlayController:
         self.rmq = rmq
         self.gc = gc
 
+    async def init_payment(self, winner, game):
+        await self.sio.emit("payment", {"address": game.player_wallet_addrs[winner], "amount": game.wager}, to=game.players[utils.opponent_ind(winner)])
+
     async def move(self, sid, uci):
         game, gid = await self.gc.get_game_by_sid(sid)
         board = game.board
@@ -72,22 +75,32 @@ class PlayController:
         )
 
         # send updated game state to clients in room
-        await utils.publish_event(self.rmq.channel, gid, Event("move", move_data.__dict__))
+        utils.publish_event(self.rmq.channel, gid, Event("move", move_data.__dict__))
+
+        # send payment instruction if we have outcome
+        if outcome:
+            await self.init_payment(int(outcome.winner), game)
 
         await self.gc.save_game(gid, game, sid)
 
     async def offer_draw(self, sid):
         game, gid = await self.gc.get_game_by_sid(sid)
-        await utils.publish_event(self.rmq.channel, gid, Event("drawOffer", None), next(p for p in game.players if p != sid))
+        utils.publish_event(self.rmq.channel, gid, Event("drawOffer", None), next(p for p in game.players if p != sid))
 
     async def accept_draw(self, sid):
         _, gid = await self.gc.get_game_by_sid(sid)
-        await utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": None, "outcome": Outcome.AGREEMENT.value}))
+        utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": None, "outcome": Outcome.AGREEMENT.value}))
 
     async def resign(self, sid):
         game, gid = await self.gc.get_game_by_sid(sid)
-        await utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": int(game.players.index(sid)), "outcome": Outcome.RESIGNATION.value}))
+        # outcome event
+        utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": int(game.players.index(sid)), "outcome": Outcome.RESIGNATION.value}))  # TODO: isn't this broken?
+        # send payment instruction to loser
+        await self.init_payment(utils.opponent_ind(game.players.index(sid)), game)
 
     async def flag(self, sid, flagged):
-        _, gid = await self.gc.get_game_by_sid(sid)
-        await utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": utils.opponent_ind(flagged), "outcome": Outcome.TIMEOUT.value}))
+        game, gid = await self.gc.get_game_by_sid(sid)
+        # outcome event
+        utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": utils.opponent_ind(flagged), "outcome": Outcome.TIMEOUT.value}))
+        # send payment instruction to loser
+        await self.init_payment(utils.opponent_ind(flagged), game)
