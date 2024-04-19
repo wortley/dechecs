@@ -2,7 +2,6 @@ import logging
 from contextlib import asynccontextmanager
 
 import aioredis
-from app.abi import abi
 from app.constants import ALCHEMY_API_KEY, CLOUDAMQP_URL, REDIS_URL, SC_ADDRESS, WALLET_PK
 from app.exceptions import SocketIOExceptionHandler
 from app.game_contract import GameContract
@@ -16,7 +15,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_socketio import SocketManager
 from web3 import AsyncWeb3
-from web3.middleware import construct_sign_and_send_raw_middleware
 
 # logging config (override uvicorn default)
 logger = logging.getLogger("uvicorn")
