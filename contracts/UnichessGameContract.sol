@@ -16,7 +16,7 @@ contract UnichessGameContract {
     }
 
     address private _owner; // owner of the contract
-    uint256 private _gasLimit = 50000; // gas limit for each transaction
+    uint256 private _gasLimit = 100000; // gas limit for each transaction
 
     mapping(string => Game) private _games;
 
@@ -43,7 +43,14 @@ contract UnichessGameContract {
      * @dev Withdraw the full balance of the contract
      */
     function withdraw() public isOwner {
-        payable(_owner).transfer(address(this).balance);
+        uint256 contractBalance = address(this).balance;
+        uint256 gasAmount = _gasLimit * tx.gasprice;
+        require(
+            contractBalance > gasAmount,
+            "Insufficient balance to cover gas fee"
+        );
+        uint256 withdrawalAmount = contractBalance - gasAmount;
+        payable(_owner).transfer(withdrawalAmount);
     }
 
     /**
@@ -83,20 +90,19 @@ contract UnichessGameContract {
         game.ended = true;
         uint256 gasFee = tx.gasprice * _gasLimit;
         uint256 playerAmount = game.wager;
-        uint256 commission = (playerAmount * 10) / 100; // 10% commission
+        uint256 commission = (playerAmount * 7) / 100; // 7% commission
         playerAmount -= commission;
 
-        if (gasFee >= playerAmount) {
-            emit InsufficientFunds(gid, address(this).balance);
-            return;
-        }
+        require(playerAmount > gasFee, "Insufficient funds to cover gas fee");
 
         playerAmount -= gasFee;
 
-        if (address(this).balance >= ((playerAmount * 2) + (gasFee * 2))) {
-            payable(game.player1).transfer(playerAmount);
-            payable(game.player2).transfer(playerAmount);
-        } else emit InsufficientFunds(gid, address(this).balance);
+        require(
+            address(this).balance >= ((playerAmount * 2) + (gasFee * 2)),
+            "Insufficient funds to cover player payout"
+        );
+        payable(game.player1).transfer(playerAmount);
+        payable(game.player2).transfer(playerAmount);
     }
 
     /**
@@ -117,20 +123,16 @@ contract UnichessGameContract {
 
         uint256 gasFee = tx.gasprice * _gasLimit;
         uint256 totalWager = (game.wager * 2);
-        uint256 commission = (totalWager * 10) / 100; // 10% commission
+        uint256 commission = (totalWager * 7) / 100;
         totalWager -= commission;
 
-        if (gasFee >= totalWager) {
-            emit InsufficientFunds(gid, address(this).balance);
-            return;
-        }
-
+        require(gasFee < totalWager, "Insufficient funds to cover gas fee");
         uint256 winnerAmount = totalWager - gasFee;
-        if (address(this).balance >= (winnerAmount + gasFee))
-            payable(game.winner).transfer(winnerAmount);
-        else emit InsufficientFunds(gid, address(this).balance);
-    }
 
-    //  events for EVM logging
-    event InsufficientFunds(string gid, uint256 contractBalance);
+        require(
+            address(this).balance >= (winnerAmount + gasFee),
+            "Insufficient funds to cover winner payout"
+        );
+        payable(game.winner).transfer(winnerAmount);
+    }
 }
