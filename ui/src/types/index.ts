@@ -69,6 +69,8 @@ export type BoardState = {
 export interface StartData {
   colour: Colour;
   timeRemaining: number;
+  round: number;
+  totalRounds: number;
 }
 
 export interface TimerData {
@@ -79,4 +81,5 @@ export interface TimerData {
 export interface GameInfo {
   timeControl: number;
   wagerAmount: number;
+  totalRounds: number;
 }

@@ -69,7 +69,7 @@ class GameController:
         except aioredis.RedisError as exc:
             raise CustomException(f"Redis error: {exc}", emit_local=False, gid=gid)
 
-    async def create(self, sid, time_control, wager, wallet_addr):
+    async def create(self, sid, time_control, wager, wallet_addr, n_rounds):
         """
         Create a new game
 
@@ -77,6 +77,7 @@ class GameController:
         :param time_control: time control in minutes
         :param wager: wager amount (ETH)
         :param wallet_addr: player's wallet address
+        :param n_rounds: number of rounds in the game
         """
         gid = str(uuid.uuid4())
         self.sio.enter_room(sid, gid)  # create a room for the game
@@ -92,11 +93,14 @@ class GameController:
             players=[sid],
             board=Board(),
             wager=wager,
-            player_wallet_addrs=[wallet_addr],
+            player_wallet_addrs={sid: wallet_addr},
             tr_w=tr,
             tr_b=tr,
             turn_start_time=-1,
             time_control=time_control,
+            match_score={sid: 0},
+            n_rounds=n_rounds,
+            round=1,
         )
 
         self.gr.add_player_gid_record(sid, gid)
@@ -134,6 +138,7 @@ class GameController:
         game_info = {
             "wagerAmount": game.wager,
             "timeControl": game.time_control,
+            "totalRounds": game.n_rounds,
         }
         await self.sio.emit("gameInfo", game_info, to=sid)
 
@@ -150,14 +155,13 @@ class GameController:
 
         self.sio.enter_room(sid, gid)  # join room
         game.players.append(sid)
-        game.player_wallet_addrs.append(wallet_addr)
+        game.player_wallet_addrs[sid] = wallet_addr
+        game.match_score[sid] = 0
 
         self.gr.add_player_gid_record(sid, gid)
 
-        # randomly pick white and black (also need to shuffle wallet addresses)
-        sids_and_wallets = list(zip(game.players, game.player_wallet_addrs))
-        random.shuffle(sids_and_wallets)
-        game.players, game.player_wallet_addrs = zip(*sids_and_wallets)
+        # randomly pick white and black
+        game.players = random.shuffle(game.players)
 
         game.turn_start_time = time_ns() / 1_000_000  # reset turn start time
 
@@ -177,7 +181,7 @@ class GameController:
             gid,
             Event(
                 "start",
-                {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w},
+                {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w, "round": game.round, "totalRounds": game.n_rounds},
             ),
             game.players[0],
         )
@@ -186,7 +190,7 @@ class GameController:
             gid,
             Event(
                 "start",
-                {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b},
+                {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b, "round": game.round, "totalRounds": game.n_rounds},
             ),
             game.players[1],
         )
@@ -201,7 +205,6 @@ class GameController:
         game, gid = await self.get_game_by_sid(sid)
         game.board.reset()
         game.players.reverse()  # switch white and black
-        game.player_wallet_addrs.reverse()  # switch wallet addresses
         game.tr_w = game.tr_b = TimeConstants.MILLISECONDS_PER_MINUTE * game.time_control
         game.turn_start_time = time_ns() / 1_000_000
 
@@ -238,7 +241,7 @@ class GameController:
             game.outcome = Outcome.ABANDONED.value
             winner_ind = utils.opponent_ind(game.players.index(sid))
             utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": winner_ind, "outcome": Outcome.ABANDONED.value}))
-            await self.contract.declare_winner(gid, utils.winner_addr(game, winner_ind))
+            await self.contract.declare_winner(gid, game.player_wallet_addrs[game.players[winner_ind]])
 
         await self.clear_game(sid, game, gid)
 

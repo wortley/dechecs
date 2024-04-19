@@ -31,8 +31,11 @@ class Game:
     turn_start_time: float  # timestamp when the turn started
     time_control: int  # time control (minutes)
     wager: float  # wager amount
-    player_wallet_addrs: List[str]  # player wallet addresses (same order as players)
-    outcome: Optional[int] = None
+    player_wallet_addrs: Dict[str, str]  # maps sids to wallet addresses
+    outcome: Optional[int] = None  # outcome of the game
+    match_score: Dict[str, int]  # keeps track of how many rounds each player has won
+    round: int  # current round
+    n_rounds: int  # number of rounds
 
 
 @dataclass

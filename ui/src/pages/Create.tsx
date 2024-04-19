@@ -21,6 +21,7 @@ export default function Create() {
   const [wagerAmountETH, setWagerAmountETH] = useState<number>(0);
   const [gasPrice, setGasPrice] = useState<number>(0);
   const [showModal, setShowModal] = useState<boolean>(false);
+  const [rounds, setRounds] = useState<number>(1);
 
   const { address, isConnected } = useAccount();
   const { data: balance } = useBalance({ address, chainId });
@@ -48,6 +49,8 @@ export default function Create() {
         state: {
           colour: data.colour,
           timeRemaining: data.timeRemaining,
+          round: data.round,
+          totalRounds: data.totalRounds,
         },
       });
     }
@@ -81,6 +84,8 @@ export default function Create() {
   function validateGameCreation() {
     if (!isConnected) return "Please connect your wallet.";
     if (timeControl < 0) return "Please select a time control.";
+    if (rounds < 1 || rounds > 10)
+      return "Please enter a valid number of rounds.";
     if (wagerAmount <= 0 || wagerAmountETH <= 0)
       return "Please enter a wager amount.";
     if (wagerAmountETH >= Number(balance!.formatted) - gasPrice)
@@ -95,7 +100,7 @@ export default function Create() {
       toast.error(err);
       return;
     }
-    socket.emit("create", timeControl, wagerAmountETH, address);
+    socket.emit("create", timeControl, wagerAmountETH, address, rounds);
   }
 
   return (
@@ -116,6 +121,18 @@ export default function Create() {
               <option value={10}>10m Rapid</option>
               <option value={30}>30m Classical</option>
             </select>
+            <label htmlFor="rounds">Number of rounds:</label>
+            <input
+              type="number"
+              id="rounds"
+              onKeyDown={(e) => e.preventDefault()}
+              style={{ caretColor: "transparent" }}
+              value={rounds}
+              min="1"
+              step="1"
+              max="10"
+              onChange={(e) => setRounds(parseInt(e.currentTarget.value))}
+            />
             <label htmlFor="wager-amount">Wager amount (GBP):</label>
             <input
               type="number"
