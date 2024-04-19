@@ -28,7 +28,7 @@ export default function TermsModal({
     <dialog className={styles.termsModal}>
       <h3>Terms of use</h3>
       <p className={styles.termsText}>{TERMS_OF_USE}</p>
-      <button onClick={onClose}>OK</button>
+      <button onClick={onClose}>Close</button>
     </dialog>
   );
 }
