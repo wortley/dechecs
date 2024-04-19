@@ -5,6 +5,8 @@ from app.constants import SC_ADDRESS, WALLET_PK
 class GameContract:
     """Wrapper around smart contract functions declareWinner and declareDraw"""
 
+    GAS_LIMIT = 100000
+
     def __init__(self, w3):
         self.w3 = w3
         self.contract = w3.eth.contract(address=SC_ADDRESS, abi=abi)
@@ -15,7 +17,7 @@ class GameContract:
         tx = self.contract.functions.declareWinner(gid, winner).buildTransaction(
             {
                 "from": self.acct.address,
-                "gas": 100000,
+                "gas": self.GAS_LIMIT,
                 "nonce": self.w3.eth.getTransactionCount(self.acct.address),
             }
         )
@@ -28,7 +30,7 @@ class GameContract:
         tx = self.contract.functions.declareDraw(gid).buildTransaction(
             {
                 "from": self.acct.address,
-                "gas": 100000,
+                "gas": self.GAS_LIMIT,
                 "nonce": self.w3.eth.getTransactionCount(self.acct.address),
             }
         )
