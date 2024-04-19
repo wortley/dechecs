@@ -76,13 +76,9 @@ contract UnichessGameContract {
      * @dev Declare the game as a draw
      * @param gid id of the game
      */
-    function declareDraw(string memory gid) public {
+    function declareDraw(string memory gid) public isOwner {
         Game storage game = _games[gid];
         require(!game.ended, "Game has already ended");
-        require(
-            msg.sender == game.player1 || msg.sender == game.player2,
-            "Only players can declare the result"
-        );
 
         game.ended = true;
         uint256 gasFee = tx.gasprice * _gasLimit;
@@ -108,13 +104,9 @@ contract UnichessGameContract {
      * @param gid id of the game
      * @param _winner address of the winner
      */
-    function declareWinner(string memory gid, address _winner) public {
+    function declareWinner(string memory gid, address _winner) public isOwner {
         Game storage game = _games[gid];
         require(!game.ended, "Game has already ended");
-        require(
-            msg.sender == game.player1 || msg.sender == game.player2,
-            "Only players can declare the winner"
-        );
         require(
             _winner == game.player1 || _winner == game.player2,
             "Invalid winner address"

@@ -1,8 +1,8 @@
 import logging
-import os
 from contextlib import asynccontextmanager
 
 import aioredis
+from app.constants import ALCHEMY_API_KEY, CLOUDAMQP_URL, REDIS_URL
 from app.exceptions import SocketIOExceptionHandler
 from app.game_controller import GameController
 from app.game_registry import GameRegistry
@@ -10,16 +10,15 @@ from app.log_formatter import custom_formatter
 from app.play_controller import PlayController
 from app.rate_limit import TokenBucketRateLimiter
 from app.rmq import RMQConnectionManager
-from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_socketio import SocketManager
 
-load_dotenv()
-
 # logging config (override uvicorn default)
 logger = logging.getLogger("uvicorn")
 logger.handlers[0].setFormatter(custom_formatter)
+
+eth_node_url = f"https://eth-sepolia.g.alchemy.com/v2/{ALCHEMY_API_KEY}"
 
 # game registry
 gr = GameRegistry()
@@ -28,10 +27,10 @@ gr = GameRegistry()
 rate_limiter = TokenBucketRateLimiter()
 
 # Redis client and MQ setup
-redis_client = aioredis.Redis.from_url(os.environ.get("REDIS_URL"))
+redis_client = aioredis.Redis.from_url(REDIS_URL)
 
 # RabbitMQ connection manager (pika)
-rmq = RMQConnectionManager(os.environ.get("CLOUDAMQP_URL"), logger)
+rmq = RMQConnectionManager(CLOUDAMQP_URL, logger)
 
 
 @asynccontextmanager
