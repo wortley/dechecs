@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { useAccount, useBalance } from "wagmi";
+import { useAccount, useBalance, useWriteContract } from "wagmi";
 import { estimateFeesPerGas } from "wagmi/actions";
+import { abi } from "../abi";
 import { config } from "../config";
-import { chainId } from "../constants";
+import { SC_ADDRESS, chainId } from "../constants";
 import { socket } from "../socket";
 import { StartData } from "../types";
 import { GBPToETH } from "../utils/eth";
@@ -17,11 +18,20 @@ export default function Create() {
   const [wagerAmountETH, setWagerAmountETH] = useState<number>(0);
   const [gasPrice, setGasPrice] = useState<number>(0);
 
+  const { writeContract, isPending } = useWriteContract();
   const { address, isConnected } = useAccount();
   const { data: balance } = useBalance({ address, chainId });
 
   useEffect(() => {
     function onGameId(gameId: string) {
+      // game has been created, user receives game ID from server
+      writeContract({
+        abi,
+        address: SC_ADDRESS,
+        functionName: "createGame",
+        value: BigInt(wagerAmountETH),
+        args: [newGameId],
+      });
       setNewGameId(gameId);
     }
 
@@ -76,7 +86,7 @@ export default function Create() {
       toast.error(err);
       return;
     }
-    socket.emit("create", timeControl, wagerAmount, address);
+    socket.emit("create", timeControl, wagerAmountETH, address);
   }
 
   return (
@@ -119,7 +129,7 @@ export default function Create() {
           </button>
         </>
       )}
-      {newGameId && (
+      {newGameId && !isPending && (
         <>
           <p>
             Share this code with a friend to play against them. Once they join

@@ -1,25 +1,27 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { useAccount, useBalance } from "wagmi";
+import { useAccount, useBalance, useWriteContract } from "wagmi";
 import { estimateFeesPerGas } from "wagmi/actions";
+import { abi } from "../abi";
 import { config } from "../config";
-import { chainId } from "../constants";
+import { SC_ADDRESS, chainId } from "../constants";
 import { socket } from "../socket";
 import { StartData } from "../types";
-import { GBPToETH } from "../utils/eth";
+import { ETHtoGBP } from "../utils/eth";
 
 interface GameInfo {
-  timeControl: number;
-  wagerAmount: number;
+  timeControl: number; // time control (minutes)
+  wagerAmount: number; // wager amount (ETH)
 }
 
-export default function Join() {
+export default async function Join() {
   const navigate = useNavigate();
   const [joiningGameId, setJoiningGameId] = useState("");
   const [gameInfo, setGameInfo] = useState<GameInfo | null>(null);
 
   const { address, isConnected } = useAccount();
+  const { writeContract, isPending } = useWriteContract();
   const { data: balance } = useBalance({ address, chainId });
 
   useEffect(() => {
@@ -57,9 +59,8 @@ export default function Join() {
       formatUnits: "ether",
     });
     const gasPrice = Number(priceInfo.formatted.maxFeePerGas);
-    const wagerETH = await GBPToETH(gameInfo.wagerAmount);
 
-    if (wagerETH >= Number(balance!.formatted) - gasPrice)
+    if (gameInfo.wagerAmount >= Number(balance!.formatted) - gasPrice)
       return "Insufficient ETH balance.";
     return 0;
   }
@@ -69,6 +70,16 @@ export default function Join() {
     if (err) {
       toast.error(err);
       return;
+    }
+    writeContract({
+      abi,
+      address: SC_ADDRESS,
+      functionName: "joinGame",
+      value: BigInt(gameInfo!.wagerAmount),
+      args: [joiningGameId],
+    });
+    while (isPending) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
     socket.emit("acceptGame", joiningGameId, address);
   }
@@ -92,7 +103,9 @@ export default function Join() {
         <>
           <p>Game code: {joiningGameId}</p>
           <p>Time control: {gameInfo.timeControl}m</p>
-          <p>Wager amount: £{gameInfo.wagerAmount.toFixed(2)}</p>
+          <p>
+            Wager amount: £{(await ETHtoGBP(gameInfo.wagerAmount)).toFixed(2)}
+          </p>
           <button onClick={onAcceptGame}>Accept and start game</button>
         </>
       )}
