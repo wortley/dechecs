@@ -39,6 +39,10 @@ contract UnichessGameContract {
         _;
     }
 
+    function withdraw() public isOwner {
+        payable(_owner).transfer(address(this).balance);
+    }
+
     /**
      * @dev Create a new game
      * @param gid id of the game
@@ -79,13 +83,16 @@ contract UnichessGameContract {
 
         game.ended = true;
         uint256 gasFee = tx.gasprice * _gasLimit;
+        uint256 playerAmount = game.wager;
+        uint256 commission = (playerAmount * 5) / 100; // 5% commission
+        playerAmount -= commission;
 
         if (gasFee >= game.wager) {
             emit InsufficientFunds(gid, address(this).balance);
             return;
         }
 
-        uint256 playerAmount = game.wager - gasFee;
+        playerAmount -= gasFee;
 
         if (address(this).balance >= ((playerAmount * 2) + (gasFee * 2))) {
             payable(game.player1).transfer(playerAmount);
@@ -115,6 +122,8 @@ contract UnichessGameContract {
 
         uint256 gasFee = tx.gasprice * _gasLimit;
         uint256 totalWager = (game.wager * 2);
+        uint256 commission = (totalWager * 5) / 100; // 5% commission
+        totalWager -= commission;
 
         if (gasFee >= totalWager) {
             emit InsufficientFunds(gid, address(this).balance);
