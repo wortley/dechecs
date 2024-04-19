@@ -86,7 +86,7 @@ contract UnichessGameContract {
         uint256 commission = (playerAmount * 5) / 100; // 5% commission
         playerAmount -= commission;
 
-        if (gasFee >= game.wager) {
+        if (gasFee >= playerAmount) {
             emit InsufficientFunds(gid, address(this).balance);
             return;
         }
