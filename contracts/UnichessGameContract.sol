@@ -39,6 +39,9 @@ contract UnichessGameContract {
         _;
     }
 
+    /**
+     * @dev Withdraw the full balance of the contract
+     */
     function withdraw() public isOwner {
         payable(_owner).transfer(address(this).balance);
     }
