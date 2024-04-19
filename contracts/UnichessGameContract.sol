@@ -13,13 +13,14 @@ contract UnichessGameContract {
         uint256 wager; // amount to wager in wei
         address winner; // wallet address of the winner
         bool ended; // flag to indicate if the game has ended
-        uint256 timestamp; // timestamp of when the game was created
+        uint256 created_at; // timestamp of when the game was created
     }
 
     address private _owner; // owner of the contract
     uint256 private _gasLimit = 100000; // gas limit for each transaction
     uint8 private _commission = 7; // 7% commission
     bool private _paused; // flag to indicate if the contract is paused
+    uint32 private _gameExpiry = 86400; // expire after 24 hours if no other player has joined
 
     mapping(string => Game) private _games;
 
@@ -94,7 +95,10 @@ contract UnichessGameContract {
         Game storage game = _games[gid];
         require(!game.ended, "Game has already ended.");
         require(msg.value == game.wager, "Incorrect wager amount sent");
-        require(block.timestamp - game.timestamp < 86400, "Game has expired");
+        require(
+            block.timestamp - game.created_at < _gameExpiry,
+            "Game has expired"
+        );
 
         game.player2 = msg.sender;
     }
