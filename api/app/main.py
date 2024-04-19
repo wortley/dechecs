@@ -2,7 +2,7 @@ import logging
 from contextlib import asynccontextmanager
 
 import aioredis
-from app.constants import ALCHEMY_API_KEY, CLOUDAMQP_URL, REDIS_URL, SC_ADDRESS, WALLET_PK
+from app.constants import ALCHEMY_API_KEY, CLOUDAMQP_URL, REDIS_URL
 from app.exceptions import SocketIOExceptionHandler
 from app.game_contract import GameContract
 from app.game_controller import GameController
@@ -72,7 +72,7 @@ chess_api.add_middleware(
 socket_manager = SocketManager(app=chess_api)
 
 # Contract wrapper
-contract = GameContract(w3)
+contract = GameContract(w3, logger)
 
 # Game controller
 gc = GameController(rmq, redis_client, chess_api.sio, gr, contract, logger)
