@@ -74,7 +74,7 @@ class GameController:
 
         :param sid: player's socket ID
         :param time_control: time control in minutes
-        :param wager: wager amount (GBP)
+        :param wager: wager amount (ETH)
         :param wallet_addr: player's wallet address
         """
         gid = str(uuid.uuid4())
