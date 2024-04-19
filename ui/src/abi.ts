@@ -5,25 +5,6 @@ export const abi = [
     type: "constructor",
   },
   {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "string",
-        name: "gid",
-        type: "string",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "contractBalance",
-        type: "uint256",
-      },
-    ],
-    name: "InsufficientFunds",
-    type: "event",
-  },
-  {
     stateMutability: "payable",
     type: "fallback",
   },
@@ -82,6 +63,13 @@ export const abi = [
     name: "joinGame",
     outputs: [],
     stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "togglePause",
+    outputs: [],
+    stateMutability: "nonpayable",
     type: "function",
   },
   {
