@@ -125,6 +125,7 @@ input {
   border: 1px solid #213547;
   padding: 0.6em 1.2em;
   font-size: 1em;
+  margin-bottom: 1em;
   font-family: inherit;
   transition: border-color 0.25s;
 }
@@ -145,7 +146,7 @@ input[type="checkbox"] {
 
 .accept-terms-container {
   display: inline;
-  margin-bottom: 1em;
+  margin-bottom: 0.5em;
 }
 
 /* <label> */

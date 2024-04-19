@@ -10,8 +10,6 @@ import styles from "./play.module.css";
 export default function Play() {
   const location = useLocation();
 
-  // const { address, isConnected } = useAccount();
-
   const [turn, setTurn] = useState(Colour.WHITE);
   const [outcome, setOutcome] = useState<Outcome>();
   const [winner, setWinner] = useState<Colour>();
@@ -22,6 +20,8 @@ export default function Play() {
 
   const colour = location.state.colour;
   const timeControl = location.state.timeRemaining;
+  const round = location.state.round;
+  const totalRounds = location.state.totalRounds;
 
   function onOfferDraw() {
     socket.emit("offerDraw");
@@ -72,6 +72,9 @@ export default function Play() {
             />
           )}
           <div>
+            <h5>
+              Round {round} / {totalRounds}
+            </h5>
             <Timer side={colour} timeControl={timeControl} />
             {drawOffer ? (
               <button onClick={onAcceptDraw}>Accept draw offer</button>
@@ -82,7 +85,13 @@ export default function Play() {
           </div>
         </div>
       </div>
-      <ResultModal outcome={outcome} winner={winner} side={colour} />
+      <ResultModal
+        outcome={outcome}
+        winner={winner}
+        side={colour}
+        round={round}
+        totalRounds={totalRounds}
+      />
 
       <small>
         Chess pieces by{" "}

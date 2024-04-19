@@ -107,8 +107,8 @@ async def disconnect(sid):
 
 @chess_api.sio.on("create")
 @sioexc.sio_exception_handler
-async def create(sid, time_control, wager, wallet_addr):
-    await gc.create(sid, time_control, wager, wallet_addr)
+async def create(sid, time_control, wager, wallet_addr, n_rounds):
+    await gc.create(sid, time_control, wager, wallet_addr, n_rounds)
 
 
 @chess_api.sio.on("join")

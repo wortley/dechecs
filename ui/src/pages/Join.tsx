@@ -29,6 +29,8 @@ export default function Join() {
         state: {
           colour: data.colour,
           timeRemaining: data.timeRemaining,
+          round: data.round,
+          totalRounds: data.totalRounds,
         },
       });
     }

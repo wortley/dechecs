@@ -8,12 +8,16 @@ type ResultModalProps = {
   outcome?: Outcome;
   winner?: Colour;
   side: Colour;
+  round: number;
+  totalRounds: number;
 };
 
 export default function ResultModal({
   outcome,
   winner,
   side,
+  round,
+  totalRounds,
 }: Readonly<ResultModalProps>) {
   const navigate = useNavigate();
   // const [rematchOffer, setRematchOffer] = useState(false);
@@ -25,6 +29,8 @@ export default function ResultModal({
         state: {
           colour: data.colour,
           timeRemaining: data.timeRemaining,
+          round: data.round,
+          totalRounds: data.totalRounds,
         },
       });
     }
@@ -100,6 +106,10 @@ export default function ResultModal({
   //   socket.emit("acceptRematch");
   // }
 
+  function onNextRound() {
+    socket.emit("nextRound");
+  }
+
   function onExit() {
     socket.emit("exit");
     navigate("/");
@@ -109,19 +119,28 @@ export default function ResultModal({
     <dialog className={styles.resultModal}>
       <h3>{winnerStr}</h3>
       <h4>{outcomeStr}</h4>
-      <p>
-        {side === winner
-          ? "Congrats on your big win! You'll receive your payment very shortly!"
-          : !winner
-          ? "Good game!"
-          : "Unlucky! :( We'll let you know when your payment has settled!"}
-      </p>
+      {round === totalRounds && (
+        <p>
+          {side === winner
+            ? "Congrats on your big win! You'll receive your payment very shortly!"
+            : !winner
+            ? "Good game!"
+            : "Unlucky! :( We'll let you know when your payment has settled!"}
+        </p>
+      )}
       {/* {rematchOffer ? (
         <button onClick={onAcceptRematch}>Accept rematch offer</button>
       ) : (
         <button onClick={onOfferRematch}>Offer rematch</button>
       )} */}
-      <button onClick={onExit}>Exit</button>
+      {round < totalRounds ? (
+        <>
+          <button onClick={onNextRound}>Next round</button>
+          {/* <button onClick={() => dialog.close()}>Forfeit match</button> */}
+        </>
+      ) : (
+        <button onClick={onExit}>Exit</button>
+      )}
     </dialog>
   );
 }

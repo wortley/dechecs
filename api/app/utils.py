@@ -17,10 +17,6 @@ def opponent_ind(turn: int):
     return int(not bool(turn))
 
 
-def winner_addr(game: Game, winner_ind: int):
-    return game.player_wallet_addrs[winner_ind]
-
-
 def serialise_game_state(game):
     """Serialise game state to JSON string for storage in Redis"""
     if not game:

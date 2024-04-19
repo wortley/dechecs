@@ -97,7 +97,7 @@ class PlayController:
         # outcome event
         utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": winner_ind, "outcome": Outcome.RESIGNATION.value}))
         # declare winner on SC
-        await self.contract.declare_winner(gid, utils.winner_addr(game, winner_ind))
+        await self.contract.declare_winner(gid, game.player_wallet_addrs[game.players[winner_ind]])
         # save game
         await self.gc.save_game(gid, game, sid)
 
@@ -108,6 +108,6 @@ class PlayController:
         # outcome event
         utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": winner_ind, "outcome": Outcome.TIMEOUT.value}))
         # declare winner on SC
-        await self.contract.declare_winner(gid, utils.winner_addr(game, winner_ind))
+        await self.contract.declare_winner(gid, game.player_wallet_addrs[game.players[winner_ind]])
         # save game
         await self.gc.save_game(gid, game, sid)
