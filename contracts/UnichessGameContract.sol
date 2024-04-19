@@ -57,13 +57,12 @@ contract UnichessGameContract {
      * @dev Join an existing game
      * @param gid id of the game
      */
-    function joinGame(string memory gid, address sender) public payable {
+    function joinGame(string memory gid) public payable {
         Game storage game = _games[gid];
         require(!game.ended, "Game has already ended.");
         require(msg.value == game.wager, "Incorrect wager amount sent");
 
-        // game.player2 = msg.sender;
-        game.player2 = sender; // temp
+        game.player2 = msg.sender;
     }
 
     /**
