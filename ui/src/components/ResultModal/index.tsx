@@ -108,10 +108,10 @@ export default function ResultModal({
       <h4>{outcomeStr}</h4>
       <p>
         {side === winner
-          ? "Congrats on your big win! You will receive your payment shortly!"
+          ? "Congrats on your big win! You'll receive your payment very shortly!"
           : !winner
           ? "Good game!"
-          : "Unlucky! :( We'll let you know when your payment has completed!"}
+          : "Unlucky! :( We'll let you know when your payment has settled!"}
       </p>
       {/* {rematchOffer ? (
         <button onClick={onAcceptRematch}>Accept rematch offer</button>
