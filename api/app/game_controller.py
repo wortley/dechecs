@@ -253,7 +253,7 @@ class GameController:
             game.players.remove(sid)
             await self.save_game(gid, game, sid)
         else:  # last player to leave game
-            self.sio.close_room(gid)
+            await self.sio.close_room(gid)
             for ctag in self.gr.get_game_ctags(gid):
                 self.rmq.channel.basic_cancel(consumer_tag=ctag)
             self.gr.remove_all_game_ctags(gid)
