@@ -121,7 +121,10 @@ export default function Create() {
             max="10000"
             onChange={(e) => setWagerAmount(parseFloat(e.currentTarget.value))}
           />
-          <p>Wager amount: {wagerAmountETH} ETH</p>
+          <p>
+            Wager amount: {wagerAmountETH > 0 ? wagerAmountETH.toFixed(8) : 0}{" "}
+            ETH
+          </p>
           <p>Gas price: {gasPrice} ETH</p>
           <button onClick={onCreateGame}>Generate code</button>
           <button
