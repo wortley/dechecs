@@ -13,10 +13,13 @@ contract UnichessGameContract {
         uint256 wager; // amount to wager in wei
         address winner; // wallet address of the winner
         bool ended; // flag to indicate if the game has ended
+        uint256 timestamp; // timestamp of when the game was created
     }
 
     address private _owner; // owner of the contract
     uint256 private _gasLimit = 100000; // gas limit for each transaction
+    uint8 private _commission = 7; // 7% commission
+    bool private _paused; // flag to indicate if the contract is paused
 
     mapping(string => Game) private _games;
 
@@ -40,6 +43,21 @@ contract UnichessGameContract {
     }
 
     /**
+     * @dev Throws if the contract is paused.
+     */
+    modifier notPaused() {
+        require(!_paused, "Contract is paused");
+        _;
+    }
+
+    /**
+     * @dev Pauses or unpauses the contract
+     */
+    function togglePause() public isOwner {
+        _paused = !_paused;
+    }
+
+    /**
      * @dev Withdraw the full balance of the contract
      */
     function withdraw() public isOwner {
@@ -57,13 +75,14 @@ contract UnichessGameContract {
      * @dev Create a new game
      * @param gid id of the game
      */
-    function createGame(string memory gid) public payable {
+    function createGame(string calldata gid) public payable notPaused {
         _games[gid] = Game(
             msg.sender,
             address(0),
             msg.value,
             address(0),
-            false
+            false,
+            block.timestamp
         );
     }
 
@@ -71,10 +90,11 @@ contract UnichessGameContract {
      * @dev Join an existing game
      * @param gid id of the game
      */
-    function joinGame(string memory gid) public payable {
+    function joinGame(string calldata gid) public payable notPaused {
         Game storage game = _games[gid];
         require(!game.ended, "Game has already ended.");
         require(msg.value == game.wager, "Incorrect wager amount sent");
+        require(block.timestamp - game.timestamp < 86400, "Game has expired");
 
         game.player2 = msg.sender;
     }
@@ -83,14 +103,15 @@ contract UnichessGameContract {
      * @dev Declare the game as a draw
      * @param gid id of the game
      */
-    function declareDraw(string memory gid) public isOwner {
+    function declareDraw(string calldata gid) public isOwner {
         Game storage game = _games[gid];
+        require(game.player2 != address(0), "Game has not started");
         require(!game.ended, "Game has already ended");
 
         game.ended = true;
         uint256 gasFee = tx.gasprice * _gasLimit;
         uint256 playerAmount = game.wager;
-        uint256 commission = (playerAmount * 7) / 100; // 7% commission
+        uint256 commission = (playerAmount * _commission) / 100;
         playerAmount -= commission;
 
         require(playerAmount > gasFee, "Insufficient funds to cover gas fee");
@@ -110,8 +131,12 @@ contract UnichessGameContract {
      * @param gid id of the game
      * @param _winner address of the winner
      */
-    function declareWinner(string memory gid, address _winner) public isOwner {
+    function declareWinner(
+        string calldata gid,
+        address _winner
+    ) public isOwner {
         Game storage game = _games[gid];
+        require(game.player2 != address(0), "Game has not started");
         require(!game.ended, "Game has already ended");
         require(
             _winner == game.player1 || _winner == game.player2,
@@ -123,7 +148,7 @@ contract UnichessGameContract {
 
         uint256 gasFee = tx.gasprice * _gasLimit;
         uint256 totalWager = (game.wager * 2);
-        uint256 commission = (totalWager * 7) / 100;
+        uint256 commission = (totalWager * _commission) / 100;
         totalWager -= commission;
 
         require(gasFee < totalWager, "Insufficient funds to cover gas fee");
