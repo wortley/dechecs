@@ -3,10 +3,10 @@
 pragma solidity >=0.8.2 <0.9.0;
 
 /**
- * @title UnichessGameContract
+ * @title DechecsGameContract
  * @dev Pool funds from two players and transfer to winner
  */
-contract UnichessGameContract {
+contract DechecsGameContract {
     struct Game {
         address player1; // wallet address of player 1
         address player2; // wallet address of player 2

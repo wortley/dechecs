@@ -61,7 +61,7 @@ chess_api = FastAPI(lifespan=lifespan)
 chess_api.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://unichess.netlify.app",
+        "https://dechecs.netlify.app",
         "http://localhost:5173",
     ],
     allow_credentials=True,

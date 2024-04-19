@@ -5,9 +5,9 @@ import "./App.css";
 import { WC_PROJECT_ID } from "./constants";
 
 const metadata = {
-  name: "unichess",
-  description: "unichess is a decentralized chess platform on Ethereum.",
-  url: "https://unichess.netlify.app",
+  name: "dechecs",
+  description: "dechecs is a decentralized chess platform on Ethereum.",
+  url: "https://dechecs.netlify.app",
   icons: [],
 };
 
