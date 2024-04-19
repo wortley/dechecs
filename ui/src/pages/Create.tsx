@@ -5,6 +5,7 @@ import { parseEther } from "viem";
 import { useAccount, useBalance } from "wagmi";
 import { estimateFeesPerGas, writeContract } from "wagmi/actions";
 import { abi } from "../abi";
+import TermsModal from "../components/TermsModal";
 import { config } from "../config";
 import { SC_ADDRESS, chainId } from "../constants";
 import { socket } from "../socket";
@@ -16,8 +17,10 @@ export default function Create() {
   const [newGameId, setNewGameId] = useState("");
   const [timeControl, setTimeControl] = useState<number>(-1);
   const [wagerAmount, setWagerAmount] = useState<number>(0);
+  const [acceptTerms, setAcceptTerms] = useState<boolean>(false);
   const [wagerAmountETH, setWagerAmountETH] = useState<number>(0);
   const [gasPrice, setGasPrice] = useState<number>(0);
+  const [showModal, setShowModal] = useState<boolean>(false);
 
   const { address, isConnected } = useAccount();
   const { data: balance } = useBalance({ address, chainId });
@@ -82,6 +85,7 @@ export default function Create() {
       return "Please enter a wager amount.";
     if (wagerAmountETH >= Number(balance!.formatted) - gasPrice)
       return "Insufficient ETH balance.";
+    if (!acceptTerms) return "Please accept the terms of use.";
     return 0;
   }
 
@@ -95,66 +99,85 @@ export default function Create() {
   }
 
   return (
-    <div className="home-div">
-      {!newGameId && (
-        <>
-          <h4>New game</h4>
-          <label htmlFor="time-control">Time control:</label>
-          <select
-            id="time-control"
-            value={timeControl}
-            onChange={(e) => setTimeControl(parseInt(e.currentTarget.value))}
-          >
-            <option value={-1} disabled hidden></option>
-            <option value={3}>3m Blitz</option>
-            <option value={5}>5m Blitz</option>
-            <option value={10}>10m Rapid</option>
-            <option value={30}>30m Classical</option>
-          </select>
-          <label htmlFor="wager-amount">Wager amount (GBP):</label>
-          <input
-            type="number"
-            id="wager-amount"
-            value={wagerAmount}
-            min="10"
-            step="0.01"
-            max="10000"
-            onChange={(e) => setWagerAmount(parseFloat(e.currentTarget.value))}
-          />
-          <p>
-            Wager amount: {wagerAmountETH > 0 ? wagerAmountETH.toFixed(8) : 0}{" "}
-            ETH
-          </p>
-          <p>Gas price: {gasPrice} ETH</p>
-          <button onClick={onCreateGame}>Generate code</button>
-          <button
-            onClick={() => {
-              setTimeControl(-1);
-              navigate("/");
-            }}
-          >
-            Back
-          </button>
-        </>
-      )}
-      {newGameId && (
-        <>
-          <p>
-            Share this code with a friend to play against them. Once they join
-            and accept the wager, the game will start.
-          </p>
-          <h4>{newGameId}</h4>
-          <button
-            onClick={async () =>
-              await navigator.clipboard
-                .writeText(newGameId)
-                .then(() => toast.success("Code copied to clipboard."))
-            }
-          >
-            Copy code
-          </button>
-        </>
-      )}
-    </div>
+    <>
+      <div className="home-div">
+        {!newGameId && (
+          <>
+            <h4>New game</h4>
+            <label htmlFor="time-control">Time control:</label>
+            <select
+              id="time-control"
+              value={timeControl}
+              onChange={(e) => setTimeControl(parseInt(e.currentTarget.value))}
+            >
+              <option value={-1} disabled hidden></option>
+              <option value={3}>3m Blitz</option>
+              <option value={5}>5m Blitz</option>
+              <option value={10}>10m Rapid</option>
+              <option value={30}>30m Classical</option>
+            </select>
+            <label htmlFor="wager-amount">Wager amount (GBP):</label>
+            <input
+              type="number"
+              id="wager-amount"
+              value={wagerAmount}
+              min="10"
+              step="0.01"
+              max="10000"
+              onChange={(e) =>
+                setWagerAmount(parseFloat(e.currentTarget.value))
+              }
+            />
+            <p>
+              Wager amount: {wagerAmountETH > 0 ? wagerAmountETH.toFixed(8) : 0}{" "}
+              ETH
+            </p>
+            <p>Gas price: {gasPrice} ETH</p>
+            <div className="accept-terms-container">
+              <input
+                type="checkbox"
+                id="accept-terms"
+                value={acceptTerms.toString()}
+                onChange={(e) => setAcceptTerms(e.currentTarget.checked)}
+              />
+              <label htmlFor="accept-terms">
+                I accept the{" "}
+                <a href="#" onClick={() => setShowModal(true)}>
+                  terms of use
+                </a>
+              </label>
+            </div>
+            <button onClick={onCreateGame}>Generate code</button>
+            <button
+              onClick={() => {
+                setTimeControl(-1);
+                navigate("/");
+              }}
+            >
+              Back
+            </button>
+          </>
+        )}
+        {newGameId && (
+          <>
+            <p>
+              Share this code with a friend to play against them. Once they join
+              and accept the wager, the game will start.
+            </p>
+            <h4>{newGameId}</h4>
+            <button
+              onClick={async () =>
+                await navigator.clipboard
+                  .writeText(newGameId)
+                  .then(() => toast.success("Code copied to clipboard."))
+              }
+            >
+              Copy code
+            </button>
+          </>
+        )}
+      </div>
+      <TermsModal show={showModal} setShow={setShowModal} />
+    </>
   );
 }

@@ -47,7 +47,7 @@ h1 {
 }
 
 h2 {
-  font-size: 2em;
+  font-size: 2.2em;
   line-height: 1.2;
 }
 
@@ -88,6 +88,7 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
+  max-width: 340px;
   background-color: #f9f9f9;
   cursor: pointer;
   transition: border-color 0.25s;
@@ -133,6 +134,18 @@ input:hover {
 input:focus,
 input:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+
+/* <input type="checkbox"> */
+input[type="checkbox"] {
+  width: 1em;
+  height: 1em;
+  margin-right: 1em;
+}
+
+.accept-terms-container {
+  display: inline;
+  margin-bottom: 1em;
 }
 
 /* <label> */

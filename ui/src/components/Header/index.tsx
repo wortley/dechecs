@@ -6,7 +6,7 @@ export default function Header() {
       <div className={styles.w3mContainer}>
         <w3m-button />
       </div>
-      <h2 className={styles.headerLogo}>unichess</h2>
+      <h2 className={styles.headerLogo}>d&eacute;checs</h2>
     </header>
   );
 }
