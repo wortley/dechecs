@@ -17,10 +17,6 @@ import { config } from "./config";
 import { WC_PROJECT_ID } from "./constants";
 import { socket } from "./socket";
 
-// METAMASK SDK TIPS AND TRICKS: https://medium.com/hackernoon/tips-and-tricks-for-adding-metamask-to-your-ui-32728b437194
-// TUTORIAL: https://www.youtube.com/watch?v=Y-njlhGmNMU&ab_channel=ETHGlobal
-// IMPERSONATE OTHER WALLETS: https://ethereum.stackexchange.com/questions/122695/fake-an-address-from-my-browser-metamask
-
 const queryClient = new QueryClient();
 
 createWeb3Modal({
