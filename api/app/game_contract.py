@@ -10,9 +10,9 @@ class GameContract:
         self.contract = w3.eth.contract(address=SC_ADDRESS, abi=abi)
         self.acct = w3.eth.account.from_key(WALLET_PK)
 
-    async def declare_winner(self, game_id: str, winner: str):
+    async def declare_winner(self, gid: str, winner: str):
         """Declare winner of game"""
-        tx = self.contract.functions.declareWinner(game_id, winner).buildTransaction(
+        tx = self.contract.functions.declareWinner(gid, winner).buildTransaction(
             {
                 "from": self.acct.address,
                 "gas": 100000,
@@ -23,9 +23,9 @@ class GameContract:
         tx_hash = await self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
         return await self.w3.eth.wait_for_transaction_receipt(tx_hash)
 
-    async def declare_draw(self, game_id: str):
+    async def declare_draw(self, gid: str):
         """Declare draw in game"""
-        tx = self.contract.functions.declareDraw(game_id).buildTransaction(
+        tx = self.contract.functions.declareDraw(gid).buildTransaction(
             {
                 "from": self.acct.address,
                 "gas": 100000,
