@@ -1,10 +1,8 @@
 import { io } from "socket.io-client";
 
-const URL = import.meta.env.PROD
-  ? "https://unichess-api-62644c9d9bf1.herokuapp.com"
-  : "http://localhost:8000";
+const URL = import.meta.env.VITE_API_URL;
 
-export const socket = io(URL ?? "", {
+export const socket = io(URL, {
   path: "/ws/socket.io",
   transports: ["websocket"],
   autoConnect: false,

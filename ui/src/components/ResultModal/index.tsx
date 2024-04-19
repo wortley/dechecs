@@ -74,6 +74,9 @@ export default function ResultModal({
       case Outcome.AGREEMENT: {
         return "by agreement";
       }
+      case Outcome.ABANDONED: {
+        return "by abandonment";
+      }
       default: {
         return;
       }

@@ -1,27 +1,23 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { useAccount, useBalance, useWriteContract } from "wagmi";
-import { estimateFeesPerGas } from "wagmi/actions";
+import { parseEther } from "viem";
+import { useAccount, useBalance } from "wagmi";
+import { estimateFeesPerGas, writeContract } from "wagmi/actions";
 import { abi } from "../abi";
 import { config } from "../config";
 import { SC_ADDRESS, chainId } from "../constants";
 import { socket } from "../socket";
-import { StartData } from "../types";
+import { GameInfo, StartData } from "../types";
 import { ETHtoGBP } from "../utils/eth";
 
-interface GameInfo {
-  timeControl: number; // time control (minutes)
-  wagerAmount: number; // wager amount (ETH)
-}
-
-export default async function Join() {
+export default function Join() {
   const navigate = useNavigate();
   const [joiningGameId, setJoiningGameId] = useState("");
   const [gameInfo, setGameInfo] = useState<GameInfo | null>(null);
+  const [wagerAmountGBP, setWagerAmountGBP] = useState<number>(0);
 
   const { address, isConnected } = useAccount();
-  const { writeContract, isPending } = useWriteContract();
   const { data: balance } = useBalance({ address, chainId });
 
   useEffect(() => {
@@ -34,7 +30,8 @@ export default async function Join() {
       });
     }
 
-    function onGameInfo(data: GameInfo) {
+    async function onGameInfo(data: GameInfo) {
+      setWagerAmountGBP(await ETHtoGBP(data.wagerAmount));
       setGameInfo(data);
     }
 
@@ -71,17 +68,20 @@ export default async function Join() {
       toast.error(err);
       return;
     }
-    writeContract({
-      abi,
-      address: SC_ADDRESS,
-      functionName: "joinGame",
-      value: BigInt(gameInfo!.wagerAmount),
-      args: [joiningGameId],
-    });
-    while (isPending) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
+    try {
+      const result = await writeContract(config, {
+        abi,
+        address: SC_ADDRESS,
+        functionName: "joinGame",
+        value: parseEther(gameInfo!.wagerAmount.toString()),
+        args: [joiningGameId],
+      });
+      console.log("Transaction successful:", result);
+      socket.emit("acceptGame", joiningGameId, address);
+    } catch (err) {
+      console.error("Transaction error:", err);
+      toast.error((err as Error).message.split(".")[0]);
     }
-    socket.emit("acceptGame", joiningGameId, address);
   }
 
   return (
@@ -103,9 +103,7 @@ export default async function Join() {
         <>
           <p>Game code: {joiningGameId}</p>
           <p>Time control: {gameInfo.timeControl}m</p>
-          <p>
-            Wager amount: £{(await ETHtoGBP(gameInfo.wagerAmount)).toFixed(2)}
-          </p>
+          <p>Wager amount: £{wagerAmountGBP.toFixed(2)}</p>
           <button onClick={onAcceptGame}>Accept and start game</button>
         </>
       )}

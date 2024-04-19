@@ -91,7 +91,7 @@ async def connect(sid, _):
 
 @chess_api.sio.on("disconnect")
 async def disconnect(sid):
-    await gc.clear_game(sid)
+    await gc.handle_exit(sid)
     logger.info(f"Client {sid} disconnected")
 
 
@@ -174,5 +174,4 @@ async def accept_rematch(sid):
 @sioexc.sio_exception_handler
 async def exit(sid):
     """When a client exits the game/match, clear it from game registry and cache"""
-    # TODO: when player exists when game is not finished, other player wins
-    await gc.clear_game(sid)
+    await gc.handle_exit(sid)
