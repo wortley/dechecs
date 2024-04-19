@@ -2,8 +2,10 @@ import logging
 from contextlib import asynccontextmanager
 
 import aioredis
-from app.constants import ALCHEMY_API_KEY, CLOUDAMQP_URL, REDIS_URL
+from app.abi import abi
+from app.constants import ALCHEMY_API_KEY, CLOUDAMQP_URL, REDIS_URL, SC_ADDRESS, WALLET_PK
 from app.exceptions import SocketIOExceptionHandler
+from app.game_contract import GameContract
 from app.game_controller import GameController
 from app.game_registry import GameRegistry
 from app.log_formatter import custom_formatter
@@ -13,12 +15,17 @@ from app.rmq import RMQConnectionManager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_socketio import SocketManager
+from web3 import AsyncWeb3
+from web3.middleware import construct_sign_and_send_raw_middleware
 
 # logging config (override uvicorn default)
 logger = logging.getLogger("uvicorn")
 logger.handlers[0].setFormatter(custom_formatter)
 
 eth_node_url = f"https://eth-sepolia.g.alchemy.com/v2/{ALCHEMY_API_KEY}"
+
+# web3
+w3 = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(eth_node_url))
 
 # game registry
 gr = GameRegistry()
@@ -66,11 +73,14 @@ chess_api.add_middleware(
 
 socket_manager = SocketManager(app=chess_api)
 
+# Contract wrapper
+contract = GameContract(w3)
+
 # Game controller
-gc = GameController(rmq, redis_client, chess_api.sio, gr, logger)
+gc = GameController(rmq, redis_client, chess_api.sio, gr, contract, logger)
 
 # Play (in game events) controller
-pc = PlayController(rmq, chess_api.sio, gc)
+pc = PlayController(rmq, chess_api.sio, contract, gc)
 
 # Global exception handler for controller methods
 sioexc = SocketIOExceptionHandler(chess_api.sio, rmq, logger)
