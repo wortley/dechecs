@@ -16,11 +16,12 @@ from chess import Board
 
 class GameController:
 
-    def __init__(self, rmq, redis_client, sio, gr, logger):
+    def __init__(self, rmq, redis_client, sio, gr, contract, logger):
         self.rmq = rmq
         self.redis_client = redis_client
         self.sio = sio
         self.gr = gr
+        self.contract = contract
         self.logger = logger
 
     def _on_emit_done(self, task, event, sid, attempts):
@@ -153,7 +154,7 @@ class GameController:
 
         self.gr.add_player_gid_record(sid, gid)
 
-        # randomly pick white and black (also need to shuffle wallet addresses; TODO: use a hashmap)
+        # randomly pick white and black (also need to shuffle wallet addresses)
         sids_and_wallets = list(zip(game.players, game.player_wallet_addrs))
         random.shuffle(sids_and_wallets)
         game.players, game.player_wallet_addrs = zip(*sids_and_wallets)
@@ -236,6 +237,7 @@ class GameController:
             # if game not finished, the player automatically loses the game
             game.outcome = Outcome.ABANDONED.value
             utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": game.players[utils.opponent_ind(game.players.index(sid))], "outcome": Outcome.ABANDONED.value}))
+            # TODO: declare winner (contract)
         await self.clear_game(sid, game, gid)
 
     async def clear_game(self, sid, game, gid):

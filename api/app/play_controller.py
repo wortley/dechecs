@@ -26,13 +26,11 @@ class MoveData:
 
 class PlayController:
 
-    def __init__(self, rmq, sio, gc):
+    def __init__(self, rmq, sio, contract, gc):
         self.rmq = rmq
         self.sio = sio
+        self.contract = contract
         self.gc = gc
-
-    async def init_payment(self, winner, game):
-        await self.sio.emit("payment", {"address": game.player_wallet_addrs[winner], "amount": game.wager}, to=game.players[utils.opponent_ind(winner)])
 
     async def move(self, sid, uci):
         game, gid = await self.gc.get_game_by_sid(sid)
@@ -97,7 +95,6 @@ class PlayController:
         # outcome event
         utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": int(game.players.index(sid)), "outcome": Outcome.RESIGNATION.value}))
         # send payment instruction to loser
-        await self.init_payment(utils.opponent_ind(game.players.index(sid)), game)
         await self.gc.save_game(gid, game, sid)
 
     async def flag(self, sid, flagged):
@@ -106,5 +103,4 @@ class PlayController:
         # outcome event
         utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": utils.opponent_ind(flagged), "outcome": Outcome.TIMEOUT.value}))
         # send payment instruction to loser
-        await self.init_payment(utils.opponent_ind(flagged), game)
         await self.gc.save_game(gid, game, sid)

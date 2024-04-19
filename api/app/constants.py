@@ -16,3 +16,5 @@ BROADCAST_KEY = "all"
 REDIS_URL = os.environ.get("REDIS_URL")
 ALCHEMY_API_KEY = os.environ.get("ALCHEMY_API_KEY")
 CLOUDAMQP_URL = os.environ.get("CLOUDAMQP_URL")
+SC_ADDRESS = os.environ.get("SC_ADDRESS")
+WALLET_PK = os.environ.get("WALLET_PK")
