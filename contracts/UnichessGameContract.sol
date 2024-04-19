@@ -83,7 +83,7 @@ contract UnichessGameContract {
         game.ended = true;
         uint256 gasFee = tx.gasprice * _gasLimit;
         uint256 playerAmount = game.wager;
-        uint256 commission = (playerAmount * 5) / 100; // 5% commission
+        uint256 commission = (playerAmount * 10) / 100; // 10% commission
         playerAmount -= commission;
 
         if (gasFee >= playerAmount) {
@@ -117,7 +117,7 @@ contract UnichessGameContract {
 
         uint256 gasFee = tx.gasprice * _gasLimit;
         uint256 totalWager = (game.wager * 2);
-        uint256 commission = (totalWager * 5) / 100; // 5% commission
+        uint256 commission = (totalWager * 10) / 100; // 10% commission
         totalWager -= commission;
 
         if (gasFee >= totalWager) {

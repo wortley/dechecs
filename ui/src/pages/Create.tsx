@@ -116,9 +116,9 @@ export default function Create() {
             type="number"
             id="wager-amount"
             value={wagerAmount}
-            min="1"
+            min="10"
             step="0.01"
-            max="1000"
+            max="10000"
             onChange={(e) => setWagerAmount(parseFloat(e.currentTarget.value))}
           />
           <p>Wager amount: {wagerAmountETH} ETH</p>
