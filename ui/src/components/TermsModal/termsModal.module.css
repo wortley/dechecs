@@ -1,0 +1,15 @@
+.termsModal {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  width: min(600px, 80vw);
+  aspect-ratio: 1 / 1;
+  transform: translate(-50%, -50%);
+  z-index: 100;
+}
+
+.termsText {
+  white-space: pre-wrap;
+  text-align: left;
+  text-justify: inter-word;
+}
