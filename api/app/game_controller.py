@@ -236,8 +236,10 @@ class GameController:
         if len(game.players) > 1 and not game.outcome:
             # if game not finished, the player automatically loses the game
             game.outcome = Outcome.ABANDONED.value
-            utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": game.players[utils.opponent_ind(game.players.index(sid))], "outcome": Outcome.ABANDONED.value}))
-            # TODO: declare winner (contract)
+            winner_ind = utils.opponent_ind(game.players.index(sid))
+            utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": winner_ind, "outcome": Outcome.ABANDONED.value}))
+            await self.contract.declare_winner(gid, utils.winner_addr(game, winner_ind))
+
         await self.clear_game(sid, game, gid)
 
     async def clear_game(self, sid, game, gid):

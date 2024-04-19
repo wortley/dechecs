@@ -87,20 +87,27 @@ class PlayController:
         game, gid = await self.gc.get_game_by_sid(sid)
         game.outcome = Outcome.AGREEMENT.value
         utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": None, "outcome": Outcome.AGREEMENT.value}))
+        await self.contract.declare_draw(gid)
         await self.gc.save_game(gid, game, sid)
 
     async def resign(self, sid):
         game, gid = await self.gc.get_game_by_sid(sid)
         game.outcome = Outcome.RESIGNATION.value
+        winner_ind = int(game.players.index(sid))
         # outcome event
-        utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": int(game.players.index(sid)), "outcome": Outcome.RESIGNATION.value}))
-        # send payment instruction to loser
+        utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": winner_ind, "outcome": Outcome.RESIGNATION.value}))
+        # declare winner on SC
+        await self.contract.declare_winner(gid, utils.winner_addr(game, winner_ind))
+        # save game
         await self.gc.save_game(gid, game, sid)
 
     async def flag(self, sid, flagged):
         game, gid = await self.gc.get_game_by_sid(sid)
         game.outcome = Outcome.TIMEOUT.value
+        winner_ind = utils.opponent_ind(flagged)
         # outcome event
-        utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": utils.opponent_ind(flagged), "outcome": Outcome.TIMEOUT.value}))
-        # send payment instruction to loser
+        utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": winner_ind, "outcome": Outcome.TIMEOUT.value}))
+        # declare winner on SC
+        await self.contract.declare_winner(gid, utils.winner_addr(game, winner_ind))
+        # save game
         await self.gc.save_game(gid, game, sid)
