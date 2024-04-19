@@ -9,7 +9,7 @@ import aioredis
 import app.utils as utils
 from app.constants import BROADCAST_KEY, MAX_EMIT_RETRIES, TimeConstants
 from app.exceptions import CustomException
-from app.models import Colour, Event, Game
+from app.models import Colour, Event, Game, Outcome
 from app.rate_limit import RateLimitConfig
 from chess import Board
 
@@ -226,14 +226,20 @@ class GameController:
             game.players[1],
         )
 
-    async def clear_game(self, sid):
-        """Clears a user's game(s) from memory"""
+    async def handle_exit(self, sid):
         if not self.gr.get_gid(sid):
             # if player already removed from game or game deleted, return
             return
 
         game, gid = await self.get_game_by_sid(sid)
+        if len(game.players) > 1 and not game.outcome:
+            # if game not finished, the player automatically loses the game
+            game.outcome = Outcome.ABANDONED.value
+            utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": game.players[utils.opponent_ind(game.players.index(sid))], "outcome": Outcome.ABANDONED.value}))
+        await self.clear_game(sid, game, gid)
 
+    async def clear_game(self, sid, game, gid):
+        """Clears a user's game(s) from memory"""
         self.gr.remove_player_gid_record(sid)
         self.rmq.channel.queue_unbind(utils.get_queue_name(gid, sid), exchange=gid, routing_key=sid)
         self.rmq.channel.queue_unbind(utils.get_queue_name(gid, sid), exchange=gid, routing_key=BROADCAST_KEY)

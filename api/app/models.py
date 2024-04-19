@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from chess import Board
 
@@ -19,6 +19,7 @@ class Outcome(Enum):
     TIMEOUT = 11
     RESIGNATION = 12
     AGREEMENT = 13
+    ABANDONED = 14
 
 
 @dataclass
@@ -31,6 +32,7 @@ class Game:
     time_control: int  # time control (minutes)
     wager: float  # wager amount
     player_wallet_addrs: List[str]  # player wallet addresses (same order as players)
+    outcome: Optional[int] = None
 
 
 @dataclass

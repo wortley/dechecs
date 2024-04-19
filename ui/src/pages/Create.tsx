@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { useAccount, useBalance, useWriteContract } from "wagmi";
-import { estimateFeesPerGas } from "wagmi/actions";
+import { parseEther } from "viem";
+import { useAccount, useBalance } from "wagmi";
+import { estimateFeesPerGas, writeContract } from "wagmi/actions";
 import { abi } from "../abi";
 import { config } from "../config";
 import { SC_ADDRESS, chainId } from "../constants";
@@ -18,21 +19,25 @@ export default function Create() {
   const [wagerAmountETH, setWagerAmountETH] = useState<number>(0);
   const [gasPrice, setGasPrice] = useState<number>(0);
 
-  const { writeContract, isPending } = useWriteContract();
   const { address, isConnected } = useAccount();
   const { data: balance } = useBalance({ address, chainId });
 
   useEffect(() => {
-    function onGameId(gameId: string) {
-      // game has been created, user receives game ID from server
-      writeContract({
-        abi,
-        address: SC_ADDRESS,
-        functionName: "createGame",
-        value: BigInt(wagerAmountETH),
-        args: [newGameId],
-      });
-      setNewGameId(gameId);
+    async function onGameId(gameId: string) {
+      try {
+        const result = await writeContract(config, {
+          abi,
+          address: SC_ADDRESS,
+          functionName: "createGame",
+          value: parseEther(wagerAmountETH.toString()),
+          args: [gameId],
+        });
+        console.log("Transaction successful:", result);
+        setNewGameId(gameId);
+      } catch (err) {
+        console.error("Transaction error:", err);
+        toast.error((err as Error).message.split(".")[0]);
+      }
     }
 
     function onStart(data: StartData) {
@@ -51,7 +56,7 @@ export default function Create() {
       socket.off("gameId", onGameId);
       socket.off("start", onStart);
     };
-  }, []);
+  }, [wagerAmountETH, navigate]);
 
   useEffect(() => {
     async function fetchGasPrice() {
@@ -129,7 +134,7 @@ export default function Create() {
           </button>
         </>
       )}
-      {newGameId && !isPending && (
+      {newGameId && (
         <>
           <p>
             Share this code with a friend to play against them. Once they join

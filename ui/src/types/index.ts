@@ -31,6 +31,7 @@ export enum Outcome {
   TIME_OUT = 11,
   RESIGNATION = 12,
   AGREEMENT = 13,
+  ABANDONED = 14,
 }
 
 export type PieceInfo = {
@@ -75,7 +76,7 @@ export interface TimerData {
   black: number;
 }
 
-interface GameInfo {
+export interface GameInfo {
   timeControl: number;
   wagerAmount: number;
 }
