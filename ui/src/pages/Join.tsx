@@ -103,7 +103,7 @@ export default function Join() {
         <>
           <p>Game code: {joiningGameId}</p>
           <p>Time control: {gameInfo.timeControl}m</p>
-          <p>Wager amount: £{wagerAmountGBP.toFixed(2)}</p>
+          <p>Wager amount: {wagerAmountGBP.toFixed(2)} GBP</p>
           <button onClick={onAcceptGame}>Accept and start game</button>
         </>
       )}
