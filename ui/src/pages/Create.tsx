@@ -140,7 +140,8 @@ export default function Create() {
               value={wagerAmount}
               min="10"
               step="0.01"
-              max="10000"
+              max="1000"
+              maxLength={7}
               onChange={(e) =>
                 setWagerAmount(parseFloat(e.currentTarget.value))
               }
