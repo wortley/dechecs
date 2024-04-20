@@ -231,24 +231,25 @@ class GameController:
             game.turn_start_time = time_ns() / 1_000_000
             await self.save_game(gid, game)
 
-            utils.publish_event(
-                self.rmq.channel,
-                gid,
-                Event(
-                    "start",
-                    {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b, "round": game.round, "totalRounds": game.n_rounds},
-                ),
-                game.players[0],
-            )
-            utils.publish_event(
-                self.rmq.channel,
-                gid,
-                Event(
-                    "start",
-                    {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w, "round": game.round, "totalRounds": game.n_rounds},
-                ),
-                game.players[1],
-            )
+            if not game.finished:  # if game has not been abandoned, send start event
+                utils.publish_event(
+                    self.rmq.channel,
+                    gid,
+                    Event(
+                        "start",
+                        {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b, "round": game.round, "totalRounds": game.n_rounds},
+                    ),
+                    game.players[0],
+                )
+                utils.publish_event(
+                    self.rmq.channel,
+                    gid,
+                    Event(
+                        "start",
+                        {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w, "round": game.round, "totalRounds": game.n_rounds},
+                    ),
+                    game.players[1],
+                )
 
     async def handle_exit(self, sid):
         if not self.gr.get_gid(sid):
@@ -261,6 +262,8 @@ class GameController:
             winner_ind = utils.opponent_ind(game.players.index(sid))
             utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": winner_ind, "outcome": Outcome.ABANDONED.value, "matchScore": game.match_score}))
             utils.publish_event(self.rmq.channel, gid, Event("matchEnded", {"overallWinner": winner_ind}))
+            game.finished = True
+            await self.save_game(gid, game)
             await self.contract.declare_winner(gid, game.player_wallet_addrs[game.players[winner_ind]])
 
         await self.clear_game(sid, game, gid)
