@@ -13,6 +13,7 @@ export default function Play() {
   const [turn, setTurn] = useState(Colour.WHITE);
   const [outcome, setOutcome] = useState<Outcome>();
   const [winner, setWinner] = useState<Colour>();
+  const [score, setScore] = useState<[number, number]>([0, 0]);
   const [drawOffer, setDrawOffer] = useState(false);
 
   const outcomeRef = useRef(outcome);
@@ -69,6 +70,7 @@ export default function Play() {
               setTurn={setTurn}
               setOutcome={setOutcome}
               setWinner={setWinner}
+              setScore={setScore}
             />
           )}
           <div>
@@ -89,6 +91,7 @@ export default function Play() {
         outcome={outcome}
         winner={winner}
         side={colour}
+        score={score}
         round={round}
         totalRounds={totalRounds}
       />

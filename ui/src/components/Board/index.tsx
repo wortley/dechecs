@@ -33,6 +33,7 @@ type BoardProps = {
   setTurn(colour: Colour): void;
   setOutcome(outcome: Outcome): void;
   setWinner(winner?: Colour): void;
+  setScore(score: [number, number]): void;
 };
 
 export default function Board({
@@ -41,6 +42,7 @@ export default function Board({
   setTurn,
   setOutcome,
   setWinner,
+  setScore,
 }: Readonly<BoardProps>) {
   const boardRef = useRef<HTMLDivElement>(null);
   const animating = useRef(false);
@@ -225,6 +227,7 @@ export default function Board({
       if (data.outcome) {
         setOutcome(data.outcome);
         setWinner(data.winner);
+        if (data.matchScore) setScore(data.matchScore);
       }
     }
 

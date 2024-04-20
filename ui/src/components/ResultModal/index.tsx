@@ -8,6 +8,7 @@ type ResultModalProps = {
   outcome?: Outcome;
   winner?: Colour;
   side: Colour;
+  score?: [number, number];
   round: number;
   totalRounds: number;
 };
@@ -16,6 +17,7 @@ export default function ResultModal({
   outcome,
   winner,
   side,
+  score,
   round,
   totalRounds,
 }: Readonly<ResultModalProps>) {
@@ -98,6 +100,9 @@ export default function ResultModal({
       ? "Black won"
       : "Draw";
 
+  const playerIndex = side === Colour.WHITE ? 0 : 1;
+  const opponentIndex = playerIndex === 0 ? 1 : 0;
+
   // function onOfferRematch() {
   //   socket.emit("offerRematch");
   // }
@@ -129,9 +134,11 @@ export default function ResultModal({
       ) : (
         <button onClick={onOfferRematch}>Offer rematch</button>
       )} */}
-      {round < totalRounds && (
+      {round < totalRounds && score && (
         <>
-          <h5>Score: </h5>
+          <h5>
+            Score: {score[playerIndex]} : {score[opponentIndex]}
+          </h5>
           <p>The next round will start shortly...</p>
         </>
       )}
