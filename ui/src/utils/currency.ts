@@ -1,3 +1,4 @@
+import { toast } from "react-toastify";
 import { parseUnits } from "viem";
 import { API_URL } from "../constants";
 
@@ -13,6 +14,7 @@ async function getMATICGBPExchangeRate() {
     return data["exchange_rate"];
   } catch (error) {
     console.error("Error fetching exchange rate:", error);
+    toast.error("Error fetching exchange rate");
   }
 }
 
