@@ -32,7 +32,7 @@ class Game:
     time_control: int  # time control (minutes)
     wager: float  # wager amount
     player_wallet_addrs: Dict[str, str]  # maps sids to wallet addresses
-    outcome: Optional[int] = None  # outcome of the game
+    finished: bool = False  # whether the game has finished
     match_score: Dict[str, int]  # keeps track of how many rounds each player has won
     round: int  # current round
     n_rounds: int  # number of rounds

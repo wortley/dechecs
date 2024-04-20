@@ -106,10 +106,6 @@ export default function ResultModal({
   //   socket.emit("acceptRematch");
   // }
 
-  function onNextRound() {
-    socket.emit("nextRound");
-  }
-
   function onExit() {
     socket.emit("exit");
     navigate("/");
@@ -133,14 +129,15 @@ export default function ResultModal({
       ) : (
         <button onClick={onOfferRematch}>Offer rematch</button>
       )} */}
-      {round < totalRounds ? (
+      {round < totalRounds && (
         <>
-          <button onClick={onNextRound}>Next round</button>
-          {/* <button onClick={() => dialog.close()}>Forfeit match</button> */}
+          <h5>Score: </h5>
+          <p>The next round will start shortly...</p>
         </>
-      ) : (
-        <button onClick={onExit}>Exit</button>
       )}
+      <button onClick={onExit}>
+        {round < totalRounds ? "Forfeit match" : "Exit"}
+      </button>
     </dialog>
   );
 }

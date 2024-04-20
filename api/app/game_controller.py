@@ -3,12 +3,14 @@ import json
 import os
 import random
 import uuid
+from logging import Logger
 from time import time_ns
 
 import aioredis
 import app.utils as utils
 from app.constants import BROADCAST_KEY, MAX_EMIT_RETRIES, TimeConstants
 from app.exceptions import CustomException
+from app.game_contract import GameContract
 from app.models import Colour, Event, Game, Outcome
 from app.rate_limit import RateLimitConfig
 from chess import Board
@@ -16,7 +18,7 @@ from chess import Board
 
 class GameController:
 
-    def __init__(self, rmq, redis_client, sio, gr, contract, logger):
+    def __init__(self, rmq, redis_client, sio, gr, contract: GameContract, logger: Logger):
         self.rmq = rmq
         self.redis_client = redis_client
         self.sio = sio
@@ -62,7 +64,7 @@ class GameController:
         game = await self.get_game_by_gid(gid, sid)
         return game, gid
 
-    async def save_game(self, gid, game, _):
+    async def save_game(self, gid, game, _=None):
         """Save game state in Redis"""
         try:
             await self.redis_client.set(utils.get_redis_key(gid), utils.serialise_game_state(game))
@@ -195,40 +197,49 @@ class GameController:
             game.players[1],
         )
 
-    async def offer_rematch(self, sid):
-        game, gid = await self.get_game_by_sid(sid)
-        if game:
-            utils.publish_event(self.rmq.channel, gid, Event("rematchOffer", 1), next(p for p in game.players if p != sid))
+    async def handle_end_of_round(self, gid: str, game: Game):
+        overall_winner = None
+        if game.round == game.n_rounds:
+            # end of match
+            if game.match_score[game.players[0]] > game.match_score[game.players[1]]:  # player who had white in last round wins overall
+                overall_winner = 0
+            elif game.match_score[game.players[0]] < game.match_score[game.players[1]]:  # player who had black in last round wins overall
+                overall_winner = 1
+            else:  # draw
+                overall_winner = -1
 
-    async def accept_rematch(self, sid):
-        # TODO: check that player has actually been offered rematch
-        game, gid = await self.get_game_by_sid(sid)
-        game.board.reset()
-        game.players.reverse()  # switch white and black
-        game.tr_w = game.tr_b = TimeConstants.MILLISECONDS_PER_MINUTE * game.time_control
-        game.turn_start_time = time_ns() / 1_000_000
+            game.finished = True
+            await self.save_game(gid, game)
+            # publish matchEnded event
+            utils.publish_event(self.rmq.channel, gid, Event("matchEnded", {"overallWinner": overall_winner}))
+        else:
+            # start next round
+            await asyncio.sleep(10)  # wait 10 seconds before starting next round
+            game.round += 1
+            game.board.reset()  # reset board
+            game.players.reverse()  # switch white and black
+            game.tr_w = game.tr_b = TimeConstants.MILLISECONDS_PER_MINUTE * game.time_control
+            game.turn_start_time = time_ns() / 1_000_000
+            await self.save_game(gid, game)
 
-        await self.save_game(gid, game, sid)
-
-        utils.publish_event(
-            self.rmq.channel,
-            gid,
-            Event(
-                "start",
-                {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w},
-            ),
-            game.players[0],
-        )
-
-        utils.publish_event(
-            self.rmq.channel,
-            gid,
-            Event(
-                "start",
-                {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b},
-            ),
-            game.players[1],
-        )
+            utils.publish_event(
+                self.rmq.channel,
+                game,
+                Event(
+                    "start",
+                    {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w, "round": game.round, "totalRounds": game.n_rounds},
+                ),
+                game.players[0],
+            )
+            utils.publish_event(
+                self.rmq.channel,
+                game,
+                Event(
+                    "start",
+                    {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b, "round": game.round, "totalRounds": game.n_rounds},
+                ),
+                game.players[1],
+            )
 
     async def handle_exit(self, sid):
         if not self.gr.get_gid(sid):
@@ -236,11 +247,10 @@ class GameController:
             return
 
         game, gid = await self.get_game_by_sid(sid)
-        if len(game.players) > 1 and not game.outcome:
+        if len(game.players) > 1 and not game.finished:
             # if game not finished, the player automatically loses the game
-            game.outcome = Outcome.ABANDONED.value
             winner_ind = utils.opponent_ind(game.players.index(sid))
-            utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": winner_ind, "outcome": Outcome.ABANDONED.value}))
+            utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": winner_ind, "outcome": Outcome.ABANDONED.value}))  # TODO: handle this special case on FE
             await self.contract.declare_winner(gid, game.player_wallet_addrs[game.players[winner_ind]])
 
         await self.clear_game(sid, game, gid)

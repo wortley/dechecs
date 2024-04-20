@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 from time import time_ns
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import app.utils as utils
 from app.exceptions import CustomException
+from app.game_contract import GameContract
+from app.game_controller import GameController
 from app.models import Castles, Event, Outcome
 from chess import Move
 
@@ -14,6 +16,7 @@ class MoveData:
     turn: int
     winner: int
     outcome: int
+    matchScore: Optional[Tuple[int, int]]  # TODO: move winner, outcome, matchScore to separate event
     move: str
     castles: Optional[str]
     isCheck: bool
@@ -26,11 +29,22 @@ class MoveData:
 
 class PlayController:
 
-    def __init__(self, rmq, sio, contract, gc):
+    def __init__(self, rmq, sio, contract: GameContract, gc: GameController):
         self.rmq = rmq
         self.sio = sio
         self.contract = contract
         self.gc = gc
+
+    def _update_match_score(self, game, outcome, winner_sid):
+        if outcome == Outcome.AGREEMENT.value:
+            for pid in game.players:
+                game.match_score[pid] += 0.5
+        else:
+            game.match_score[winner_sid] += 1
+        match_score = [0, 0]  # dumb match score [white, black]
+        for pid in game.players:
+            match_score[game.players.index(pid)] = game.match_score[pid]
+        return game, tuple(match_score)
 
     async def move(self, sid, uci):
         game, gid = await self.gc.get_game_by_sid(sid)
@@ -47,7 +61,6 @@ class PlayController:
         try:
             board.push(move)
             outcome = board.outcome(claim_draw=True)
-            game.outcome = outcome.termination.value if outcome else None
         except AssertionError:
             # move not pseudo-legal
             raise CustomException("Ilegal move", sid)
@@ -63,7 +76,7 @@ class PlayController:
         move_data = MoveData(
             turn=int(board.turn),
             winner=int(outcome.winner) if outcome else None,
-            outcome=game.outcome,
+            outcome=outcome.termination.value if outcome else None,
             move=str(board.peek()),
             castles=castles.value if castles else None,
             isCheck=board.is_check(),
@@ -85,29 +98,37 @@ class PlayController:
 
     async def accept_draw(self, sid):
         game, gid = await self.gc.get_game_by_sid(sid)
-        game.outcome = Outcome.AGREEMENT.value
-        utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": None, "outcome": Outcome.AGREEMENT.value}))
+        outcome = Outcome.AGREEMENT.value
+        # update match score
+        game, match_score = self._update_match_score(game, outcome, None)
+        utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": None, "outcome": outcome, "matchScore": match_score}))
         await self.contract.declare_draw(gid)
-        await self.gc.save_game(gid, game, sid)
+        await self.gc.handle_end_of_round(gid, game)  # NOTE: this will save the updated match score to redis and start next round
 
     async def resign(self, sid):
         game, gid = await self.gc.get_game_by_sid(sid)
-        game.outcome = Outcome.RESIGNATION.value
         winner_ind = int(game.players.index(sid))
+        winner_sid = game.players[utils.opponent_ind(winner_ind)]  # TODO: check this works
+        outcome = Outcome.RESIGNATION.value
+        # update match score
+        game, match_score = self._update_match_score(game, outcome, winner_sid)
         # outcome event
-        utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": winner_ind, "outcome": Outcome.RESIGNATION.value}))
+        utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": winner_ind, "outcome": outcome, "matchScore": match_score}))
         # declare winner on SC
         await self.contract.declare_winner(gid, game.player_wallet_addrs[game.players[winner_ind]])
-        # save game
-        await self.gc.save_game(gid, game, sid)
+        # handle end of round (+ save match score)
+        await self.gc.handle_end_of_round(gid, game)
 
     async def flag(self, sid, flagged):
         game, gid = await self.gc.get_game_by_sid(sid)
-        game.outcome = Outcome.TIMEOUT.value
         winner_ind = utils.opponent_ind(flagged)
+        winner_sid = game.players[winner_ind]
+        outcome = Outcome.TIMEOUT.value
+        # update match score
+        game, match_score = self._update_match_score(game, outcome, winner_sid)
         # outcome event
-        utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": winner_ind, "outcome": Outcome.TIMEOUT.value}))
+        utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": winner_ind, "outcome": outcome, "matchScore": match_score}))
         # declare winner on SC
         await self.contract.declare_winner(gid, game.player_wallet_addrs[game.players[winner_ind]])
         # save game
-        await self.gc.save_game(gid, game, sid)
+        await self.gc.handle_end_of_round(gid, game)
