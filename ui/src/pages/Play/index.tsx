@@ -92,7 +92,7 @@ export default function Play() {
             <h4>
               Round {round}/{totalRounds}
             </h4>
-            <Timer side={colour} timeControl={timeControl} />
+            <Timer side={colour} timeControl={timeControl} outcome={outcome} />
             {drawOffer ? (
               <button onClick={onAcceptDraw}>Accept draw offer</button>
             ) : (

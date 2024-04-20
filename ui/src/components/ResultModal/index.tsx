@@ -113,7 +113,7 @@ export default function ResultModal({
       <h4>
         {winnerStr} {outcomeStr}
       </h4>
-      {round === totalRounds && (
+      {(round === totalRounds || overallWinner) && (
         <>
           {score && (
             <h5>
@@ -129,12 +129,7 @@ export default function ResultModal({
           </p>
         </>
       )}
-      {/* {rematchOffer ? (
-        <button onClick={onAcceptRematch}>Accept rematch offer</button>
-      ) : (
-        <button onClick={onOfferRematch}>Offer rematch</button>
-      )} */}
-      {round < totalRounds && score && (
+      {round < totalRounds && score && !overallWinner && (
         <>
           <h5>
             Score: {score[playerIndex]} - {score[opponentIndex]}
@@ -143,7 +138,7 @@ export default function ResultModal({
         </>
       )}
       <button onClick={onExit}>
-        {round < totalRounds ? "Forfeit match" : "Exit"}
+        {round < totalRounds && !overallWinner ? "Forfeit match" : "Exit"}
       </button>
     </dialog>
   );

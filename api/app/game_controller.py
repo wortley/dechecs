@@ -224,12 +224,12 @@ class GameController:
         else:
             # start next round
             await asyncio.sleep(20)  # wait 20 seconds before starting next round
+            game = await self.get_game_by_gid(gid, game.players[0])  # refresh game in memory
             game.round += 1
             game.board.reset()  # reset board
             game.players.reverse()  # switch white and black
             game.tr_w = game.tr_b = TimeConstants.MILLISECONDS_PER_MINUTE * game.time_control
             game.turn_start_time = time_ns() / 1_000_000
-            await self.save_game(gid, game)
 
             if not game.finished:  # if game has not been abandoned, send start event
                 utils.publish_event(
@@ -250,6 +250,7 @@ class GameController:
                     ),
                     game.players[1],
                 )
+            await self.save_game(gid, game)
 
     async def handle_exit(self, sid):
         if not self.gr.get_gid(sid):

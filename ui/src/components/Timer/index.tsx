@@ -1,20 +1,33 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { socket } from "../../socket";
-import { BoardState, Colour, TimerData } from "../../types";
+import { BoardState, Colour, Outcome, TimerData } from "../../types";
 import { millisecondsToTimeFormat } from "../../utils";
 import styles from "./timer.module.css";
 
 type TimerProps = {
   side: Colour;
   timeControl: number;
+  outcome?: Outcome;
 };
 
-export default function Timer({ side, timeControl }: Readonly<TimerProps>) {
+export default function Timer({
+  side,
+  timeControl,
+  outcome,
+}: Readonly<TimerProps>) {
   const [timer, setTimer] = useState<TimerData>({
     white: timeControl,
     black: timeControl,
   });
   const [turn, setTurn] = useState<Colour>(Colour.WHITE);
+
+  const timerIntervalId = useRef<NodeJS.Timer>();
+
+  useEffect(() => {
+    if (outcome && outcome > 0) {
+      clearInterval(timerIntervalId.current);
+    }
+  }, [outcome]);
 
   useEffect(() => {
     const onMove = (data: BoardState) => {
@@ -43,17 +56,24 @@ export default function Timer({ side, timeControl }: Readonly<TimerProps>) {
           black:
             turn === Colour.BLACK ? prevTimer.black - 1000 : prevTimer.black,
         };
-        if (turn === Colour.WHITE && newTimer.white <= 0) {
+        if (
+          side === Colour.WHITE &&
+          turn === Colour.WHITE &&
+          newTimer.white <= 0
+        ) {
           socket.emit("flag", Colour.WHITE);
-          clearInterval(intervalId);
-        } else if (turn === Colour.BLACK && newTimer.black <= 0) {
+        } else if (
+          side === Colour.BLACK &&
+          turn === Colour.BLACK &&
+          newTimer.black <= 0
+        ) {
           socket.emit("flag", Colour.BLACK);
-          clearInterval(intervalId);
         }
 
         return newTimer;
       });
     }, 1000);
+    timerIntervalId.current = intervalId;
 
     return () => {
       clearInterval(intervalId);

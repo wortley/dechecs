@@ -22,8 +22,8 @@ def serialise_game_state(game: Game):
     """Serialise game state to JSON string for storage in Redis"""
     if not game:
         return
-    game.board = game.board.fen()
     game_dict = game.__dict__
+    game_dict["board"] = game.board.fen()
     return json.dumps(game_dict)
 
 
