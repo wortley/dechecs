@@ -111,8 +111,9 @@ export default function ResultModal({
 
   return (
     <dialog className={styles.resultModal}>
-      <h4>{winnerStr}</h4>
-      <h5>{outcomeStr}</h5>
+      <h4>
+        {winnerStr} {outcomeStr}
+      </h4>
       {round === totalRounds && score && (
         <>
           <h5>
