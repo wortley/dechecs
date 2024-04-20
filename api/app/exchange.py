@@ -3,8 +3,6 @@ from app.constants import CMC_API_KEY
 from fastapi import APIRouter, HTTPException
 from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
 
-MATIC_UCID = "3890"
-
 router = APIRouter(prefix="/exchange", tags=["exchange"])
 
 
@@ -29,7 +27,7 @@ async def get_matic_gbp_exchange_rate():
             ) as response:
                 if response.status == 200:
                     data = await response.json()
-                    exchange_rate = data["data"][MATIC_UCID]["quote"]["GBP"]["price"]
+                    exchange_rate = data["data"]["MATIC"][0]["quote"]["GBP"]["price"]
                     return {"exchange_rate": exchange_rate}
                 else:
                     raise HTTPException(
