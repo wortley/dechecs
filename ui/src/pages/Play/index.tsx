@@ -17,16 +17,19 @@ export default function Play() {
   const [score, setScore] = useState<[number, number]>([0, 0]);
   const [drawOffer, setDrawOffer] = useState(false);
 
-  const outcomeRef = useRef(outcome);
-  outcomeRef.current = outcome;
+  const endedRef = useRef(false);
 
   useEffect(() => {
     function onReceiveDrawOffer() {
       setDrawOffer(true);
     }
 
+    function onMatchEnded() {
+      endedRef.current = true;
+    }
+
     function onBeforeUnload(event: BeforeUnloadEvent) {
-      if (outcomeRef.current !== undefined) {
+      if (endedRef.current) {
         return;
       }
       event.preventDefault();
@@ -34,11 +37,13 @@ export default function Play() {
     }
 
     socket.on("drawOffer", onReceiveDrawOffer);
+    socket.on("matchEnded", onMatchEnded);
 
     window.addEventListener("beforeunload", onBeforeUnload);
 
     return () => {
       socket.off("drawOffer", onReceiveDrawOffer);
+      socket.off("matchEnded", onMatchEnded);
       window.removeEventListener("beforeunload", onBeforeUnload);
     };
   }, []);

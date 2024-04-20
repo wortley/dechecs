@@ -59,6 +59,7 @@ class PlayController:
             winner_sid = None
             if outcome.winner is not None:
                 winner_sid = game.players[int(outcome.winner)]
+            print(f"Game over: {outcome.termination.value} - {winner_sid}")
             game, match_score = self._update_match_score(game, outcome.termination.value, winner_sid)
 
         move_data = MoveData(
@@ -79,7 +80,10 @@ class PlayController:
         # send updated game state to clients in room
         utils.publish_event(self.rmq.channel, gid, Event("move", move_data.__dict__))
 
-        await self.gc.save_game(gid, game, sid)
+        if outcome:
+            await self.gc.handle_end_of_round(gid, game)
+        else:
+            await self.gc.save_game(gid, game, sid)
 
     async def offer_draw(self, sid):
         game, gid = await self.gc.get_game_by_sid(sid)

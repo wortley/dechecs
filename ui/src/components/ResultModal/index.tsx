@@ -38,7 +38,6 @@ export default function ResultModal({
     }
 
     function onMatchEnded(data: { overallWinner: Colour | null }) {
-      console.log("Match ended event received", data);
       setOverallWinner(data.overallWinner);
     }
 
@@ -114,11 +113,13 @@ export default function ResultModal({
       <h4>
         {winnerStr} {outcomeStr}
       </h4>
-      {round === totalRounds && score && (
+      {round === totalRounds && (
         <>
-          <h5>
-            Score: {score[playerIndex]} - {score[opponentIndex]}
-          </h5>
+          {score && (
+            <h5>
+              Score: {score[playerIndex]} - {score[opponentIndex]}
+            </h5>
+          )}
           <p>
             {side === overallWinner
               ? "You win overall! Congratulations! You'll receive your payout shortly."
@@ -136,7 +137,7 @@ export default function ResultModal({
       {round < totalRounds && score && (
         <>
           <h5>
-            Score: {score[playerIndex]} : {score[opponentIndex]}
+            Score: {score[playerIndex]} - {score[opponentIndex]}
           </h5>
           <p>The next round will start shortly...</p>
         </>
