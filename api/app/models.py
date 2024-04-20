@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from chess import Board
 
@@ -42,3 +42,20 @@ class Game:
 class Event:
     name: str
     data: int | str | dict
+
+
+@dataclass
+class MoveData:
+    # NOTE: we break naming conventions here to avoid using hindering var name conversion
+    turn: int
+    winner: int
+    outcome: int
+    matchScore: Optional[Tuple[int, int]]  # TODO: move winner, outcome, matchScore to separate event
+    move: str
+    castles: Optional[str]
+    isCheck: bool
+    enPassant: bool
+    legalMoves: List[str]
+    moveStack: List[str]
+    timeRemainingWhite: int
+    timeRemainingBlack: int

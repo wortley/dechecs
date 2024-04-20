@@ -1,3 +1,5 @@
+from logging import Logger
+
 from pika import URLParameters
 from pika.adapters.asyncio_connection import AsyncioConnection
 
@@ -5,7 +7,7 @@ from pika.adapters.asyncio_connection import AsyncioConnection
 
 
 class RMQConnectionManager:
-    def __init__(self, url, logger):
+    def __init__(self, url: str, logger: Logger):
         self.channel = None
         self.logger = logger
         self.rmq_params = URLParameters(url)

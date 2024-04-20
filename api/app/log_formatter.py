@@ -1,7 +1,7 @@
-import logging
+from logging import Formatter
 
 
-class CustomLogFormatter(logging.Formatter):
+class CustomLogFormatter(Formatter):
     def format(self, record):
         # if stack trace, add new line before it
         if record.exc_info:
@@ -12,6 +12,4 @@ class CustomLogFormatter(logging.Formatter):
         return super().format(record)
 
 
-custom_formatter = CustomLogFormatter(
-    "%(asctime)s %(levelname)s - %(message)s%(nl)s%(exc_info)s"
-)
+custom_formatter = CustomLogFormatter("%(asctime)s %(levelname)s - %(message)s%(nl)s%(exc_info)s")
