@@ -24,7 +24,7 @@ class Outcome(Enum):
 
 @dataclass
 class Game:
-    players: List[str]  # [0] white, [1] black
+    players: List[str]  # [0] black, [1] white
     board: Board | str  # pychess board object or string when serialised
     tr_w: int  # time remaining for white
     tr_b: int  # time remaining for black
