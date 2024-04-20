@@ -6,6 +6,7 @@
   aspect-ratio: 1 / 1;
   transform: translate(-50%, -50%);
   z-index: 100;
+  overflow-y: scroll;
 }
 
 .termsText {
