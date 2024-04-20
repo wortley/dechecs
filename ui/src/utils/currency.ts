@@ -1,4 +1,20 @@
 import { parseUnits } from "viem";
+import { API_URL } from "../constants";
+
+async function getMATICGBPExchangeRate() {
+  /**
+   * Fetch the current exchange rate of MATIC to GBP from CoinGecko API
+   *
+   * @returns the exchange rate of MATIC to GBP
+   */
+  try {
+    const response = await fetch(`${API_URL}/exchange/matic-gbp`);
+    const data = await response.json();
+    return data["exchange_rate"];
+  } catch (error) {
+    console.error("Error fetching exchange rate:", error);
+  }
+}
 
 export async function GBPtoMATIC(amountGbp: number) {
   /**
@@ -8,18 +24,8 @@ export async function GBPtoMATIC(amountGbp: number) {
    * @returns the amount in MATIC
    */
   let maticAmount = 0;
-
-  try {
-    const response = await fetch(
-      "https://api.coingecko.com/api/v3/simple/price?ids=matic-network&vs_currencies=gbp"
-    );
-    const data = await response.json();
-    const exchangeRate = data["matic-network"].gbp;
-    maticAmount = amountGbp / exchangeRate;
-  } catch (error) {
-    console.error("Error fetching exchange rate:", error);
-  }
-
+  const exchangeRate = await getMATICGBPExchangeRate();
+  maticAmount = amountGbp / exchangeRate;
   return maticAmount;
 }
 
@@ -31,24 +37,16 @@ export async function MATICtoGBP(amountMatic: number) {
    * @returns the amount in GBP
    */
   let gbpAmount = 0;
-
-  try {
-    const response = await fetch(
-      "https://api.coingecko.com/api/v3/simple/price?ids=matic-network&vs_currencies=gbp"
-    );
-    const data = await response.json();
-    const exchangeRate = data["matic-network"].gbp;
-    gbpAmount = amountMatic * exchangeRate;
-  } catch (error) {
-    console.error("Error fetching exchange rate:", error);
-  }
-
+  const exchangeRate = await getMATICGBPExchangeRate();
+  gbpAmount = amountMatic * exchangeRate;
   return gbpAmount;
 }
 
 export function parseMatic(amount: string) {
   /**
    * Convert MATIC string amount to wei (bigint)
+   *
+   * Equivalent to viem parseEther method but for MATIC
    *
    * @param amount - the amount in MATIC to parse
    * @returns the parsed amount
