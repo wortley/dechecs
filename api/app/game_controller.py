@@ -259,7 +259,8 @@ class GameController:
         if len(game.players) > 1 and not game.finished:
             # if game not finished, the player automatically loses the game
             winner_ind = utils.opponent_ind(game.players.index(sid))
-            utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": winner_ind, "outcome": Outcome.ABANDONED.value}))  # TODO: handle this special case on FE
+            utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": winner_ind, "outcome": Outcome.ABANDONED.value, "matchScore": game.match_score}))
+            utils.publish_event(self.rmq.channel, gid, Event("matchEnded", {"overallWinner": winner_ind}))
             await self.contract.declare_winner(gid, game.player_wallet_addrs[game.players[winner_ind]])
 
         await self.clear_game(sid, game, gid)
