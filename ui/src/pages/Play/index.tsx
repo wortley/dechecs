@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import Board from "../../components/Board";
 import ResultModal from "../../components/ResultModal";
 import Timer from "../../components/Timer";
@@ -21,6 +22,7 @@ export default function Play() {
 
   useEffect(() => {
     function onReceiveDrawOffer() {
+      toast.info("Your opponent offered a draw");
       setDrawOffer(true);
     }
 
