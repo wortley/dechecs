@@ -30,6 +30,11 @@ body {
   padding: 0;
 }
 
+/* <p> */
+p {
+  margin: 0.7em 0;
+}
+
 /* Headings */
 h1,
 h2,
@@ -88,7 +93,6 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  max-width: 340px;
   background-color: #f9f9f9;
   cursor: pointer;
   transition: border-color 0.25s;
@@ -179,7 +183,9 @@ hr {
   display: flex;
   flex-direction: column;
   width: fit-content;
-  min-width: 340px;
+  min-width: 360px;
+  max-width: 720px;
   margin-left: auto;
   margin-right: auto;
+  align-items: stretch;
 }

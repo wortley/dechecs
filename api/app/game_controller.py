@@ -167,7 +167,7 @@ class GameController:
         self.gr.add_player_gid_record(sid, gid)
 
         # randomly pick white and black
-        game.players = random.shuffle(game.players)
+        random.shuffle(game.players)
 
         game.turn_start_time = time_ns() / 1_000_000  # reset turn start time
 
@@ -205,20 +205,25 @@ class GameController:
         overall_winner = None
         if game.round == game.n_rounds:
             # end of match
-            if game.match_score[game.players[0]] > game.match_score[game.players[1]]:  # player who had white in last round wins overall
+            if game.match_score[game.players[0]] > game.match_score[game.players[1]]:  # player who had black in last round wins overall
                 overall_winner = 0
-            elif game.match_score[game.players[0]] < game.match_score[game.players[1]]:  # player who had black in last round wins overall
+            elif game.match_score[game.players[0]] < game.match_score[game.players[1]]:  # player who had white in last round wins overall
                 overall_winner = 1
-            else:  # draw
-                overall_winner = -1
 
-            game.finished = True
-            await self.save_game(gid, game)
             # publish matchEnded event
             utils.publish_event(self.rmq.channel, gid, Event("matchEnded", {"overallWinner": overall_winner}))
+            # save game
+            game.finished = True
+            await self.save_game(gid, game)
+
+            # declare result on SC
+            if overall_winner:
+                await self.contract.declare_winner(gid, game.player_wallet_addrs[game.players[overall_winner]])
+            else:  # draw
+                await self.contract.declare_draw(gid)
         else:
             # start next round
-            await asyncio.sleep(10)  # wait 10 seconds before starting next round
+            await asyncio.sleep(20)  # wait 20 seconds before starting next round
             game.round += 1
             game.board.reset()  # reset board
             game.players.reverse()  # switch white and black
@@ -228,7 +233,7 @@ class GameController:
 
             utils.publish_event(
                 self.rmq.channel,
-                game,
+                gid,
                 Event(
                     "start",
                     {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b, "round": game.round, "totalRounds": game.n_rounds},
@@ -237,7 +242,7 @@ class GameController:
             )
             utils.publish_event(
                 self.rmq.channel,
-                game,
+                gid,
                 Event(
                     "start",
                     {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w, "round": game.round, "totalRounds": game.n_rounds},
