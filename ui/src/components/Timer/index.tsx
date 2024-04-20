@@ -20,14 +20,7 @@ export default function Timer({
     black: timeControl,
   });
   const [turn, setTurn] = useState<Colour>(Colour.WHITE);
-
   const timerIntervalId = useRef<NodeJS.Timer>();
-
-  useEffect(() => {
-    if (outcome && outcome > 0) {
-      clearInterval(timerIntervalId.current);
-    }
-  }, [outcome]);
 
   useEffect(() => {
     const onMove = (data: BoardState) => {
@@ -48,6 +41,11 @@ export default function Timer({
   }, []);
 
   useEffect(() => {
+    if (outcome && outcome > 0) {
+      clearInterval(timerIntervalId.current);
+      return;
+    }
+
     const intervalId = setInterval(() => {
       setTimer((prevTimer) => {
         const newTimer = {
@@ -73,12 +71,13 @@ export default function Timer({
         return newTimer;
       });
     }, 1000);
+
     timerIntervalId.current = intervalId;
 
     return () => {
       clearInterval(intervalId);
     };
-  }, [turn]);
+  }, [turn, outcome, side]);
 
   return side === Colour.WHITE ? (
     <div className={styles.timer}>

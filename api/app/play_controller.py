@@ -59,7 +59,6 @@ class PlayController:
             winner_sid = None
             if outcome.winner is not None:
                 winner_sid = game.players[int(outcome.winner)]
-            print(f"Game over: {outcome.termination.value} - {winner_sid}")
             game, match_score = self._update_match_score(game, outcome.termination.value, winner_sid)
 
         move_data = MoveData(
