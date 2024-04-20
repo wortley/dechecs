@@ -41,9 +41,9 @@ class PlayController:
                 game.match_score[pid] += 0.5
         else:
             game.match_score[winner_sid] += 1
-        match_score = [0, 0]  # dumb match score [white, black]
-        for pid in game.players:
-            match_score[game.players.index(pid)] = game.match_score[pid]
+        match_score = [0, 0]  # dumb match score [black, white]
+        for idx, pid in enumerate(game.players):
+            match_score[idx] = game.match_score[pid]
         return game, tuple(match_score)
 
     async def move(self, sid, uci):
@@ -107,11 +107,10 @@ class PlayController:
 
     async def resign(self, sid):
         game, gid = await self.gc.get_game_by_sid(sid)
-        winner_ind = int(game.players.index(sid))
-        winner_sid = game.players[utils.opponent_ind(winner_ind)]  # TODO: check this works
+        winner_ind = utils.opponent_ind(game.players.index(sid))
         outcome = Outcome.RESIGNATION.value
         # update match score
-        game, match_score = self._update_match_score(game, outcome, winner_sid)
+        game, match_score = self._update_match_score(game, outcome, game.players[winner_ind])
         # outcome event
         utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": winner_ind, "outcome": outcome, "matchScore": match_score}))
         # declare winner on SC
@@ -122,10 +121,9 @@ class PlayController:
     async def flag(self, sid, flagged):
         game, gid = await self.gc.get_game_by_sid(sid)
         winner_ind = utils.opponent_ind(flagged)
-        winner_sid = game.players[winner_ind]
         outcome = Outcome.TIMEOUT.value
         # update match score
-        game, match_score = self._update_match_score(game, outcome, winner_sid)
+        game, match_score = self._update_match_score(game, outcome, game.players[winner_ind])
         # outcome event
         utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": winner_ind, "outcome": outcome, "matchScore": match_score}))
         # declare winner on SC

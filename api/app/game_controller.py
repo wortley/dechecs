@@ -183,7 +183,7 @@ class GameController:
             gid,
             Event(
                 "start",
-                {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w, "round": game.round, "totalRounds": game.n_rounds},
+                {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b, "round": game.round, "totalRounds": game.n_rounds},
             ),
             game.players[0],
         )
@@ -192,7 +192,7 @@ class GameController:
             gid,
             Event(
                 "start",
-                {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b, "round": game.round, "totalRounds": game.n_rounds},
+                {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w, "round": game.round, "totalRounds": game.n_rounds},
             ),
             game.players[1],
         )
@@ -227,7 +227,7 @@ class GameController:
                 game,
                 Event(
                     "start",
-                    {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w, "round": game.round, "totalRounds": game.n_rounds},
+                    {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b, "round": game.round, "totalRounds": game.n_rounds},
                 ),
                 game.players[0],
             )
@@ -236,7 +236,7 @@ class GameController:
                 game,
                 Event(
                     "start",
-                    {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b, "round": game.round, "totalRounds": game.n_rounds},
+                    {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w, "round": game.round, "totalRounds": game.n_rounds},
                 ),
                 game.players[1],
             )
