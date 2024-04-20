@@ -2,7 +2,6 @@ from time import time_ns
 
 import app.utils as utils
 from app.exceptions import CustomException
-from app.game_contract import GameContract
 from app.game_controller import GameController
 from app.models import Castles, Event, MoveData, Outcome
 from app.rmq import RMQConnectionManager
@@ -12,13 +11,12 @@ from socketio.asyncio_server import AsyncServer
 
 class PlayController:
 
-    def __init__(self, rmq: RMQConnectionManager, sio: AsyncServer, contract: GameContract, gc: GameController):
+    def __init__(self, rmq: RMQConnectionManager, sio: AsyncServer, gc: GameController):
         self.rmq = rmq
         self.sio = sio
-        self.contract = contract
         self.gc = gc
 
-    def _update_match_score(self, game, outcome, winner_sid):
+    def _update_match_score(self, game, outcome, winner_sid=None):
         if outcome == Outcome.AGREEMENT.value:
             for pid in game.players:
                 game.match_score[pid] += 0.5
@@ -56,9 +54,17 @@ class PlayController:
 
         game.turn_start_time = time_now
 
+        match_score = None
+        if outcome:
+            winner_sid = None
+            if outcome.winner is not None:
+                winner_sid = game.players[int(outcome.winner)]
+            game, match_score = self._update_match_score(game, outcome.termination.value, winner_sid)
+
         move_data = MoveData(
             turn=int(board.turn),
             winner=int(outcome.winner) if outcome else None,
+            matchScore=match_score,
             outcome=outcome.termination.value if outcome else None,
             move=str(board.peek()),
             castles=castles.value if castles else None,
@@ -85,7 +91,6 @@ class PlayController:
         # update match score
         game, match_score = self._update_match_score(game, outcome, None)
         utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": None, "outcome": outcome, "matchScore": match_score}))
-        await self.contract.declare_draw(gid)
         await self.gc.handle_end_of_round(gid, game)  # NOTE: this will save the updated match score to redis and start next round
 
     async def resign(self, sid):
@@ -96,8 +101,6 @@ class PlayController:
         game, match_score = self._update_match_score(game, outcome, game.players[winner_ind])
         # outcome event
         utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": winner_ind, "outcome": outcome, "matchScore": match_score}))
-        # declare winner on SC
-        await self.contract.declare_winner(gid, game.player_wallet_addrs[game.players[winner_ind]])
         # handle end of round (+ save match score)
         await self.gc.handle_end_of_round(gid, game)
 
@@ -109,7 +112,5 @@ class PlayController:
         game, match_score = self._update_match_score(game, outcome, game.players[winner_ind])
         # outcome event
         utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": winner_ind, "outcome": outcome, "matchScore": match_score}))
-        # declare winner on SC
-        await self.contract.declare_winner(gid, game.player_wallet_addrs[game.players[winner_ind]])
         # save game
         await self.gc.handle_end_of_round(gid, game)

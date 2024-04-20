@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { socket } from "../../socket";
 import { Colour, Outcome, StartData } from "../../types";
@@ -22,8 +22,8 @@ export default function ResultModal({
   totalRounds,
 }: Readonly<ResultModalProps>) {
   const navigate = useNavigate();
-  // const [rematchOffer, setRematchOffer] = useState(false);
   const dialog = document.getElementsByTagName("dialog")[0];
+  const [overallWinner, setOverallWinner] = useState<Colour | null>(null);
 
   useEffect(() => {
     function onStart(data: StartData) {
@@ -37,16 +37,17 @@ export default function ResultModal({
       });
     }
 
-    // function onRematchOffer() {
-    //   setRematchOffer(true);
-    // }
+    function onMatchEnded(data: { overallWinner: Colour | null }) {
+      console.log("Match ended event received", data);
+      setOverallWinner(data.overallWinner);
+    }
 
     socket.on("start", onStart);
-    // socket.on("rematchOffer", onRematchOffer);
+    socket.on("matchEnded", onMatchEnded);
 
     return () => {
       socket.off("start", onStart);
-      // socket.off("rematchOffer", onRematchOffer);
+      socket.off("matchEnded", onMatchEnded);
     };
   }, []);
 
@@ -93,23 +94,15 @@ export default function ResultModal({
 
   const winnerStr =
     side === winner
-      ? "You won"
+      ? "You won the round"
       : winner === Colour.WHITE
-      ? "White won"
+      ? "White won the round"
       : winner === Colour.BLACK
-      ? "Black won"
+      ? "Black won the round"
       : "Draw";
 
-  const playerIndex = side === Colour.WHITE ? 0 : 1;
+  const playerIndex = side === Colour.WHITE ? 1 : 0;
   const opponentIndex = playerIndex === 0 ? 1 : 0;
-
-  // function onOfferRematch() {
-  //   socket.emit("offerRematch");
-  // }
-
-  // function onAcceptRematch() {
-  //   socket.emit("acceptRematch");
-  // }
 
   function onExit() {
     socket.emit("exit");
@@ -118,16 +111,21 @@ export default function ResultModal({
 
   return (
     <dialog className={styles.resultModal}>
-      <h3>{winnerStr}</h3>
-      <h4>{outcomeStr}</h4>
-      {round === totalRounds && (
-        <p>
-          {side === winner
-            ? "Congrats on your big win! You'll receive your payment very shortly!"
-            : !winner
-            ? "Good game!"
-            : "Unlucky! :( We'll let you know when your payment has settled!"}
-        </p>
+      <h4>{winnerStr}</h4>
+      <h5>{outcomeStr}</h5>
+      {round === totalRounds && score && (
+        <>
+          <h5>
+            Score: {score[playerIndex]} : {score[opponentIndex]}
+          </h5>
+          <p>
+            {side === overallWinner
+              ? "You win overall! Congratulations! You'll receive your payout shortly!"
+              : !overallWinner
+              ? "Match drawn. Good game!"
+              : "You lost the match. Unlucky! :( We'll let you know when your payment has settled!"}
+          </p>
+        </>
       )}
       {/* {rematchOffer ? (
         <button onClick={onAcceptRematch}>Accept rematch offer</button>

@@ -77,7 +77,7 @@ contract = GameContract(w3, logger)
 gc = GameController(rmq, redis_client, chess_api.sio, gr, contract, logger)
 
 # Play (in game events) controller
-pc = PlayController(rmq, chess_api.sio, contract, gc)
+pc = PlayController(rmq, chess_api.sio, gc)
 
 # Global exception handler for controller methods
 sioexc = SocketIOExceptionHandler(chess_api.sio, rmq, logger)

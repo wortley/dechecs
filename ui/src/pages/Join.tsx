@@ -110,6 +110,7 @@ export default function Join() {
           <>
             <p>Game code: {joiningGameId}</p>
             <p>Time control: {gameInfo.timeControl}m</p>
+            <p>Number of rounds: {gameInfo.totalRounds}</p>
             <p>Wager amount: {wagerAmountGBP.toFixed(2)} GBP</p>
             <div className="accept-terms-container">
               <input

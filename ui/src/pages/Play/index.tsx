@@ -74,9 +74,9 @@ export default function Play() {
             />
           )}
           <div>
-            <h5>
-              Round {round} / {totalRounds}
-            </h5>
+            <h4>
+              Round {round}/{totalRounds}
+            </h4>
             <Timer side={colour} timeControl={timeControl} />
             {drawOffer ? (
               <button onClick={onAcceptDraw}>Accept draw offer</button>
