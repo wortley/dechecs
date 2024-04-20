@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Board from "../../components/Board";
 import ResultModal from "../../components/ResultModal";
 import Timer from "../../components/Timer";
@@ -9,6 +9,7 @@ import styles from "./play.module.css";
 
 export default function Play() {
   const location = useLocation();
+  const navigate = useNavigate();
 
   const [turn, setTurn] = useState(Colour.WHITE);
   const [outcome, setOutcome] = useState<Outcome>();
@@ -18,23 +19,6 @@ export default function Play() {
 
   const outcomeRef = useRef(outcome);
   outcomeRef.current = outcome;
-
-  const colour = location.state.colour;
-  const timeControl = location.state.timeRemaining;
-  const round = location.state.round;
-  const totalRounds = location.state.totalRounds;
-
-  function onOfferDraw() {
-    socket.emit("offerDraw");
-  }
-
-  function onAcceptDraw() {
-    socket.emit("acceptDraw");
-  }
-
-  function onResign() {
-    socket.emit("resign");
-  }
 
   useEffect(() => {
     function onReceiveDrawOffer() {
@@ -58,6 +42,30 @@ export default function Play() {
       window.removeEventListener("beforeunload", onBeforeUnload);
     };
   }, []);
+
+  let colour, timeControl, round, totalRounds;
+
+  try {
+    colour = location.state.colour;
+    timeControl = location.state.timeRemaining;
+    round = location.state.round;
+    totalRounds = location.state.totalRounds;
+  } catch (err) {
+    navigate("/");
+    return;
+  }
+
+  function onOfferDraw() {
+    socket.emit("offerDraw");
+  }
+
+  function onAcceptDraw() {
+    socket.emit("acceptDraw");
+  }
+
+  function onResign() {
+    socket.emit("resign");
+  }
 
   return (
     <>
