@@ -1,6 +1,9 @@
+from logging import Logger
+
 from app.abi import abi
 from app.constants import SC_ADDRESS, WALLET_PK
 from eth_utils import encode_hex
+from web3 import AsyncWeb3
 
 
 class GameContract:
@@ -8,7 +11,7 @@ class GameContract:
 
     GAS_LIMIT = 100000
 
-    def __init__(self, w3, logger):
+    def __init__(self, w3: AsyncWeb3, logger: Logger):
         self.w3 = w3
         self.contract = w3.eth.contract(address=SC_ADDRESS, abi=abi)
         self.acct = w3.eth.account.from_key(WALLET_PK)

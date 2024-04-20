@@ -8,17 +8,21 @@ from time import time_ns
 
 import aioredis
 import app.utils as utils
+from aioredis.client import Redis
 from app.constants import BROADCAST_KEY, MAX_EMIT_RETRIES, TimeConstants
 from app.exceptions import CustomException
 from app.game_contract import GameContract
+from app.game_registry import GameRegistry
 from app.models import Colour, Event, Game, Outcome
 from app.rate_limit import RateLimitConfig
+from app.rmq import RMQConnectionManager
 from chess import Board
+from socketio.asyncio_server import AsyncServer
 
 
 class GameController:
 
-    def __init__(self, rmq, redis_client, sio, gr, contract: GameContract, logger: Logger):
+    def __init__(self, rmq: RMQConnectionManager, redis_client: Redis, sio: AsyncServer, gr: GameRegistry, contract: GameContract, logger: Logger):
         self.rmq = rmq
         self.redis_client = redis_client
         self.sio = sio

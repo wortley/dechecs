@@ -1,35 +1,18 @@
-from dataclasses import dataclass
 from time import time_ns
-from typing import List, Optional, Tuple
 
 import app.utils as utils
 from app.exceptions import CustomException
 from app.game_contract import GameContract
 from app.game_controller import GameController
-from app.models import Castles, Event, Outcome
+from app.models import Castles, Event, MoveData, Outcome
+from app.rmq import RMQConnectionManager
 from chess import Move
-
-
-@dataclass
-class MoveData:
-    # NOTE: we break naming conventions here to avoid using hindering var name conversion
-    turn: int
-    winner: int
-    outcome: int
-    matchScore: Optional[Tuple[int, int]]  # TODO: move winner, outcome, matchScore to separate event
-    move: str
-    castles: Optional[str]
-    isCheck: bool
-    enPassant: bool
-    legalMoves: List[str]
-    moveStack: List[str]
-    timeRemainingWhite: int
-    timeRemainingBlack: int
+from socketio.asyncio_server import AsyncServer
 
 
 class PlayController:
 
-    def __init__(self, rmq, sio, contract: GameContract, gc: GameController):
+    def __init__(self, rmq: RMQConnectionManager, sio: AsyncServer, contract: GameContract, gc: GameController):
         self.rmq = rmq
         self.sio = sio
         self.contract = contract
