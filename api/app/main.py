@@ -2,7 +2,7 @@ import logging
 from contextlib import asynccontextmanager
 
 import aioredis
-from app.constants import ALCHEMY_API_KEY, CLOUDAMQP_URL, REDIS_URL
+from app.constants import ALCHEMY_API_URL, CLOUDAMQP_URL, REDIS_URL
 from app.exceptions import SocketIOExceptionHandler
 from app.game_contract import GameContract
 from app.game_controller import GameController
@@ -21,8 +21,7 @@ logger = logging.getLogger("uvicorn")
 logger.handlers[0].setFormatter(custom_formatter)
 
 # web3
-eth_node_url = f"https://eth-sepolia.g.alchemy.com/v2/{ALCHEMY_API_KEY}"
-w3 = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(eth_node_url))
+w3 = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(ALCHEMY_API_URL))
 
 # game registry
 gr = GameRegistry()

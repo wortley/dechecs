@@ -81,7 +81,7 @@ class GameController:
 
         :param sid: player's socket ID
         :param time_control: time control in minutes
-        :param wager: wager amount (ETH)
+        :param wager: wager amount (MATIC)
         :param wallet_addr: player's wallet address
         :param n_rounds: number of rounds in the game
         """
@@ -132,7 +132,7 @@ class GameController:
 
         Returns game information (time control and wager amount)
           - gives user joining game a chance to review and accept wager amount before joining
-          - this flow also allows for us to check other player has sufficient ETH balance
+          - this flow also allows for us to check other player has sufficient MATIC balance
 
         :param sid: player's socket ID
         :param gid: game ID

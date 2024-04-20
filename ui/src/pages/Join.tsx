@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { parseEther } from "viem";
 import { useAccount, useBalance } from "wagmi";
 import { estimateFeesPerGas, writeContract } from "wagmi/actions";
 import { abi } from "../abi";
@@ -10,7 +9,7 @@ import { config } from "../config";
 import { SC_ADDRESS, chainId } from "../constants";
 import { socket } from "../socket";
 import { GameInfo, StartData } from "../types";
-import { ETHtoGBP } from "../utils/eth";
+import { MATICtoGBP, parseMatic } from "../utils/currency";
 
 export default function Join() {
   const navigate = useNavigate();
@@ -36,7 +35,7 @@ export default function Join() {
     }
 
     async function onGameInfo(data: GameInfo) {
-      setWagerAmountGBP(await ETHtoGBP(data.wagerAmount));
+      setWagerAmountGBP(await MATICtoGBP(data.wagerAmount));
       setGameInfo(data);
     }
 
@@ -59,12 +58,14 @@ export default function Join() {
     if (!acceptTerms) return "Please accept the terms of use.";
     const priceInfo = await estimateFeesPerGas(config, {
       chainId,
-      formatUnits: "ether",
     });
-    const gasPrice = Number(priceInfo.formatted.maxFeePerGas);
+    const gasPrice = priceInfo.maxFeePerGas;
 
-    if (gameInfo.wagerAmount >= Number(balance!.formatted) - gasPrice)
-      return "Insufficient ETH balance.";
+    if (
+      parseMatic(gameInfo.wagerAmount.toString()) >=
+      balance!.value - gasPrice
+    )
+      return "Insufficient MATIC balance.";
     return 0;
   }
 
@@ -79,7 +80,7 @@ export default function Join() {
         abi,
         address: SC_ADDRESS,
         functionName: "joinGame",
-        value: parseEther(gameInfo!.wagerAmount.toString()),
+        value: parseMatic(gameInfo!.wagerAmount.toString()),
         args: [joiningGameId],
       });
       console.log("Transaction successful:", result);

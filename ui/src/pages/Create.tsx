@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { parseEther } from "viem";
 import { useAccount, useBalance } from "wagmi";
 import { estimateFeesPerGas, writeContract } from "wagmi/actions";
 import { abi } from "../abi";
@@ -10,7 +9,7 @@ import { config } from "../config";
 import { SC_ADDRESS, chainId } from "../constants";
 import { socket } from "../socket";
 import { StartData } from "../types";
-import { GBPToETH } from "../utils/eth";
+import { GBPtoMATIC, parseMatic } from "../utils/currency";
 
 export default function Create() {
   const navigate = useNavigate();
@@ -18,8 +17,8 @@ export default function Create() {
   const [timeControl, setTimeControl] = useState<number>(-1);
   const [wagerAmount, setWagerAmount] = useState<number>(0);
   const [acceptTerms, setAcceptTerms] = useState<boolean>(false);
-  const [wagerAmountETH, setWagerAmountETH] = useState<number>(0);
-  const [gasPrice, setGasPrice] = useState<number>(0);
+  const [wagerAmountMATIC, setWagerAmountMATIC] = useState<number>(0);
+  const [gasPrice, setGasPrice] = useState<bigint>(0n);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [rounds, setRounds] = useState<number>(1);
 
@@ -33,7 +32,7 @@ export default function Create() {
           abi,
           address: SC_ADDRESS,
           functionName: "createGame",
-          value: parseEther(wagerAmountETH.toString()),
+          value: parseMatic(wagerAmountMATIC.toString()), // convert to wei
           args: [gameId],
         });
         console.log("Transaction successful:", result);
@@ -62,34 +61,36 @@ export default function Create() {
       socket.off("gameId", onGameId);
       socket.off("start", onStart);
     };
-  }, [wagerAmountETH, navigate]);
+  }, [wagerAmountMATIC, navigate]);
 
   useEffect(() => {
     async function fetchGasPrice() {
       if (isConnected) {
         const priceInfo = await estimateFeesPerGas(config, {
           chainId,
-          formatUnits: "ether",
-        }); // gets gas price for mainnet or testnet in ETH
-        setGasPrice(Number(priceInfo.formatted.maxFeePerGas));
+        }); // gets estimated gas price in wei
+        setGasPrice(priceInfo.maxFeePerGas);
       }
     }
     fetchGasPrice();
   }, [isConnected]);
 
   useEffect(() => {
-    GBPToETH(wagerAmount).then((ethAmount) => setWagerAmountETH(ethAmount));
+    GBPtoMATIC(wagerAmount).then((maticAmount) =>
+      setWagerAmountMATIC(maticAmount)
+    );
   }, [wagerAmount]);
 
   function validateGameCreation() {
     if (!isConnected) return "Please connect your wallet.";
+    if (!gasPrice) return "Please wait for gas price to load.";
     if (timeControl < 0) return "Please select a time control.";
     if (rounds < 1 || rounds > 10)
       return "Please enter a valid number of rounds.";
-    if (wagerAmount <= 0 || wagerAmountETH <= 0)
+    if (wagerAmount <= 0 || wagerAmountMATIC <= 0)
       return "Please enter a wager amount.";
-    if (wagerAmountETH >= Number(balance!.formatted) - gasPrice)
-      return "Insufficient ETH balance.";
+    if (parseMatic(wagerAmountMATIC.toString()) >= balance!.value - gasPrice)
+      return "Insufficient MATIC balance.";
     if (!acceptTerms) return "Please accept the terms of use.";
     return 0;
   }
@@ -100,7 +101,7 @@ export default function Create() {
       toast.error(err);
       return;
     }
-    socket.emit("create", timeControl, wagerAmountETH, address, rounds);
+    socket.emit("create", timeControl, wagerAmountMATIC, address, rounds);
   }
 
   return (
@@ -138,19 +139,18 @@ export default function Create() {
               type="number"
               id="wager-amount"
               value={wagerAmount}
-              min="10"
+              min="0.01"
               step="0.01"
-              max="1000"
-              maxLength={7}
+              max="100000"
               onChange={(e) =>
                 setWagerAmount(parseFloat(e.currentTarget.value))
               }
             />
             <p>
-              Wager amount: {wagerAmountETH > 0 ? wagerAmountETH.toFixed(8) : 0}{" "}
-              ETH
+              Wager amount:{" "}
+              {wagerAmountMATIC > 0 ? wagerAmountMATIC.toFixed(8) : 0} MATIC
             </p>
-            <p>Gas price: {gasPrice} ETH</p>
+            <p>Gas price: {(Number(gasPrice) / 10 ** 9).toFixed(2)} Gwei</p>
             <div className="accept-terms-container">
               <input
                 type="checkbox"
