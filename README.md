@@ -1,8 +1,8 @@
-# _d&eacute;checs_
+# d&eacute;checs
 
 > from &eacute;checs (French for 'chess') and *de*centralised
 
-Performant multiplayer chess dapp on the Polygon blockchain utilising web3py, wagmi, Socket.IO and react-dnd. Features drag and drop interface, CSS piece animations, rematch functionality and multiple time controls. Game states stored in Redis cache with a pub/sub channel used for game events. Backend is currently scaled to 8 uvicorn workers on a single Heroku dyno, and can be scaled much further.
+Performant multiplayer chess dapp on the Polygon blockchain utilising web3py, wagmi, Socket.IO and react-dnd. A smart contract, written with Solidity, is used to pool players' wagers and then distribute payouts at the conclusion of the match according to the outcome. Game states stored in Redis cache with a pub/sub channel used for game events. Backend is currently scaled to 8 uvicorn workers on a single Heroku dyno, and can be scaled much further.
 
 <!-- ![Screenshot of gameplay](images/play.png) -->
 
