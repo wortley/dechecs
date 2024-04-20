@@ -56,6 +56,7 @@ export type BoardState = {
   turn: Colour;
   winner?: Colour;
   outcome?: Outcome;
+  matchScore?: [number, number];
   move: string;
   castles: Castles;
   enPassant: boolean;
