@@ -1,8 +1,7 @@
 import { io } from "socket.io-client";
+import { API_URL } from "./constants";
 
-const URL = import.meta.env.VITE_API_URL;
-
-export const socket = io(URL, {
+export const socket = io(API_URL, {
   path: "/ws/socket.io",
   transports: ["websocket"],
   autoConnect: false,

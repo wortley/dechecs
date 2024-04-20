@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 import aioredis
 from app.constants import ALCHEMY_API_URL, CLOUDAMQP_URL, REDIS_URL
 from app.exceptions import SocketIOExceptionHandler
+from app.exchange import router as exchange_router
 from app.game_contract import GameContract
 from app.game_controller import GameController
 from app.game_registry import GameRegistry
@@ -66,6 +67,8 @@ chess_api.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+chess_api.include_router(exchange_router)
 
 socket_manager = SocketManager(app=chess_api)
 
