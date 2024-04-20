@@ -203,11 +203,12 @@ class GameController:
 
     async def handle_end_of_round(self, gid: str, game: Game):
         overall_winner = None
+        match_score = game.match_score
         if game.round == game.n_rounds:
             # end of match
-            if game.match_score[game.players[0]] > game.match_score[game.players[1]]:  # player who had black in last round wins overall
+            if match_score[game.players[0]] > match_score[game.players[1]]:  # player who had black in last round wins overall
                 overall_winner = 0
-            elif game.match_score[game.players[0]] < game.match_score[game.players[1]]:  # player who had white in last round wins overall
+            elif match_score[game.players[0]] < match_score[game.players[1]]:  # player who had white in last round wins overall
                 overall_winner = 1
 
             # publish matchEnded event
@@ -217,7 +218,7 @@ class GameController:
             await self.save_game(gid, game)
 
             # declare result on SC
-            if overall_winner:
+            if overall_winner is not None:
                 await self.contract.declare_winner(gid, game.player_wallet_addrs[game.players[overall_winner]])
             else:  # draw
                 await self.contract.declare_draw(gid)
@@ -226,6 +227,7 @@ class GameController:
             await asyncio.sleep(20)  # wait 20 seconds before starting next round
             game = await self.get_game_by_gid(gid, game.players[0])  # refresh game in memory
             game.round += 1
+            game.match_score = match_score  # restore match score
             game.board.reset()  # reset board
             game.players.reverse()  # switch white and black
             game.tr_w = game.tr_b = TimeConstants.MILLISECONDS_PER_MINUTE * game.time_control
