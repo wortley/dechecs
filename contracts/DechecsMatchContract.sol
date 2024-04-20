@@ -128,6 +128,8 @@ contract DechecsMatchContract {
         );
         payable(game.player1).transfer(playerAmount);
         payable(game.player2).transfer(playerAmount);
+
+        delete _games[gid]; // free up storage
     }
 
     /**
@@ -163,5 +165,7 @@ contract DechecsMatchContract {
             "Insufficient funds to cover winner payout"
         );
         payable(game.winner).transfer(winnerAmount);
+
+        delete _games[gid];
     }
 }
