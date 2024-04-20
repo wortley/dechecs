@@ -1,4 +1,4 @@
-import styles from "./header.module.css";
+import styles from "./header.module.css"
 
 export default function Header() {
   return (
@@ -8,5 +8,5 @@ export default function Header() {
       </div>
       <h2 className={styles.headerLogo}>d&eacute;checs</h2>
     </header>
-  );
+  )
 }

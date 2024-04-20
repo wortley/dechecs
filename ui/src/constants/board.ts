@@ -1,4 +1,4 @@
-import { Colour, Move, PieceInfo, PieceType } from "../types";
+import { Colour, Move, PieceInfo, PieceType } from "../types"
 
 export const initialState: (PieceInfo | null)[][] = [
   [
@@ -45,7 +45,7 @@ export const initialState: (PieceInfo | null)[][] = [
     { pieceType: PieceType.KNIGHT, colour: Colour.BLACK },
     { pieceType: PieceType.ROOK, colour: Colour.BLACK },
   ],
-];
+]
 
 export const initialLegalMoves: Move[] = [
   { fromSquare: [0, 6], toSquare: [2, 7], promotion: null },
@@ -68,6 +68,6 @@ export const initialLegalMoves: Move[] = [
   { fromSquare: [1, 2], toSquare: [3, 2], promotion: null },
   { fromSquare: [1, 1], toSquare: [3, 1], promotion: null },
   { fromSquare: [1, 0], toSquare: [3, 0], promotion: null },
-];
+]
 
-export const boardArray = Array.from({ length: 8 }, () => Array(8).fill(null));
+export const boardArray = Array.from({ length: 8 }, () => Array(8).fill(null))

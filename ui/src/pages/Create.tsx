@@ -1,29 +1,29 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
-import { useAccount, useBalance } from "wagmi";
-import { estimateFeesPerGas, writeContract } from "wagmi/actions";
-import { abi } from "../abi";
-import TermsModal from "../components/TermsModal";
-import { config } from "../config";
-import { SC_ADDRESS, chainId } from "../constants";
-import { socket } from "../socket";
-import { StartData } from "../types";
-import { GBPtoMATIC, parseMatic } from "../utils/currency";
+import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { toast } from "react-toastify"
+import { useAccount, useBalance } from "wagmi"
+import { estimateFeesPerGas, writeContract } from "wagmi/actions"
+import { abi } from "../abi"
+import TermsModal from "../components/TermsModal"
+import { config } from "../config"
+import { SC_ADDRESS, chainId } from "../constants"
+import { socket } from "../socket"
+import { StartData } from "../types"
+import { GBPtoMATIC, parseMatic } from "../utils/currency"
 
 export default function Create() {
-  const navigate = useNavigate();
-  const [newGameId, setNewGameId] = useState("");
-  const [timeControl, setTimeControl] = useState<number>(-1);
-  const [wagerAmount, setWagerAmount] = useState<number>(0);
-  const [acceptTerms, setAcceptTerms] = useState<boolean>(false);
-  const [wagerAmountMATIC, setWagerAmountMATIC] = useState<number>(0);
-  const [gasPrice, setGasPrice] = useState<bigint>(0n);
-  const [showModal, setShowModal] = useState<boolean>(false);
-  const [rounds, setRounds] = useState<number>(1);
+  const navigate = useNavigate()
+  const [newGameId, setNewGameId] = useState("")
+  const [timeControl, setTimeControl] = useState<number>(-1)
+  const [wagerAmount, setWagerAmount] = useState<number>(0)
+  const [acceptTerms, setAcceptTerms] = useState<boolean>(false)
+  const [wagerAmountMATIC, setWagerAmountMATIC] = useState<number>(0)
+  const [gasPrice, setGasPrice] = useState<bigint>(0n)
+  const [showModal, setShowModal] = useState<boolean>(false)
+  const [rounds, setRounds] = useState<number>(1)
 
-  const { address, isConnected } = useAccount();
-  const { data: balance } = useBalance({ address, chainId });
+  const { address, isConnected } = useAccount()
+  const { data: balance } = useBalance({ address, chainId })
 
   useEffect(() => {
     async function onGameId(gameId: string) {
@@ -34,12 +34,12 @@ export default function Create() {
           functionName: "createGame",
           value: parseMatic(wagerAmountMATIC.toString()), // convert to wei
           args: [gameId],
-        });
-        console.log("Transaction successful:", result);
-        setNewGameId(gameId);
+        })
+        console.log("Transaction successful:", result)
+        setNewGameId(gameId)
       } catch (err) {
-        console.error("Transaction error:", err);
-        toast.error((err as Error).message.split(".")[0]);
+        console.error("Transaction error:", err)
+        toast.error((err as Error).message.split(".")[0])
       }
     }
 
@@ -51,57 +51,57 @@ export default function Create() {
           round: data.round,
           totalRounds: data.totalRounds,
         },
-      });
+      })
     }
 
-    socket.on("gameId", onGameId);
-    socket.on("start", onStart);
+    socket.on("gameId", onGameId)
+    socket.on("start", onStart)
 
     return () => {
-      socket.off("gameId", onGameId);
-      socket.off("start", onStart);
-    };
-  }, [wagerAmountMATIC, navigate]);
+      socket.off("gameId", onGameId)
+      socket.off("start", onStart)
+    }
+  }, [wagerAmountMATIC, navigate])
 
   useEffect(() => {
     async function fetchGasPrice() {
       if (isConnected) {
         const priceInfo = await estimateFeesPerGas(config, {
           chainId,
-        }); // gets estimated gas price in wei
-        setGasPrice(priceInfo.maxFeePerGas);
+        }) // gets estimated gas price in wei
+        setGasPrice(priceInfo.maxFeePerGas)
       }
     }
-    fetchGasPrice();
-  }, [isConnected]);
+    fetchGasPrice()
+  }, [isConnected])
 
   useEffect(() => {
     GBPtoMATIC(wagerAmount).then((maticAmount) =>
-      setWagerAmountMATIC(maticAmount)
-    );
-  }, [wagerAmount]);
+      setWagerAmountMATIC(maticAmount),
+    )
+  }, [wagerAmount])
 
   function validateGameCreation() {
-    if (!isConnected) return "Please connect your wallet.";
-    if (!gasPrice) return "Please wait for gas price to load.";
-    if (timeControl < 0) return "Please select a time control.";
+    if (!isConnected) return "Please connect your wallet."
+    if (!gasPrice) return "Please wait for gas price to load."
+    if (timeControl < 0) return "Please select a time control."
     if (rounds < 1 || rounds > 10)
-      return "Please enter a valid number of rounds.";
+      return "Please enter a valid number of rounds."
     if (wagerAmount <= 0 || wagerAmountMATIC <= 0)
-      return "Please enter a wager amount.";
+      return "Please enter a wager amount."
     if (parseMatic(wagerAmountMATIC.toString()) >= balance!.value - gasPrice)
-      return "Insufficient MATIC balance.";
-    if (!acceptTerms) return "Please accept the terms of use.";
-    return 0;
+      return "Insufficient MATIC balance."
+    if (!acceptTerms) return "Please accept the terms of use."
+    return 0
   }
 
   function onCreateGame() {
-    const err = validateGameCreation();
+    const err = validateGameCreation()
     if (err) {
-      toast.error(err);
-      return;
+      toast.error(err)
+      return
     }
-    socket.emit("create", timeControl, wagerAmountMATIC, address, rounds);
+    socket.emit("create", timeControl, wagerAmountMATIC, address, rounds)
   }
 
   return (
@@ -168,8 +168,8 @@ export default function Create() {
             <button onClick={onCreateGame}>Generate code</button>
             <button
               onClick={() => {
-                setTimeControl(-1);
-                navigate("/");
+                setTimeControl(-1)
+                navigate("/")
               }}
             >
               Back
@@ -197,5 +197,5 @@ export default function Create() {
       </div>
       <TermsModal show={showModal} setShow={setShowModal} />
     </>
-  );
+  )
 }

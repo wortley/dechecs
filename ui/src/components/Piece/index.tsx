@@ -1,28 +1,28 @@
-import { useEffect, useState } from "react";
-import { XYCoord, useDrag, useDragLayer } from "react-dnd";
-import { getEmptyImage } from "react-dnd-html5-backend";
-import blackBishop from "../../assets/pieces/B_b.svg";
-import whiteBishop from "../../assets/pieces/B_w.svg";
-import blackKing from "../../assets/pieces/K_b.svg";
-import whiteKing from "../../assets/pieces/K_w.svg";
-import blackKnight from "../../assets/pieces/N_b.svg";
-import whiteKnight from "../../assets/pieces/N_w.svg";
-import blackPawn from "../../assets/pieces/P_b.svg";
-import whitePawn from "../../assets/pieces/P_w.svg";
-import blackQueen from "../../assets/pieces/Q_b.svg";
-import whiteQueen from "../../assets/pieces/Q_w.svg";
-import blackRook from "../../assets/pieces/R_b.svg";
-import whiteRook from "../../assets/pieces/R_w.svg";
-import { DraggableTypes } from "../../constants";
-import { Colour, PieceType } from "../../types";
-import styles from "./piece.module.css";
+import { useEffect, useState } from "react"
+import { XYCoord, useDrag, useDragLayer } from "react-dnd"
+import { getEmptyImage } from "react-dnd-html5-backend"
+import blackBishop from "../../assets/pieces/B_b.svg"
+import whiteBishop from "../../assets/pieces/B_w.svg"
+import blackKing from "../../assets/pieces/K_b.svg"
+import whiteKing from "../../assets/pieces/K_w.svg"
+import blackKnight from "../../assets/pieces/N_b.svg"
+import whiteKnight from "../../assets/pieces/N_w.svg"
+import blackPawn from "../../assets/pieces/P_b.svg"
+import whitePawn from "../../assets/pieces/P_w.svg"
+import blackQueen from "../../assets/pieces/Q_b.svg"
+import whiteQueen from "../../assets/pieces/Q_w.svg"
+import blackRook from "../../assets/pieces/R_b.svg"
+import whiteRook from "../../assets/pieces/R_w.svg"
+import { DraggableTypes } from "../../constants"
+import { Colour, PieceType } from "../../types"
+import styles from "./piece.module.css"
 
 type PieceProps = {
-  pieceType: PieceType;
-  colour: Colour;
-  onClick(): void;
-  onDrag(): void;
-};
+  pieceType: PieceType
+  colour: Colour
+  onClick(): void
+  onDrag(): void
+}
 
 const PIECE_IMAGE_MAP = {
   [Colour.WHITE]: {
@@ -41,44 +41,44 @@ const PIECE_IMAGE_MAP = {
     [PieceType.KNIGHT]: blackKnight,
     [PieceType.PAWN]: blackPawn,
   },
-};
+}
 
 function getItemStyles(
   initialOffset: XYCoord | null,
   currentOffset: XYCoord | null,
-  imageSize: number
+  imageSize: number,
 ): React.CSSProperties {
   if (!initialOffset || !currentOffset) {
     return {
       display: "none",
-    };
+    }
   }
-  const { x, y } = currentOffset;
+  const { x, y } = currentOffset
 
-  const offset = (imageSize / 2) * -1; // center image on cursor
-  const transform = `translate(${x + offset}px, ${y + offset}px)`;
+  const offset = (imageSize / 2) * -1 // center image on cursor
+  const transform = `translate(${x + offset}px, ${y + offset}px)`
 
   return {
     transform,
     WebkitTransform: transform,
-  };
+  }
 }
 
 export function CustomPreview() {
   const [pieceSize, setPieceSize] = useState<number>(
-    Math.min(window.innerHeight * 0.8, window.innerWidth * 0.9) / 8
-  );
+    Math.min(window.innerHeight * 0.8, window.innerWidth * 0.9) / 8,
+  )
 
   function onResize() {
     setPieceSize(
-      Math.min(window.innerHeight * 0.8, window.innerWidth * 0.9) / 8
-    );
+      Math.min(window.innerHeight * 0.8, window.innerWidth * 0.9) / 8,
+    )
   }
 
   useEffect(() => {
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
+    window.addEventListener("resize", onResize)
+    return () => window.removeEventListener("resize", onResize)
+  }, [])
 
   const { isDragging, item, initialOffset, currentOffset } = useDragLayer(
     (monitor) => ({
@@ -86,11 +86,11 @@ export function CustomPreview() {
       initialOffset: monitor.getInitialSourceClientOffset(),
       currentOffset: monitor.getClientOffset(),
       isDragging: monitor.isDragging(),
-    })
-  );
+    }),
+  )
 
   if (!isDragging) {
-    return null;
+    return null
   }
 
   return (
@@ -112,7 +112,7 @@ export function CustomPreview() {
         />
       </div>
     </div>
-  );
+  )
 }
 
 export default function Piece({
@@ -129,13 +129,13 @@ export default function Piece({
         isDragging: !!monitor.isDragging(),
       }),
     }),
-    [pieceType, colour]
-  );
+    [pieceType, colour],
+  )
 
   useEffect(() => {
     // set preview to blank image
-    preview(getEmptyImage());
-  }, []);
+    preview(getEmptyImage())
+  }, [])
 
   return (
     <img
@@ -148,5 +148,5 @@ export default function Piece({
         opacity: isDragging ? 0 : 1, // hide original while dragging
       }}
     />
-  );
+  )
 }

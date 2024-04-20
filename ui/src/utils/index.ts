@@ -1,4 +1,4 @@
-import { Move, PieceType } from "../types";
+import { Move, PieceType } from "../types"
 
 /**
  * Converts move to UCI string.
@@ -7,19 +7,19 @@ import { Move, PieceType } from "../types";
  * @returns {string} The UCI string representation of the move.
  */
 export function moveToUci(move: Move): string {
-  const [fromRank, fromFile] = move.fromSquare;
-  const [toRank, toFile] = move.toSquare;
+  const [fromRank, fromFile] = move.fromSquare
+  const [toRank, toFile] = move.toSquare
 
-  const fromSquareUci = `${String.fromCharCode(fromFile + 97)}${fromRank + 1}`;
-  const toSquareUci = `${String.fromCharCode(toFile + 97)}${toRank + 1}`;
+  const fromSquareUci = `${String.fromCharCode(fromFile + 97)}${fromRank + 1}`
+  const toSquareUci = `${String.fromCharCode(toFile + 97)}${toRank + 1}`
 
-  let uci = fromSquareUci + toSquareUci;
+  let uci = fromSquareUci + toSquareUci
 
   if (move.promotion) {
-    uci += move.promotion.toLowerCase();
+    uci += move.promotion.toLowerCase()
   }
 
-  return uci;
+  return uci
 }
 
 /**
@@ -32,19 +32,19 @@ export function uciToMove(uci: string): Move {
   const fromSquare: [number, number] = [
     parseInt(uci[1]) - 1,
     uci.charCodeAt(0) - 97,
-  ];
+  ]
   const toSquare: [number, number] = [
     parseInt(uci[3]) - 1,
     uci.charCodeAt(2) - 97,
-  ];
+  ]
   const promotion =
-    uci.length === 5 ? (uci[4].toUpperCase() as PieceType) : null; // e.g. "e2e4q" => 'q'
+    uci.length === 5 ? (uci[4].toUpperCase() as PieceType) : null // e.g. "e2e4q" => 'q'
 
   return {
     fromSquare,
     toSquare,
     promotion,
-  };
+  }
 }
 
 /**
@@ -55,7 +55,7 @@ export function uciToMove(uci: string): Move {
  * @returns {string} The algebraic notation for the given chess square.
  */
 export function getAlgebraicNotation(rank_idx: number, file_idx: number) {
-  return `${String.fromCharCode(97 + file_idx)}${rank_idx + 1}`;
+  return `${String.fromCharCode(97 + file_idx)}${rank_idx + 1}`
 }
 
 /**
@@ -65,11 +65,11 @@ export function getAlgebraicNotation(rank_idx: number, file_idx: number) {
  * @returns {string} The time format string in the format "mm:ss".
  */
 export function millisecondsToTimeFormat(milliseconds: number) {
-  const minutes = Math.floor(milliseconds / 60000);
-  const remainingSeconds = Math.floor((milliseconds % 60000) / 1000);
+  const minutes = Math.floor(milliseconds / 60000)
+  const remainingSeconds = Math.floor((milliseconds % 60000) / 1000)
 
-  const minutesString = minutes.toString();
-  const secondsString = remainingSeconds.toString().padStart(2, "0");
+  const minutesString = minutes.toString()
+  const secondsString = remainingSeconds.toString().padStart(2, "0")
 
-  return `${minutesString}:${secondsString}`;
+  return `${minutesString}:${secondsString}`
 }

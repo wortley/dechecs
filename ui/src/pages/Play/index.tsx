@@ -1,77 +1,77 @@
-import { useEffect, useRef, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
-import Board from "../../components/Board";
-import ResultModal from "../../components/ResultModal";
-import Timer from "../../components/Timer";
-import { socket } from "../../socket";
-import { Colour, Outcome } from "../../types";
-import styles from "./play.module.css";
+import { useEffect, useRef, useState } from "react"
+import { useLocation, useNavigate } from "react-router-dom"
+import { toast } from "react-toastify"
+import Board from "../../components/Board"
+import ResultModal from "../../components/ResultModal"
+import Timer from "../../components/Timer"
+import { socket } from "../../socket"
+import { Colour, Outcome } from "../../types"
+import styles from "./play.module.css"
 
 export default function Play() {
-  const location = useLocation();
-  const navigate = useNavigate();
+  const location = useLocation()
+  const navigate = useNavigate()
 
-  const [turn, setTurn] = useState(Colour.WHITE);
-  const [outcome, setOutcome] = useState<Outcome>();
-  const [winner, setWinner] = useState<Colour>();
-  const [score, setScore] = useState<[number, number]>([0, 0]);
-  const [drawOffer, setDrawOffer] = useState(false);
+  const [turn, setTurn] = useState(Colour.WHITE)
+  const [outcome, setOutcome] = useState<Outcome>()
+  const [winner, setWinner] = useState<Colour>()
+  const [score, setScore] = useState<[number, number]>([0, 0])
+  const [drawOffer, setDrawOffer] = useState(false)
 
-  const endedRef = useRef(false);
+  const endedRef = useRef(false)
 
   useEffect(() => {
     function onReceiveDrawOffer() {
-      toast.info("Your opponent offered a draw");
-      setDrawOffer(true);
+      toast.info("Your opponent offered a draw")
+      setDrawOffer(true)
     }
 
     function onMatchEnded() {
-      endedRef.current = true;
+      endedRef.current = true
     }
 
     function onBeforeUnload(event: BeforeUnloadEvent) {
       if (endedRef.current) {
-        return;
+        return
       }
-      event.preventDefault();
-      event.returnValue = "";
+      event.preventDefault()
+      event.returnValue = ""
     }
 
-    socket.on("drawOffer", onReceiveDrawOffer);
-    socket.on("matchEnded", onMatchEnded);
+    socket.on("drawOffer", onReceiveDrawOffer)
+    socket.on("matchEnded", onMatchEnded)
 
-    window.addEventListener("beforeunload", onBeforeUnload);
+    window.addEventListener("beforeunload", onBeforeUnload)
 
     return () => {
-      socket.off("drawOffer", onReceiveDrawOffer);
-      socket.off("matchEnded", onMatchEnded);
-      window.removeEventListener("beforeunload", onBeforeUnload);
-    };
-  }, []);
+      socket.off("drawOffer", onReceiveDrawOffer)
+      socket.off("matchEnded", onMatchEnded)
+      window.removeEventListener("beforeunload", onBeforeUnload)
+    }
+  }, [])
 
-  let colour, timeControl, round, totalRounds;
+  let colour, timeControl, round, totalRounds
 
   try {
-    colour = location.state.colour;
-    timeControl = location.state.timeRemaining;
-    round = location.state.round;
-    totalRounds = location.state.totalRounds;
+    colour = location.state.colour
+    timeControl = location.state.timeRemaining
+    round = location.state.round
+    totalRounds = location.state.totalRounds
   } catch (err) {
-    navigate("/");
-    return;
+    navigate("/")
+    return
   }
 
   function onOfferDraw() {
-    socket.emit("offerDraw");
+    socket.emit("offerDraw")
   }
 
   function onAcceptDraw() {
-    socket.emit("acceptDraw");
+    socket.emit("acceptDraw")
   }
 
   function onResign() {
-    socket.emit("resign");
+    socket.emit("resign")
   }
 
   return (
@@ -136,5 +136,5 @@ export default function Play() {
         </a>
       </small>
     </>
-  );
+  )
 }

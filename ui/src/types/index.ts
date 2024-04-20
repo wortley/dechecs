@@ -35,52 +35,52 @@ export enum Outcome {
 }
 
 export type PieceInfo = {
-  pieceType: PieceType;
-  colour: Colour;
-};
+  pieceType: PieceType
+  colour: Colour
+}
 
 export type PieceRef = {
-  pieceType: PieceType;
-  colour: Colour;
-  rank: number;
-  file: number;
-};
+  pieceType: PieceType
+  colour: Colour
+  rank: number
+  file: number
+}
 
 export type Move = {
-  fromSquare: [number, number]; // tuple
-  toSquare: [number, number];
-  promotion: PieceType | null;
-};
+  fromSquare: [number, number] // tuple
+  toSquare: [number, number]
+  promotion: PieceType | null
+}
 
 export type BoardState = {
-  turn: Colour;
-  winner?: Colour;
-  outcome?: Outcome;
-  matchScore?: [number, number];
-  move: string;
-  castles: Castles;
-  enPassant: boolean;
-  isCheck: boolean;
-  legalMoves: string[];
-  moveStack?: string[];
-  timeRemainingWhite?: number;
-  timeRemainingBlack?: number;
-};
+  turn: Colour
+  winner?: Colour
+  outcome?: Outcome
+  matchScore?: [number, number]
+  move: string
+  castles: Castles
+  enPassant: boolean
+  isCheck: boolean
+  legalMoves: string[]
+  moveStack?: string[]
+  timeRemainingWhite?: number
+  timeRemainingBlack?: number
+}
 
 export interface StartData {
-  colour: Colour;
-  timeRemaining: number;
-  round: number;
-  totalRounds: number;
+  colour: Colour
+  timeRemaining: number
+  round: number
+  totalRounds: number
 }
 
 export interface TimerData {
-  white: number;
-  black: number;
+  white: number
+  black: number
 }
 
 export interface GameInfo {
-  timeControl: number;
-  wagerAmount: number;
-  totalRounds: number;
+  timeControl: number
+  wagerAmount: number
+  totalRounds: number
 }

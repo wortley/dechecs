@@ -1,8 +1,8 @@
-import styles from "./connectionStatus.module.css";
+import styles from "./connectionStatus.module.css"
 
 type ConnectionStatusProps = {
-  connected: boolean;
-};
+  connected: boolean
+}
 
 export default function ConnectionStatus({
   connected,
@@ -16,5 +16,5 @@ export default function ConnectionStatus({
         {connected ? "Connected to server" : "Disconnected from server"}
       </h6>
     </div>
-  );
+  )
 }

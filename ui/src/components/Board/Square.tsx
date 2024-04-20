@@ -1,18 +1,18 @@
-import { memo } from "react";
-import { useDrop } from "react-dnd";
-import { DraggableTypes } from "../../constants";
-import styles from "./board.module.css";
+import { memo } from "react"
+import { useDrop } from "react-dnd"
+import { DraggableTypes } from "../../constants"
+import styles from "./board.module.css"
 
 type SquareProps = {
-  id: string; // e.g. "e4"
-  onClick(): void;
-  onDrop(): void;
-  selected: boolean;
-  isLegalMove: boolean;
-  wasPrevMove: boolean;
-  isCheckedKing: boolean;
-  children?: React.ReactNode; // current piece on square
-};
+  id: string // e.g. "e4"
+  onClick(): void
+  onDrop(): void
+  selected: boolean
+  isLegalMove: boolean
+  wasPrevMove: boolean
+  isCheckedKing: boolean
+  children?: React.ReactNode // current piece on square
+}
 
 const Square = memo(
   ({
@@ -34,8 +34,8 @@ const Square = memo(
           isOver: !!monitor.isOver(),
         }),
       }),
-      [onDrop, isLegalMove]
-    );
+      [onDrop, isLegalMove],
+    )
 
     return (
       <div
@@ -67,8 +67,8 @@ const Square = memo(
           />
         )}
       </div>
-    );
-  }
-);
+    )
+  },
+)
 
-export default Square;
+export default Square

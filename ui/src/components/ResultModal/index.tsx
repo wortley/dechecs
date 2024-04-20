@@ -1,17 +1,17 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { socket } from "../../socket";
-import { Colour, Outcome, StartData } from "../../types";
-import styles from "./resultModal.module.css";
+import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { socket } from "../../socket"
+import { Colour, Outcome, StartData } from "../../types"
+import styles from "./resultModal.module.css"
 
 type ResultModalProps = {
-  outcome?: Outcome;
-  winner?: Colour;
-  side: Colour;
-  score?: [number, number];
-  round: number;
-  totalRounds: number;
-};
+  outcome?: Outcome
+  winner?: Colour
+  side: Colour
+  score?: [number, number]
+  round: number
+  totalRounds: number
+}
 
 export default function ResultModal({
   outcome,
@@ -21,9 +21,9 @@ export default function ResultModal({
   round,
   totalRounds,
 }: Readonly<ResultModalProps>) {
-  const navigate = useNavigate();
-  const dialog = document.getElementsByTagName("dialog")[0];
-  const [overallWinner, setOverallWinner] = useState<Colour | null>(null);
+  const navigate = useNavigate()
+  const dialog = document.getElementsByTagName("dialog")[0]
+  const [overallWinner, setOverallWinner] = useState<Colour | null>(null)
 
   useEffect(() => {
     function onStart(data: StartData) {
@@ -34,78 +34,78 @@ export default function ResultModal({
           round: data.round,
           totalRounds: data.totalRounds,
         },
-      });
+      })
     }
 
     function onMatchEnded(data: { overallWinner: Colour | null }) {
-      setOverallWinner(data.overallWinner);
+      setOverallWinner(data.overallWinner)
     }
 
-    socket.on("start", onStart);
-    socket.on("matchEnded", onMatchEnded);
+    socket.on("start", onStart)
+    socket.on("matchEnded", onMatchEnded)
 
     return () => {
-      socket.off("start", onStart);
-      socket.off("matchEnded", onMatchEnded);
-    };
-  }, []);
+      socket.off("start", onStart)
+      socket.off("matchEnded", onMatchEnded)
+    }
+  }, [])
 
   useEffect(() => {
     if (outcome && outcome > 0) {
-      dialog.showModal();
+      dialog.showModal()
     }
-  }, [outcome]);
+  }, [outcome])
 
   const outcomeStr = (function () {
     switch (outcome) {
       case Outcome.CHECKMATE: {
-        return "by checkmate";
+        return "by checkmate"
       }
       case Outcome.STALEMATE: {
-        return "by stalemate";
+        return "by stalemate"
       }
       case Outcome.INSUFFICIENT_MATERIAL: {
-        return "by insufficient material";
+        return "by insufficient material"
       }
       case Outcome.FIFTY_MOVES: {
-        return "by fifty-move rule";
+        return "by fifty-move rule"
       }
       case Outcome.THREEFOLD_REPETITION: {
-        return "by threefold repetition";
+        return "by threefold repetition"
       }
       case Outcome.TIME_OUT: {
-        return "on time";
+        return "on time"
       }
       case Outcome.RESIGNATION: {
-        return "by resignation";
+        return "by resignation"
       }
       case Outcome.AGREEMENT: {
-        return "by agreement";
+        return "by agreement"
       }
       case Outcome.ABANDONED: {
-        return "by abandonment";
+        return "by abandonment"
       }
       default: {
-        return;
+        return
       }
     }
-  })();
+  })()
 
   const winnerStr =
     side === winner
       ? "You won the round"
       : winner === Colour.WHITE
-      ? "White won the round"
-      : winner === Colour.BLACK
-      ? "Black won the round"
-      : "Draw";
+        ? "White won the round"
+        : winner === Colour.BLACK
+          ? "Black won the round"
+          : "Draw"
 
-  const playerIndex = side === Colour.WHITE ? 1 : 0;
-  const opponentIndex = playerIndex === 0 ? 1 : 0;
+  const playerIndex = side === Colour.WHITE ? 1 : 0
+  const opponentIndex = playerIndex === 0 ? 1 : 0
 
   function onExit() {
-    socket.emit("exit");
-    navigate("/");
+    socket.emit("exit")
+    navigate("/")
   }
 
   return (
@@ -124,8 +124,8 @@ export default function ResultModal({
             {side === overallWinner
               ? "You win overall! Congratulations! You'll receive your payout shortly."
               : overallWinner === null
-              ? "Match drawn. Good game!"
-              : "You lost the match. Unlucky! :( We'll let you know when your payment has settled."}
+                ? "Match drawn. Good game!"
+                : "You lost the match. Unlucky! :( We'll let you know when your payment has settled."}
           </p>
         </>
       )}
@@ -141,5 +141,5 @@ export default function ResultModal({
         {round < totalRounds && !overallWinner ? "Forfeit match" : "Exit"}
       </button>
     </dialog>
-  );
+  )
 }

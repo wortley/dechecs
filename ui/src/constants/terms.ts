@@ -19,4 +19,4 @@ export const TERMS_OF_USE = `
 
 10. Termination of Service: We reserve the right to terminate or suspend your access to our platform at any time, for any reason, without prior notice. We may also terminate your account if we suspect any fraudulent, abusive, or illegal activity.\n
 
-By using déchecs, you acknowledge that you have read, understood, and agree to be bound by these terms and conditions. If you do not agree with any part of these terms, you must not use our platform.\n`;
+By using déchecs, you acknowledge that you have read, understood, and agree to be bound by these terms and conditions. If you do not agree with any part of these terms, you must not use our platform.\n`
