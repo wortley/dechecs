@@ -20,9 +20,8 @@ from web3 import AsyncWeb3
 logger = logging.getLogger("uvicorn")
 logger.handlers[0].setFormatter(custom_formatter)
 
-eth_node_url = f"https://eth-sepolia.g.alchemy.com/v2/{ALCHEMY_API_KEY}"
-
 # web3
+eth_node_url = f"https://eth-sepolia.g.alchemy.com/v2/{ALCHEMY_API_KEY}"
 w3 = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(eth_node_url))
 
 # game registry
