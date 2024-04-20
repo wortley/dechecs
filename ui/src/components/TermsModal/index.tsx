@@ -16,6 +16,7 @@ export default function TermsModal({
   useEffect(() => {
     if (show) {
       dialog.showModal();
+      dialog.scrollTo(0, 0);
     }
   }, [show, dialog]);
 
