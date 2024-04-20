@@ -16,6 +16,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_socketio import SocketManager
 from web3 import AsyncWeb3
+from web3.middleware import async_geth_poa_middleware
 
 # logging config (override uvicorn default)
 logger = logging.getLogger("uvicorn")
@@ -23,6 +24,7 @@ logger.handlers[0].setFormatter(custom_formatter)
 
 # web3
 w3 = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(ALCHEMY_API_URL))
+w3.middleware_onion.inject(async_geth_poa_middleware, layer=0)
 
 # game registry
 gr = GameRegistry()
