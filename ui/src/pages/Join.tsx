@@ -61,11 +61,7 @@ export default function Join() {
     })
     const gasPrice = priceInfo.maxFeePerGas
 
-    if (
-      parseMatic(gameInfo.wagerAmount.toString()) >=
-      balance!.value - gasPrice
-    )
-      return "Insufficient MATIC balance."
+    if (parseMatic(gameInfo.wagerAmount.toString()) >= balance!.value - gasPrice) return "Insufficient MATIC balance."
     return 0
   }
 
@@ -98,12 +94,7 @@ export default function Join() {
         {!gameInfo && (
           <>
             {" "}
-            <input
-              type="text"
-              placeholder="Enter game code"
-              value={joiningGameId}
-              onChange={(e) => setJoiningGameId(e.currentTarget.value)}
-            />
+            <input type="text" placeholder="Enter game code" value={joiningGameId} onChange={(e) => setJoiningGameId(e.currentTarget.value)} />
             <button onClick={onSubmitGameId}>Join</button>
           </>
         )}
@@ -114,12 +105,7 @@ export default function Join() {
             <p>Number of rounds: {gameInfo.totalRounds}</p>
             <p>Wager amount: {wagerAmountGBP.toFixed(2)} GBP</p>
             <div className="accept-terms-container">
-              <input
-                type="checkbox"
-                id="accept-terms"
-                value={acceptTerms.toString()}
-                onChange={(e) => setAcceptTerms(e.currentTarget.checked)}
-              />
+              <input type="checkbox" id="accept-terms" value={acceptTerms.toString()} onChange={(e) => setAcceptTerms(e.currentTarget.checked)} />
               <label htmlFor="accept-terms">
                 I accept the{" "}
                 <a href="#" onClick={() => setShowModal(true)}>

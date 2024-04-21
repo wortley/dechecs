@@ -7,10 +7,7 @@ interface TermsModalProps {
   setShow: (show: boolean) => void
 }
 
-export default function TermsModal({
-  show,
-  setShow,
-}: Readonly<TermsModalProps>) {
+export default function TermsModal({ show, setShow }: Readonly<TermsModalProps>) {
   const dialog = document.getElementsByTagName("dialog")[0]
 
   useEffect(() => {

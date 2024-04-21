@@ -4,15 +4,11 @@ type ConnectionStatusProps = {
   connected: boolean
 }
 
-export default function ConnectionStatus({
-  connected,
-}: Readonly<ConnectionStatusProps>) {
+export default function ConnectionStatus({ connected }: Readonly<ConnectionStatusProps>) {
   return (
     <div>
       <h6>
-        <span
-          className={`${styles.statusCircle} ${connected && styles.connected}`}
-        />
+        <span className={`${styles.statusCircle} ${connected && styles.connected}`} />
         {connected ? "Connected to server" : "Disconnected from server"}
       </h6>
     </div>

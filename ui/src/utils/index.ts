@@ -29,16 +29,9 @@ export function moveToUci(move: Move): string {
  * @returns {Move} The move object with 'fromSquare' and 'toSquare' fields.
  */
 export function uciToMove(uci: string): Move {
-  const fromSquare: [number, number] = [
-    parseInt(uci[1]) - 1,
-    uci.charCodeAt(0) - 97,
-  ]
-  const toSquare: [number, number] = [
-    parseInt(uci[3]) - 1,
-    uci.charCodeAt(2) - 97,
-  ]
-  const promotion =
-    uci.length === 5 ? (uci[4].toUpperCase() as PieceType) : null // e.g. "e2e4q" => 'q'
+  const fromSquare: [number, number] = [parseInt(uci[1]) - 1, uci.charCodeAt(0) - 97]
+  const toSquare: [number, number] = [parseInt(uci[3]) - 1, uci.charCodeAt(2) - 97]
+  const promotion = uci.length === 5 ? (uci[4].toUpperCase() as PieceType) : null // e.g. "e2e4q" => 'q'
 
   return {
     fromSquare,

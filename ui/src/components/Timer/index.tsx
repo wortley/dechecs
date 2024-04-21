@@ -10,11 +10,7 @@ type TimerProps = {
   outcome?: Outcome
 }
 
-export default function Timer({
-  side,
-  timeControl,
-  outcome,
-}: Readonly<TimerProps>) {
+export default function Timer({ side, timeControl, outcome }: Readonly<TimerProps>) {
   const [timer, setTimer] = useState<TimerData>({
     white: timeControl,
     black: timeControl,
@@ -49,22 +45,12 @@ export default function Timer({
     const intervalId = setInterval(() => {
       setTimer((prevTimer) => {
         const newTimer = {
-          white:
-            turn === Colour.WHITE ? prevTimer.white - 1000 : prevTimer.white,
-          black:
-            turn === Colour.BLACK ? prevTimer.black - 1000 : prevTimer.black,
+          white: turn === Colour.WHITE ? prevTimer.white - 1000 : prevTimer.white,
+          black: turn === Colour.BLACK ? prevTimer.black - 1000 : prevTimer.black,
         }
-        if (
-          side === Colour.WHITE &&
-          turn === Colour.WHITE &&
-          newTimer.white <= 0
-        ) {
+        if (side === Colour.WHITE && turn === Colour.WHITE && newTimer.white <= 0) {
           socket.emit("flag", Colour.WHITE)
-        } else if (
-          side === Colour.BLACK &&
-          turn === Colour.BLACK &&
-          newTimer.black <= 0
-        ) {
+        } else if (side === Colour.BLACK && turn === Colour.BLACK && newTimer.black <= 0) {
           socket.emit("flag", Colour.BLACK)
         }
 

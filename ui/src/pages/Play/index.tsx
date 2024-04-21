@@ -78,45 +78,22 @@ export default function Play() {
     <>
       <div className={styles.outer}>
         <div className={styles.inner}>
-          {colour >= 0 && (
-            <Board
-              colour={colour}
-              turn={turn}
-              setTurn={setTurn}
-              setOutcome={setOutcome}
-              setWinner={setWinner}
-              setScore={setScore}
-            />
-          )}
+          {colour >= 0 && <Board colour={colour} turn={turn} setTurn={setTurn} setOutcome={setOutcome} setWinner={setWinner} setScore={setScore} />}
           <div>
             <h4>
               Round {round}/{totalRounds}
             </h4>
             <Timer side={colour} timeControl={timeControl} outcome={outcome} />
-            {drawOffer ? (
-              <button onClick={onAcceptDraw}>Accept draw offer</button>
-            ) : (
-              <button onClick={onOfferDraw}>Offer draw</button>
-            )}
+            {drawOffer ? <button onClick={onAcceptDraw}>Accept draw offer</button> : <button onClick={onOfferDraw}>Offer draw</button>}
             <button onClick={onResign}>Resign</button>
           </div>
         </div>
       </div>
-      <ResultModal
-        outcome={outcome}
-        winner={winner}
-        side={colour}
-        score={score}
-        round={round}
-        totalRounds={totalRounds}
-      />
+      <ResultModal outcome={outcome} winner={winner} side={colour} score={score} round={round} totalRounds={totalRounds} />
 
       <small>
         Chess pieces by{" "}
-        <a
-          href="//commons.wikimedia.org/wiki/User:Cburnett"
-          title="User:Cburnett"
-        >
+        <a href="//commons.wikimedia.org/wiki/User:Cburnett" title="User:Cburnett">
           Cburnett
         </a>{" "}
         -{" "}
@@ -124,16 +101,10 @@ export default function Play() {
           Own work
         </span>
         ,{" "}
-        <a
-          href="http://creativecommons.org/licenses/by-sa/3.0/"
-          title="Creative Commons Attribution-Share Alike 3.0"
-        >
+        <a href="http://creativecommons.org/licenses/by-sa/3.0/" title="Creative Commons Attribution-Share Alike 3.0">
           CC BY-SA 3.0
         </a>
-        ,{" "}
-        <a href="https://commons.wikimedia.org/w/index.php?curid=1499803">
-          Link
-        </a>
+        , <a href="https://commons.wikimedia.org/w/index.php?curid=1499803">Link</a>
       </small>
     </>
   )

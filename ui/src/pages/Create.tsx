@@ -76,21 +76,16 @@ export default function Create() {
   }, [isConnected])
 
   useEffect(() => {
-    GBPtoMATIC(wagerAmount).then((maticAmount) =>
-      setWagerAmountMATIC(maticAmount)
-    )
+    GBPtoMATIC(wagerAmount).then((maticAmount) => setWagerAmountMATIC(maticAmount))
   }, [wagerAmount])
 
   function validateGameCreation() {
     if (!isConnected) return "Please connect your wallet."
     if (!gasPrice) return "Please wait for gas price to load."
     if (timeControl < 0) return "Please select a time control."
-    if (rounds < 1 || rounds > 10)
-      return "Please enter a valid number of rounds."
-    if (wagerAmount <= 0 || wagerAmountMATIC <= 0)
-      return "Please enter a wager amount."
-    if (parseMatic(wagerAmountMATIC.toString()) >= balance!.value - gasPrice)
-      return "Insufficient MATIC balance."
+    if (rounds < 1 || rounds > 10) return "Please enter a valid number of rounds."
+    if (wagerAmount <= 0 || wagerAmountMATIC <= 0) return "Please enter a wager amount."
+    if (parseMatic(wagerAmountMATIC.toString()) >= balance!.value - gasPrice) return "Insufficient MATIC balance."
     if (!acceptTerms) return "Please accept the terms of use."
     return 0
   }
@@ -111,11 +106,7 @@ export default function Create() {
           <>
             <h4>New game</h4>
             <label htmlFor="time-control">Time control:</label>
-            <select
-              id="time-control"
-              value={timeControl}
-              onChange={(e) => setTimeControl(parseInt(e.currentTarget.value))}
-            >
+            <select id="time-control" value={timeControl} onChange={(e) => setTimeControl(parseInt(e.currentTarget.value))}>
               <option value={-1} disabled hidden></option>
               <option value={3}>3m Blitz</option>
               <option value={5}>5m Blitz</option>
@@ -135,29 +126,11 @@ export default function Create() {
               onChange={(e) => setRounds(parseInt(e.currentTarget.value))}
             />
             <label htmlFor="wager-amount">Wager amount (GBP):</label>
-            <input
-              type="number"
-              id="wager-amount"
-              value={wagerAmount}
-              min="1"
-              step="0.01"
-              max="100000"
-              onChange={(e) =>
-                setWagerAmount(parseFloat(e.currentTarget.value))
-              }
-            />
-            <p>
-              Wager amount:{" "}
-              {wagerAmountMATIC > 0 ? wagerAmountMATIC.toFixed(8) : 0} MATIC
-            </p>
+            <input type="number" id="wager-amount" value={wagerAmount} min="1" step="0.01" max="100000" onChange={(e) => setWagerAmount(parseFloat(e.currentTarget.value))} />
+            <p>Wager amount: {wagerAmountMATIC > 0 ? wagerAmountMATIC.toFixed(8) : 0} MATIC</p>
             <p>Gas price: {(Number(gasPrice) / 10 ** 9).toFixed(2)} Gwei</p>
             <div className="accept-terms-container">
-              <input
-                type="checkbox"
-                id="accept-terms"
-                value={acceptTerms.toString()}
-                onChange={(e) => setAcceptTerms(e.currentTarget.checked)}
-              />
+              <input type="checkbox" id="accept-terms" value={acceptTerms.toString()} onChange={(e) => setAcceptTerms(e.currentTarget.checked)} />
               <label htmlFor="accept-terms">
                 I accept the{" "}
                 <a href="#" onClick={() => setShowModal(true)}>
@@ -178,20 +151,9 @@ export default function Create() {
         )}
         {newGameId && (
           <>
-            <p>
-              Share this code with a friend to play against them. Once they join
-              and accept the wager, the game will start.
-            </p>
+            <p>Share this code with a friend to play against them. Once they join and accept the wager, the game will start.</p>
             <h4>{newGameId}</h4>
-            <button
-              onClick={async () =>
-                await navigator.clipboard
-                  .writeText(newGameId)
-                  .then(() => toast.success("Code copied to clipboard."))
-              }
-            >
-              Copy code
-            </button>
+            <button onClick={async () => await navigator.clipboard.writeText(newGameId).then(() => toast.success("Code copied to clipboard."))}>Copy code</button>
           </>
         )}
       </div>

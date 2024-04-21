@@ -13,14 +13,7 @@ type ResultModalProps = {
   totalRounds: number
 }
 
-export default function ResultModal({
-  outcome,
-  winner,
-  side,
-  score,
-  round,
-  totalRounds,
-}: Readonly<ResultModalProps>) {
+export default function ResultModal({ outcome, winner, side, score, round, totalRounds }: Readonly<ResultModalProps>) {
   const navigate = useNavigate()
   const dialog = document.getElementsByTagName("dialog")[0]
   const [overallWinner, setOverallWinner] = useState<Colour | null>(null)
@@ -91,14 +84,7 @@ export default function ResultModal({
     }
   })()
 
-  const winnerStr =
-    side === winner
-      ? "You won the round"
-      : winner === Colour.WHITE
-        ? "White won the round"
-        : winner === Colour.BLACK
-          ? "Black won the round"
-          : "Draw"
+  const winnerStr = side === winner ? "You won the round" : winner === Colour.WHITE ? "White won the round" : winner === Colour.BLACK ? "Black won the round" : "Draw"
 
   const playerIndex = side === Colour.WHITE ? 1 : 0
   const opponentIndex = playerIndex === 0 ? 1 : 0
@@ -137,9 +123,7 @@ export default function ResultModal({
           <p>The next round will start shortly...</p>
         </>
       )}
-      <button onClick={onExit}>
-        {round < totalRounds && !overallWinner ? "Forfeit match" : "Exit"}
-      </button>
+      <button onClick={onExit}>{round < totalRounds && !overallWinner ? "Forfeit match" : "Exit"}</button>
     </dialog>
   )
 }

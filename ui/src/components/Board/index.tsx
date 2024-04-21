@@ -1,28 +1,10 @@
 import cloneDeep from "lodash/cloneDeep"
 import { useEffect, useRef, useState } from "react"
-import {
-  boardArray,
-  initialLegalMoves,
-  initialState,
-} from "../../constants/board"
+import { boardArray, initialLegalMoves, initialState } from "../../constants/board"
 import { socket } from "../../socket"
-import {
-  BoardState,
-  Castles,
-  Colour,
-  Move,
-  Outcome,
-  PieceInfo,
-  PieceRef,
-  PieceType,
-} from "../../types"
+import { BoardState, Castles, Colour, Move, Outcome, PieceInfo, PieceRef, PieceType } from "../../types"
 import { getAlgebraicNotation, moveToUci, uciToMove } from "../../utils"
-import {
-  isCastles,
-  isEnPassant,
-  isIllegalMove,
-  isPromotion,
-} from "../../utils/board"
+import { isCastles, isEnPassant, isIllegalMove, isPromotion } from "../../utils/board"
 import Piece from "../Piece"
 import Square from "./Square"
 import styles from "./board.module.css"
@@ -36,20 +18,11 @@ type BoardProps = {
   setScore(score: [number, number]): void
 }
 
-export default function Board({
-  colour,
-  turn,
-  setTurn,
-  setOutcome,
-  setWinner,
-  setScore,
-}: Readonly<BoardProps>) {
+export default function Board({ colour, turn, setTurn, setOutcome, setWinner, setScore }: Readonly<BoardProps>) {
   const boardRef = useRef<HTMLDivElement>(null)
   const animating = useRef(false)
   const squareCoords = useRef<Map<string, { x: number; y: number }>>()
-  const oppositeColour = useRef(
-    colour === Colour.WHITE ? Colour.BLACK : Colour.WHITE,
-  )
+  const oppositeColour = useRef(colour === Colour.WHITE ? Colour.BLACK : Colour.WHITE)
 
   const [selectedPiece, setSelectedPiece] = useState<PieceRef>()
   const [state, setState] = useState<(PieceInfo | null)[][]>(initialState)
@@ -111,40 +84,24 @@ export default function Board({
   }, [])
 
   function animateMove(fromSquareNotation: string, toSquareNotation: string) {
-    const pieceEl = document
-      .getElementById(fromSquareNotation)
-      ?.getElementsByTagName(`img`)[0]
+    const pieceEl = document.getElementById(fromSquareNotation)?.getElementsByTagName(`img`)[0]
     const fromCoords = squareCoords.current?.get(fromSquareNotation)
     const toCoords = squareCoords.current?.get(toSquareNotation)
 
     if (pieceEl && fromCoords && toCoords) {
       animating.current = true
-      pieceEl.style.transform = `translate(${toCoords.x - fromCoords.x}px, ${
-        toCoords.y - fromCoords.y
-      }px)`
+      pieceEl.style.transform = `translate(${toCoords.x - fromCoords.x}px, ${toCoords.y - fromCoords.y}px)`
     }
   }
 
   function animateCastles(rank_idx: number, side: Castles) {
     if (side === Castles.KINGSIDE) {
-      animateMove(
-        getAlgebraicNotation(rank_idx, 4),
-        getAlgebraicNotation(rank_idx, 6),
-      )
-      animateMove(
-        getAlgebraicNotation(rank_idx, 7),
-        getAlgebraicNotation(rank_idx, 5),
-      )
+      animateMove(getAlgebraicNotation(rank_idx, 4), getAlgebraicNotation(rank_idx, 6))
+      animateMove(getAlgebraicNotation(rank_idx, 7), getAlgebraicNotation(rank_idx, 5))
     } else {
       // Queenside
-      animateMove(
-        getAlgebraicNotation(rank_idx, 4),
-        getAlgebraicNotation(rank_idx, 2),
-      )
-      animateMove(
-        getAlgebraicNotation(rank_idx, 0),
-        getAlgebraicNotation(rank_idx, 3),
-      )
+      animateMove(getAlgebraicNotation(rank_idx, 4), getAlgebraicNotation(rank_idx, 2))
+      animateMove(getAlgebraicNotation(rank_idx, 0), getAlgebraicNotation(rank_idx, 3))
     }
   }
 
@@ -194,11 +151,7 @@ export default function Board({
             animateCastles(rank_idx, Castles.QUEENSIDE)
           }
         } else if (data.enPassant) {
-          newState[
-            colour === Colour.WHITE
-              ? move.toSquare[0] + 1
-              : move.toSquare[0] - 1
-          ][move.toSquare[1]] = null
+          newState[colour === Colour.WHITE ? move.toSquare[0] + 1 : move.toSquare[0] - 1][move.toSquare[1]] = null
           newState[move.toSquare[0]][move.toSquare[1]] = piece
           animateMove(data.move.slice(0, 2), data.move.slice(2, 4))
         } else {
@@ -238,12 +191,7 @@ export default function Board({
     }
   }, [squareCoords.current, state])
 
-  function handleCastles(
-    newState: (PieceInfo | null)[][],
-    selectedPiece: PieceRef,
-    rank_idx: number,
-    file_idx: number,
-  ) {
+  function handleCastles(newState: (PieceInfo | null)[][], selectedPiece: PieceRef, rank_idx: number, file_idx: number) {
     if (file_idx === 6) {
       // short castles
       newState[rank_idx][7] = null
@@ -266,25 +214,13 @@ export default function Board({
     return newState
   }
 
-  function handleEnPassant(
-    newState: (PieceInfo | null)[][],
-    selectedPiece: PieceRef,
-    rank_idx: number,
-    file_idx: number,
-  ) {
-    newState[colour === Colour.WHITE ? rank_idx - 1 : rank_idx + 1][file_idx] =
-      null
+  function handleEnPassant(newState: (PieceInfo | null)[][], selectedPiece: PieceRef, rank_idx: number, file_idx: number) {
+    newState[colour === Colour.WHITE ? rank_idx - 1 : rank_idx + 1][file_idx] = null
     newState[rank_idx][file_idx] = selectedPiece as PieceInfo
     return newState
   }
 
-  function handlePromotion(
-    newState: (PieceInfo | null)[][],
-    promotion: PieceType,
-    rank_idx: number,
-    file_idx: number,
-    colour: Colour,
-  ) {
+  function handlePromotion(newState: (PieceInfo | null)[][], promotion: PieceType, rank_idx: number, file_idx: number, colour: Colour) {
     newState[rank_idx][file_idx] = {
       pieceType: promotion,
       colour,
@@ -294,15 +230,9 @@ export default function Board({
 
   function onSquareClick(rank_idx: number, file_idx: number, dropped = false) {
     if (selectedPiece && turn === colour) {
-      const fromSquare: [number, number] = [
-        selectedPiece.rank,
-        selectedPiece.file,
-      ]
+      const fromSquare: [number, number] = [selectedPiece.rank, selectedPiece.file]
       const toSquare: [number, number] = [rank_idx, file_idx]
-      const fromSquareNotation = getAlgebraicNotation(
-        fromSquare[0],
-        fromSquare[1],
-      )
+      const fromSquareNotation = getAlgebraicNotation(fromSquare[0], fromSquare[1])
       const toSquareNotation = getAlgebraicNotation(toSquare[0], toSquare[1])
 
       if (isIllegalMove(selectedPiece, fromSquare, toSquare, legalMoves)) {
@@ -316,13 +246,7 @@ export default function Board({
       if (isPromotion(selectedPiece, rank_idx, turn)) {
         // auto-promote to queen
         promotion = PieceType.QUEEN
-        newState = handlePromotion(
-          newState,
-          promotion,
-          rank_idx,
-          file_idx,
-          colour,
-        )
+        newState = handlePromotion(newState, promotion, rank_idx, file_idx, colour)
       } else if (isCastles(file_idx, colour, selectedPiece)) {
         newState = handleCastles(newState, selectedPiece, rank_idx, file_idx)
       } else if (isEnPassant(rank_idx, file_idx, state, selectedPiece)) {
@@ -372,41 +296,20 @@ export default function Board({
             id={getAlgebraicNotation(getRank(rank_idx), getFile(file_idx))}
             key={file_idx}
             onClick={() => onSquareClick(getRank(rank_idx), getFile(file_idx))}
-            onDrop={() =>
-              onSquareClick(getRank(rank_idx), getFile(file_idx), true)
-            }
-            selected={
-              selectedPiece?.rank === getRank(rank_idx) &&
-              selectedPiece.file === getFile(file_idx)
-            }
+            onDrop={() => onSquareClick(getRank(rank_idx), getFile(file_idx), true)}
+            selected={selectedPiece?.rank === getRank(rank_idx) && selectedPiece.file === getFile(file_idx)}
             isLegalMove={legalMoves.some(
-              (m) =>
-                m.fromSquare[0] === selectedPiece?.rank &&
-                m.fromSquare[1] === selectedPiece?.file &&
-                m.toSquare[0] === getRank(rank_idx) &&
-                m.toSquare[1] === getFile(file_idx),
+              (m) => m.fromSquare[0] === selectedPiece?.rank && m.fromSquare[1] === selectedPiece?.file && m.toSquare[0] === getRank(rank_idx) && m.toSquare[1] === getFile(file_idx),
             )}
-            wasPrevMove={prevMove.includes(
-              getAlgebraicNotation(getRank(rank_idx), getFile(file_idx)),
-            )}
-            isCheckedKing={
-              state[getRank(rank_idx)][getFile(file_idx)]?.pieceType ===
-                PieceType.KING &&
-              isCheck &&
-              state[getRank(rank_idx)][getFile(file_idx)]?.colour === turn
-            }
+            wasPrevMove={prevMove.includes(getAlgebraicNotation(getRank(rank_idx), getFile(file_idx)))}
+            isCheckedKing={state[getRank(rank_idx)][getFile(file_idx)]?.pieceType === PieceType.KING && isCheck && state[getRank(rank_idx)][getFile(file_idx)]?.colour === turn}
           >
             {state[getRank(rank_idx)][getFile(file_idx)] != null && (
               <Piece
-                pieceType={
-                  state[getRank(rank_idx)][getFile(file_idx)]!.pieceType
-                }
+                pieceType={state[getRank(rank_idx)][getFile(file_idx)]!.pieceType}
                 colour={state[getRank(rank_idx)][getFile(file_idx)]!.colour}
                 onClick={() => {
-                  if (
-                    state[getRank(rank_idx)][getFile(file_idx)]!.colour ===
-                    colour
-                  ) {
+                  if (state[getRank(rank_idx)][getFile(file_idx)]!.colour === colour) {
                     setSelectedPiece({
                       ...state[getRank(rank_idx)][getFile(file_idx)]!,
                       rank: getRank(rank_idx),
@@ -415,10 +318,7 @@ export default function Board({
                   }
                 }}
                 onDrag={() => {
-                  if (
-                    state[getRank(rank_idx)][getFile(file_idx)]!.colour ===
-                    colour
-                  ) {
+                  if (state[getRank(rank_idx)][getFile(file_idx)]!.colour === colour) {
                     setSelectedPiece({
                       ...state[getRank(rank_idx)][getFile(file_idx)]!,
                       rank: getRank(rank_idx),

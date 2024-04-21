@@ -43,11 +43,7 @@ const PIECE_IMAGE_MAP = {
   },
 }
 
-function getItemStyles(
-  initialOffset: XYCoord | null,
-  currentOffset: XYCoord | null,
-  imageSize: number,
-): React.CSSProperties {
+function getItemStyles(initialOffset: XYCoord | null, currentOffset: XYCoord | null, imageSize: number): React.CSSProperties {
   if (!initialOffset || !currentOffset) {
     return {
       display: "none",
@@ -65,14 +61,10 @@ function getItemStyles(
 }
 
 export function CustomPreview() {
-  const [pieceSize, setPieceSize] = useState<number>(
-    Math.min(window.innerHeight * 0.8, window.innerWidth * 0.9) / 8,
-  )
+  const [pieceSize, setPieceSize] = useState<number>(Math.min(window.innerHeight * 0.8, window.innerWidth * 0.9) / 8)
 
   function onResize() {
-    setPieceSize(
-      Math.min(window.innerHeight * 0.8, window.innerWidth * 0.9) / 8,
-    )
+    setPieceSize(Math.min(window.innerHeight * 0.8, window.innerWidth * 0.9) / 8)
   }
 
   useEffect(() => {
@@ -80,14 +72,12 @@ export function CustomPreview() {
     return () => window.removeEventListener("resize", onResize)
   }, [])
 
-  const { isDragging, item, initialOffset, currentOffset } = useDragLayer(
-    (monitor) => ({
-      item: monitor.getItem(),
-      initialOffset: monitor.getInitialSourceClientOffset(),
-      currentOffset: monitor.getClientOffset(),
-      isDragging: monitor.isDragging(),
-    }),
-  )
+  const { isDragging, item, initialOffset, currentOffset } = useDragLayer((monitor) => ({
+    item: monitor.getItem(),
+    initialOffset: monitor.getInitialSourceClientOffset(),
+    currentOffset: monitor.getClientOffset(),
+    isDragging: monitor.isDragging(),
+  }))
 
   if (!isDragging) {
     return null
@@ -104,23 +94,13 @@ export function CustomPreview() {
       }}
     >
       <div style={getItemStyles(initialOffset, currentOffset, pieceSize)}>
-        <img
-          src={
-            PIECE_IMAGE_MAP[item.colour as Colour][item.pieceType as PieceType]
-          }
-          style={{ opacity: 1, width: pieceSize, height: pieceSize }}
-        />
+        <img src={PIECE_IMAGE_MAP[item.colour as Colour][item.pieceType as PieceType]} style={{ opacity: 1, width: pieceSize, height: pieceSize }} />
       </div>
     </div>
   )
 }
 
-export default function Piece({
-  pieceType,
-  colour,
-  onClick,
-  onDrag,
-}: Readonly<PieceProps>) {
+export default function Piece({ pieceType, colour, onClick, onDrag }: Readonly<PieceProps>) {
   const [{ isDragging }, drag, preview] = useDrag(
     () => ({
       type: DraggableTypes.PIECE,

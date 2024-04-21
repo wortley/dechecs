@@ -66,16 +66,7 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <DndProvider backend={dndBackend} options={{ enableMouseEvents: true }}>
           <CustomPreview />
-          <ToastContainer
-            autoClose={2500}
-            hideProgressBar
-            newestOnTop
-            closeOnClick
-            pauseOnFocusLoss
-            draggable={false}
-            pauseOnHover
-            theme="colored"
-          />
+          <ToastContainer autoClose={2500} hideProgressBar newestOnTop closeOnClick pauseOnFocusLoss draggable={false} pauseOnHover theme="colored" />
           <Header />
           <ConnectionStatus connected={connected} />
           <Router />
