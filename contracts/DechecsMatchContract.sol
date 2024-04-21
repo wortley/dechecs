@@ -11,8 +11,6 @@ contract DechecsMatchContract {
         address player1; // wallet address of player 1
         address player2; // wallet address of player 2
         uint256 wager; // amount to wager in wei
-        address winner; // wallet address of the winner
-        bool ended; // flag to indicate if the game has ended
         uint256 created_at; // timestamp of when the game was created
     }
 
@@ -77,14 +75,7 @@ contract DechecsMatchContract {
      * @param gid id of the game
      */
     function createGame(string calldata gid) public payable notPaused {
-        _games[gid] = Game(
-            msg.sender,
-            address(0),
-            msg.value,
-            address(0),
-            false,
-            block.timestamp
-        );
+        _games[gid] = Game(msg.sender, address(0), msg.value, block.timestamp);
     }
 
     /**
@@ -93,7 +84,7 @@ contract DechecsMatchContract {
      */
     function joinGame(string calldata gid) public payable notPaused {
         Game storage game = _games[gid];
-        require(!game.ended, "Game has already ended.");
+        require(game.created_at > 0, "Game does not exist");
         require(msg.value == game.wager, "Incorrect wager amount sent");
         require(
             block.timestamp - game.created_at < _gameExpiry,
@@ -109,10 +100,9 @@ contract DechecsMatchContract {
      */
     function declareDraw(string calldata gid) public isOwner {
         Game storage game = _games[gid];
+        require(game.created_at > 0, "Game does not exist");
         require(game.player2 != address(0), "Game has not started");
-        require(!game.ended, "Game has already ended");
 
-        game.ended = true;
         uint256 gasFee = tx.gasprice * _gasLimit;
         uint256 playerAmount = game.wager;
         uint256 commission = (playerAmount * _commission) / 100;
@@ -142,15 +132,12 @@ contract DechecsMatchContract {
         address _winner
     ) public isOwner {
         Game storage game = _games[gid];
+        require(game.created_at > 0, "Game does not exist");
         require(game.player2 != address(0), "Game has not started");
-        require(!game.ended, "Game has already ended");
         require(
             _winner == game.player1 || _winner == game.player2,
             "Invalid winner address"
         );
-
-        game.winner = _winner;
-        game.ended = true;
 
         uint256 gasFee = tx.gasprice * _gasLimit;
         uint256 totalWager = (game.wager * 2);
@@ -164,7 +151,7 @@ contract DechecsMatchContract {
             address(this).balance >= (winnerAmount + gasFee),
             "Insufficient funds to cover winner payout"
         );
-        payable(game.winner).transfer(winnerAmount);
+        payable(_winner).transfer(winnerAmount);
 
         delete _games[gid];
     }

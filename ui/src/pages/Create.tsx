@@ -77,7 +77,7 @@ export default function Create() {
 
   useEffect(() => {
     GBPtoMATIC(wagerAmount).then((maticAmount) =>
-      setWagerAmountMATIC(maticAmount),
+      setWagerAmountMATIC(maticAmount)
     )
   }, [wagerAmount])
 
@@ -139,7 +139,7 @@ export default function Create() {
               type="number"
               id="wager-amount"
               value={wagerAmount}
-              min="0.01"
+              min="1"
               step="0.01"
               max="100000"
               onChange={(e) =>

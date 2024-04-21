@@ -17,6 +17,6 @@ export const TERMS_OF_USE = `
 
 9. Modification of Terms: We reserve the right to modify these terms and conditions at any time without prior notice. Your continued use of our platform after any such changes constitutes your acceptance of the new terms and conditions.\n
 
-10. Termination of Service: We reserve the right to terminate or suspend your access to our platform at any time, for any reason, without prior notice. We may also terminate your account if we suspect any fraudulent, abusive, or illegal activity.\n
+10. Termination of Service: We reserve the right to terminate or suspend your access to our platform at any time, for any reason, without prior notice.\n
 
 By using déchecs, you acknowledge that you have read, understood, and agree to be bound by these terms and conditions. If you do not agree with any part of these terms, you must not use our platform.\n`
