@@ -12,6 +12,7 @@ export default function Home() {
       <div className="how-it-works">
         <h5>How it works</h5>
         <ol type="1">
+          <li>Connect your web3 wallet and ensure you have some MATIC on the Polygon mainnet</li>
           <li>Create a new game and select time control, number of rounds and wager</li>
           <li>Pay the wager in MATIC and share the game code with a chosen opponent</li>
           <li>Join a game by entering the game code and paying the wager</li>

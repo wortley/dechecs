@@ -11,7 +11,7 @@ const metadata = {
   icons: [],
 }
 
-const chains = [polygon, polygonAmoy] as const
+const chains = import.meta.env.PROD ? ([polygon] as const) : ([polygon, polygonAmoy] as const)
 
 export const config = defaultWagmiConfig({
   chains,
