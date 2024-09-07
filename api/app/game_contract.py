@@ -9,7 +9,7 @@ from web3 import AsyncWeb3
 class GameContract:
     """Wrapper around smart contract functions declareWinner and declareDraw"""
 
-    GAS_LIMIT = 100000
+    GAS_LIMIT = 100_000
 
     def __init__(self, w3: AsyncWeb3, logger: Logger):
         self.w3 = w3
