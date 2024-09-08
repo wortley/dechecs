@@ -29,4 +29,4 @@ Performant multiplayer chess dapp on the Polygon blockchain utilising web3py, wa
 
 Manually push to Heroku repo: `git subtree push --prefix api heroku master`
 
-View logs: `heroku logs --tail -a unichess-api`
+View logs: `heroku logs --tail -a dechecs-api`

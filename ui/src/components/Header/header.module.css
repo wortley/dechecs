@@ -2,7 +2,7 @@
   box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
   text-align: center;
   margin: 0;
-  padding: 1.3em;
+  padding: 1.25em;
   position: relative;
 }
 
@@ -14,4 +14,13 @@
 
 .headerLogo {
   font-weight: 700;
+}
+
+@media only screen and (max-width: 1024px) {
+  .header {
+    text-align: left;
+  }
+  .headerLogo {
+    font-size: medium;
+  }
 }

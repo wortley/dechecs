@@ -6,19 +6,20 @@ from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
 router = APIRouter(prefix="/exchange", tags=["exchange"])
 
 
-@router.get("/matic-gbp")
-async def get_matic_gbp_exchange_rate():
+@router.get("/{fiat}")
+async def get_exchange_rate(fiat: str):
     """
-    Fetch the current exchange rate of MATIC to GBP from CoinMarketCap API
+    Fetch the current exchange rate of POL to fiat from CoinMarketCap API
 
     Returns:
-        dict: The exchange rate of MATIC to GBP
+        dict: The exchange rate
     """
+    FIAT = fiat.upper()
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 "https://pro-api.coinmarketcap.com/v2/cryptocurrency/quotes/latest",
-                params={"symbol": "MATIC", "convert": "GBP"},
+                params={"symbol": "POL", "convert": FIAT},
                 headers={
                     "X-CMC_PRO_API_KEY": CMC_API_KEY,
                     "Accept-Encoding": "deflate, gzip",
@@ -27,7 +28,7 @@ async def get_matic_gbp_exchange_rate():
             ) as response:
                 if response.status == 200:
                     data = await response.json()
-                    exchange_rate = data["data"]["MATIC"][0]["quote"]["GBP"]["price"]
+                    exchange_rate = data["data"]["POL"][0]["quote"][FIAT]["price"]
                     return {"exchange_rate": exchange_rate}
                 else:
                     raise HTTPException(

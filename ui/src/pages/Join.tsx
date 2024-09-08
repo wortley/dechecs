@@ -6,15 +6,17 @@ import { estimateFeesPerGas, writeContract } from "wagmi/actions"
 import { abi } from "../abi"
 import TermsModal from "../components/TermsModal"
 import { config } from "../config"
-import { SC_ADDRESS, chainId } from "../constants"
+import { MAX_GAS, SC_ADDRESS, chainId } from "../constants"
 import { socket } from "../socket"
 import { GameInfo, StartData } from "../types"
-import { MATICtoGBP, parseMatic } from "../utils/currency"
+import { POLtoGBP, POLtoUSD, parsePOL } from "../utils/currency"
 
 export default function Join() {
   const navigate = useNavigate()
   const [joiningGameId, setJoiningGameId] = useState("")
   const [gameInfo, setGameInfo] = useState<GameInfo | null>(null)
+  const [wagerAmount, setWagerAmount] = useState<number>(0)
+  const [wagerAmountUSD, setWagerAmountUSD] = useState<number>(0)
   const [wagerAmountGBP, setWagerAmountGBP] = useState<number>(0)
   const [acceptTerms, setAcceptTerms] = useState<boolean>(false)
   const [showModal, setShowModal] = useState<boolean>(false)
@@ -35,7 +37,9 @@ export default function Join() {
     }
 
     async function onGameInfo(data: GameInfo) {
-      setWagerAmountGBP(await MATICtoGBP(data.wagerAmount))
+      setWagerAmount(data.wagerAmount)
+      setWagerAmountUSD(await POLtoUSD(data.wagerAmount))
+      setWagerAmountGBP(await POLtoGBP(data.wagerAmount))
       setGameInfo(data)
     }
 
@@ -61,7 +65,7 @@ export default function Join() {
     })
     const gasPrice = priceInfo.maxFeePerGas
 
-    if (parseMatic(gameInfo.wagerAmount.toString()) >= balance!.value - gasPrice) return "Insufficient MATIC balance."
+    if (parsePOL(gameInfo.wagerAmount.toString()) >= balance!.value - gasPrice) return "Insufficient MATIC balance."
     return 0
   }
 
@@ -76,7 +80,8 @@ export default function Join() {
         abi,
         address: SC_ADDRESS,
         functionName: "joinGame",
-        value: parseMatic(gameInfo!.wagerAmount.toString()),
+        value: parsePOL(gameInfo!.wagerAmount.toString()),
+        gas: MAX_GAS,
         args: [joiningGameId],
       })
       console.log("Transaction successful:", result)
@@ -102,8 +107,8 @@ export default function Join() {
           <>
             <p>Game code: {joiningGameId}</p>
             <p>Time control: {gameInfo.timeControl}m</p>
-            <p>Number of rounds: {gameInfo.totalRounds}</p>
-            <p>Wager amount: {wagerAmountGBP.toFixed(2)} GBP</p>
+            <p>Rounds: {gameInfo.totalRounds}</p>
+            <p>Wager: {wagerAmount} POL ({wagerAmountUSD.toFixed(2)} USD / {wagerAmountGBP.toFixed(2)} GBP)</p>
             <div className="accept-terms-container">
               <input type="checkbox" id="accept-terms" value={acceptTerms.toString()} onChange={(e) => setAcceptTerms(e.currentTarget.checked)} />
               <label htmlFor="accept-terms">

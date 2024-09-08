@@ -15,8 +15,7 @@ contract DechecsMatchContract {
     }
 
     address private _owner; // owner of the contract
-    uint256 private _gasLimit = 100000; // gas limit for each transaction
-    uint8 private _commission = 7; // 7% commission
+    uint256 private _gasLimit = 1000000; // gas limit for each transaction
     bool private _paused; // flag to indicate if the contract is paused
     uint32 private _gameExpiry = 86400; // expire after 24 hours if no other player has joined
 
@@ -105,8 +104,6 @@ contract DechecsMatchContract {
 
         uint256 gasFee = tx.gasprice * _gasLimit;
         uint256 playerAmount = game.wager;
-        uint256 commission = (playerAmount * _commission) / 100;
-        playerAmount -= commission;
 
         require(playerAmount > gasFee, "Insufficient funds to cover gas fee");
 
@@ -141,8 +138,6 @@ contract DechecsMatchContract {
 
         uint256 gasFee = tx.gasprice * _gasLimit;
         uint256 totalWager = (game.wager * 2);
-        uint256 commission = (totalWager * _commission) / 100;
-        totalWager -= commission;
 
         require(gasFee < totalWager, "Insufficient funds to cover gas fee");
         uint256 winnerAmount = totalWager - gasFee;

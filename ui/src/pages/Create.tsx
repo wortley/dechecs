@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react"
+import { throttle } from "lodash"
+import { useCallback, useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { toast } from "react-toastify"
 import { useAccount, useBalance } from "wagmi"
@@ -6,24 +7,35 @@ import { estimateFeesPerGas, writeContract } from "wagmi/actions"
 import { abi } from "../abi"
 import TermsModal from "../components/TermsModal"
 import { config } from "../config"
-import { SC_ADDRESS, chainId } from "../constants"
+import { chainId, MAX_GAS, SC_ADDRESS } from "../constants"
 import { socket } from "../socket"
 import { StartData } from "../types"
-import { GBPtoMATIC, parseMatic } from "../utils/currency"
+import { parsePOL, POLtoGBP, POLtoUSD } from "../utils/currency"
 
 export default function Create() {
   const navigate = useNavigate()
   const [newGameId, setNewGameId] = useState("")
   const [timeControl, setTimeControl] = useState<number>(-1)
-  const [wagerAmount, setWagerAmount] = useState<number>(0)
+  const [wagerAmount, setWagerAmount] = useState<number>(0) // in POL
   const [acceptTerms, setAcceptTerms] = useState<boolean>(false)
-  const [wagerAmountMATIC, setWagerAmountMATIC] = useState<number>(0)
   const [gasPrice, setGasPrice] = useState<bigint>(0n)
   const [showModal, setShowModal] = useState<boolean>(false)
   const [rounds, setRounds] = useState<number>(1)
 
+  const [wagerAmountGBP, setWagerAmountGBP] = useState<number>(0)
+  const [wagerAmountUSD, setWagerAmountUSD] = useState<number>(0)
+
   const { address, isConnected } = useAccount()
   const { data: balance } = useBalance({ address, chainId })
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const throttledConverter = useCallback(
+    throttle((amount) => {
+      POLtoGBP(amount).then((gbpAmount) => setWagerAmountGBP(gbpAmount));
+      POLtoUSD(amount).then((usdAmount) => setWagerAmountUSD(usdAmount));
+    }, 1000),
+    []
+  );
 
   useEffect(() => {
     async function onGameId(gameId: string) {
@@ -32,7 +44,8 @@ export default function Create() {
           abi,
           address: SC_ADDRESS,
           functionName: "createGame",
-          value: parseMatic(wagerAmountMATIC.toString()), // convert to wei
+          value: parsePOL(wagerAmount.toString()), // convert to wei
+          gas: MAX_GAS,
           args: [gameId],
         })
         console.log("Transaction successful:", result)
@@ -61,7 +74,7 @@ export default function Create() {
       socket.off("gameId", onGameId)
       socket.off("start", onStart)
     }
-  }, [wagerAmountMATIC, navigate])
+  }, [wagerAmount, navigate])
 
   useEffect(() => {
     async function fetchGasPrice() {
@@ -76,16 +89,18 @@ export default function Create() {
   }, [isConnected])
 
   useEffect(() => {
-    GBPtoMATIC(wagerAmount).then((maticAmount) => setWagerAmountMATIC(maticAmount))
-  }, [wagerAmount])
+    if (wagerAmount) {
+      throttledConverter(wagerAmount);
+    }
+  }, [wagerAmount, throttledConverter]);
 
   function validateGameCreation() {
     if (!isConnected) return "Please connect your wallet."
     if (!gasPrice) return "Please wait for gas price to load."
     if (timeControl < 0) return "Please select a time control."
     if (rounds < 1 || rounds > 10) return "Please enter a valid number of rounds."
-    if (wagerAmount <= 0 || wagerAmountMATIC <= 0) return "Please enter a wager amount."
-    if (parseMatic(wagerAmountMATIC.toString()) >= balance!.value - gasPrice) return "Insufficient MATIC balance."
+    if (wagerAmount <= 0) return "Please enter a wager amount."
+    if (parsePOL(wagerAmount.toString()) >= balance!.value - gasPrice) return "Insufficient MATIC balance."
     if (!acceptTerms) return "Please accept the terms of use."
     return 0
   }
@@ -96,7 +111,7 @@ export default function Create() {
       toast.error(err)
       return
     }
-    socket.emit("create", timeControl, wagerAmountMATIC, address, rounds)
+    socket.emit("create", timeControl, wagerAmount, address, rounds)
   }
 
   return (
@@ -113,7 +128,7 @@ export default function Create() {
               <option value={10}>10m Rapid</option>
               <option value={30}>30m Classical</option>
             </select>
-            <label htmlFor="rounds">Number of rounds:</label>
+            <label htmlFor="rounds">Rounds:</label>
             <input
               type="number"
               id="rounds"
@@ -125,9 +140,11 @@ export default function Create() {
               max="10"
               onChange={(e) => setRounds(parseInt(e.currentTarget.value))}
             />
-            <label htmlFor="wager-amount">Wager amount (GBP):</label>
-            <input type="number" id="wager-amount" value={wagerAmount} min="1" step="0.01" max="100000" onChange={(e) => setWagerAmount(parseFloat(e.currentTarget.value))} />
-            <p>Wager amount: {wagerAmountMATIC > 0 ? wagerAmountMATIC.toFixed(8) : 0} MATIC</p>
+            <label htmlFor="wager-amount">Wager (POL):</label>
+            <input type="number" id="wager-amount" value={wagerAmount} min="0.01" step="0.01" max="10000" onChange={(e) => setWagerAmount(parseFloat(e.currentTarget.value))} />
+            <p>
+              Wager: {wagerAmountUSD.toFixed(2)} USD / {wagerAmountGBP.toFixed(2)} GBP
+            </p>
             <p>Gas price: {(Number(gasPrice) / 10 ** 9).toFixed(2)} Gwei</p>
             <div className="accept-terms-container">
               <input type="checkbox" id="accept-terms" value={acceptTerms.toString()} onChange={(e) => setAcceptTerms(e.currentTarget.checked)} />
