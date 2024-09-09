@@ -114,7 +114,7 @@ export default function Create() {
     socket.emit("create", timeControl, wagerAmount, address, rounds)
   }
 
-  const step = import.meta.env.PROD ? "1" : "0.01"
+  const step = import.meta.env.PROD ? "1" : "0.1"
 
   return (
     <>

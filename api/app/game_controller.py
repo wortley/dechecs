@@ -100,9 +100,6 @@ class GameController:
             board=Board(),
             wager=wager,
             player_wallet_addrs={sid: wallet_addr},
-            tr_w=tr,
-            tr_b=tr,
-            turn_start_time=-1,
             time_control=time_control,
             match_score={sid: 0},
             n_rounds=n_rounds,
@@ -169,8 +166,6 @@ class GameController:
         # randomly pick white and black
         random.shuffle(game.players)
 
-        game.turn_start_time = time_ns() / 1_000_000  # reset turn start time
-
         await self.save_game(gid, game, sid)
 
         # create player 2 queue
@@ -181,13 +176,15 @@ class GameController:
 
         await self.init_listener(gid, sid)
 
+        tr = game.time_control * TimeConstants.MILLISECONDS_PER_MINUTE
+
         # start the game
         utils.publish_event(
             self.rmq.channel,
             gid,
             Event(
                 "start",
-                {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b, "round": game.round, "totalRounds": game.n_rounds},
+                {"colour": Colour.BLACK.value[0], "timeRemaining": tr, "round": game.round, "totalRounds": game.n_rounds},
             ),
             game.players[0],
         )
@@ -196,7 +193,7 @@ class GameController:
             gid,
             Event(
                 "start",
-                {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w, "round": game.round, "totalRounds": game.n_rounds},
+                {"colour": Colour.WHITE.value[0], "timeRemaining": tr, "round": game.round, "totalRounds": game.n_rounds},
             ),
             game.players[1],
         )
@@ -230,8 +227,8 @@ class GameController:
             game.match_score = match_score  # restore match score
             game.board.reset()  # reset board
             game.players.reverse()  # switch white and black
-            game.tr_w = game.tr_b = TimeConstants.MILLISECONDS_PER_MINUTE * game.time_control
-            game.turn_start_time = time_ns() / 1_000_000
+
+            tr = game.time_control * TimeConstants.MILLISECONDS_PER_MINUTE
 
             if not game.finished:  # if game has not been abandoned, send start event
                 utils.publish_event(
@@ -239,7 +236,7 @@ class GameController:
                     gid,
                     Event(
                         "start",
-                        {"colour": Colour.BLACK.value[0], "timeRemaining": game.tr_b, "round": game.round, "totalRounds": game.n_rounds},
+                        {"colour": Colour.BLACK.value[0], "timeRemaining": tr, "round": game.round, "totalRounds": game.n_rounds},
                     ),
                     game.players[0],
                 )
@@ -248,7 +245,7 @@ class GameController:
                     gid,
                     Event(
                         "start",
-                        {"colour": Colour.WHITE.value[0], "timeRemaining": game.tr_w, "round": game.round, "totalRounds": game.n_rounds},
+                        {"colour": Colour.WHITE.value[0], "timeRemaining": tr, "round": game.round, "totalRounds": game.n_rounds},
                     ),
                     game.players[1],
                 )

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { useLocation, useNavigate } from "react-router-dom"
+import { useLocation } from "react-router-dom"
 import { toast } from "react-toastify"
 import Board from "../../components/Board"
 import ResultModal from "../../components/ResultModal"
@@ -10,7 +10,6 @@ import styles from "./play.module.css"
 
 export default function Play() {
   const location = useLocation()
-  const navigate = useNavigate()
 
   const [turn, setTurn] = useState(Colour.WHITE)
   const [outcome, setOutcome] = useState<Outcome>()
@@ -58,7 +57,7 @@ export default function Play() {
     round = location.state.round
     totalRounds = location.state.totalRounds
   } catch (err) {
-    navigate("/")
+    window.location.href = "../"
     return
   }
 

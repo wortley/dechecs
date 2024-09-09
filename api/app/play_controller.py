@@ -46,14 +46,6 @@ class PlayController:
             # move not pseudo-legal
             raise CustomException("Ilegal move", sid)
 
-        time_now = time_ns() / 1_000_000
-        if utils.opponent_ind(game.board.turn) == 0:
-            game.tr_b -= time_now - game.turn_start_time
-        else:
-            game.tr_w -= time_now - game.turn_start_time
-
-        game.turn_start_time = time_now
-
         match_score = None
         if outcome:
             winner_sid = None
@@ -72,8 +64,6 @@ class PlayController:
             enPassant=en_passant,
             legalMoves=[str(m) for m in board.legal_moves],
             moveStack=[str(m) for m in board.move_stack],
-            timeRemainingWhite=game.tr_w,
-            timeRemainingBlack=game.tr_b,
         )
 
         # send updated game state to clients in room

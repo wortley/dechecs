@@ -26,9 +26,6 @@ class Outcome(Enum):
 class Game:
     players: List[str]  # [0] black, [1] white
     board: Board | str  # pychess board object or string when serialised
-    tr_w: int  # time remaining for white
-    tr_b: int  # time remaining for black
-    turn_start_time: float  # timestamp when the turn started
     time_control: int  # time control (minutes)
     wager: float  # wager amount
     player_wallet_addrs: Dict[str, str]  # maps sids to wallet addresses
@@ -57,5 +54,3 @@ class MoveData:
     enPassant: bool
     legalMoves: List[str]
     moveStack: List[str]
-    timeRemainingWhite: int
-    timeRemainingBlack: int
