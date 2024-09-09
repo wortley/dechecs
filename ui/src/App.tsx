@@ -63,6 +63,8 @@ function App() {
   }, [])
 
   const adTest = import.meta.env.PROD ? "off" : "on"
+  const adClient = "ca-pub-6019420046943386"
+  const adSlot = "8114392452"
 
   return (
     <WagmiProvider config={config}>
@@ -73,11 +75,11 @@ function App() {
           <Header />
           <ConnectionStatus connected={connected} />
           <div className="triplecol">
-            <Adsense client="ca-pub-6019420046943386" slot="8114392452" adTest={adTest} format="auto" responsive="true" className="adsense" />
+            <Adsense client={adClient} slot={adSlot} adTest={adTest} format="auto" responsive="true" className="adsense" />
             <Router />
-            <Adsense client="ca-pub-6019420046943386" slot="8114392452" adTest={adTest} format="auto" responsive="true" className="adsense" />
+            <Adsense client={adClient} slot={adSlot} adTest={adTest} format="auto" responsive="true" className="adsense" />
           </div>
-          <Adsense client="ca-pub-6019420046943386" slot="8114392452" adTest={adTest} format="auto" responsive="true" style={{ display: "block" }} />
+          <Adsense client={adClient} slot={adSlot} adTest={adTest} format="auto" responsive="true" style={{ display: "block" }} />
           <Footer />
         </DndProvider>
       </QueryClientProvider>
