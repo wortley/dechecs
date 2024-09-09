@@ -114,6 +114,8 @@ export default function Create() {
     socket.emit("create", timeControl, wagerAmount, address, rounds)
   }
 
+  const step = import.meta.env.PROD ? "1" : "0.01"
+
   return (
     <>
       <div className="home-div">
@@ -141,7 +143,7 @@ export default function Create() {
               onChange={(e) => setRounds(parseInt(e.currentTarget.value))}
             />
             <label htmlFor="wager-amount">Wager (POL):</label>
-            <input type="number" id="wager-amount" value={wagerAmount} min="0.01" step="0.01" max="10000" onChange={(e) => setWagerAmount(parseFloat(e.currentTarget.value))} />
+            <input type="number" id="wager-amount" value={wagerAmount} min={step} step={step} max="10000" onChange={(e) => setWagerAmount(parseFloat(e.currentTarget.value))} />
             <p>
               Wager: {wagerAmountUSD.toFixed(2)} USD / {wagerAmountGBP.toFixed(2)} GBP
             </p>

@@ -33,7 +33,7 @@ createWeb3Modal({
 
 function App() {
   const [connected, setConnected] = useState(false)
-  const dndBackend = window.innerWidth <= 768 ? TouchBackend : HTML5Backend
+  const dndBackend = window.innerWidth <= 1024 ? TouchBackend : HTML5Backend
 
   useEffect(() => {
     function onConnect() {
@@ -66,6 +66,8 @@ function App() {
   const adClient = "ca-pub-6019420046943386"
   const adSlot = "8114392452"
 
+  const adHeight = window.innerWidth <= 1024 ? "150px" : "auto";
+
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
@@ -75,11 +77,11 @@ function App() {
           <Header />
           <ConnectionStatus connected={connected} />
           <div className="triplecol">
-            <Adsense client={adClient} slot={adSlot} adTest={adTest} format="auto" responsive="true" className="adsense" />
+            <Adsense client={adClient} slot={adSlot} adTest={adTest} format="fluid" responsive="true" style={{display: "block", height: adHeight}} />
             <Router />
-            <Adsense client={adClient} slot={adSlot} adTest={adTest} format="auto" responsive="true" className="adsense" />
+            <Adsense client={adClient} slot={adSlot} adTest={adTest} format="fluid" responsive="true" style={{display: "block", height: adHeight}} />
           </div>
-          <Adsense client={adClient} slot={adSlot} adTest={adTest} format="auto" responsive="true" style={{ display: "block" }} />
+          <Adsense client={adClient} slot={adSlot} adTest={adTest} format="fluid" responsive="true"  style={{display: window.innerWidth > 1024 ? "block" : "none"}} />
           <Footer />
         </DndProvider>
       </QueryClientProvider>
