@@ -33,7 +33,7 @@ export default function Create() {
     throttle((amount) => {
       POLtoGBP(amount).then((gbpAmount) => setWagerAmountGBP(gbpAmount));
       POLtoUSD(amount).then((usdAmount) => setWagerAmountUSD(usdAmount));
-    }, 1000),
+    }, 500),
     []
   );
 
@@ -143,7 +143,7 @@ export default function Create() {
               onChange={(e) => setRounds(parseInt(e.currentTarget.value))}
             />
             <label htmlFor="wager-amount">Wager (POL):</label>
-            <input type="number" id="wager-amount" value={wagerAmount} min={step} step={step} max="10000" onChange={(e) => setWagerAmount(parseFloat(e.currentTarget.value))} />
+            <input type="number" id="wager-amount" value={wagerAmount} min={step} step={step} max="100" onChange={(e) => setWagerAmount(parseFloat(e.currentTarget.value))} />
             <p>
               Wager: {wagerAmountUSD.toFixed(2)} USD / {wagerAmountGBP.toFixed(2)} GBP
             </p>
