@@ -65,7 +65,7 @@ export default function Timer({ side, timeControl, outcome }: Readonly<TimerProp
     return () => {
       clearInterval(intervalId)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [turn, outcome, side])
 
   return (
