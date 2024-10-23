@@ -108,10 +108,10 @@ export default function ResultModal({ outcome, winner, side, score, round, total
           )}
           <p>
             {side === overallWinner
-              ? "You win overall! Congratulations! You'll receive your payout shortly."
+              ? "You win the match! Congratulations! You'll receive your payout shortly."
               : overallWinner === null
                 ? "Match drawn. Good game!"
-                : "You lost the match. Unlucky! :( We'll let you know when your payment has settled."}
+                : "You lost the match. Better luck next time!"}
           </p>
         </>
       )}

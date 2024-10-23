@@ -9,7 +9,7 @@ from time import time_ns
 import aioredis
 import app.utils as utils
 from aioredis.client import Redis
-from app.constants import BROADCAST_KEY, MAX_EMIT_RETRIES, TimeConstants
+from app.constants import BROADCAST_KEY, MAX_EMIT_RETRIES, MILLISECONDS_PER_MINUTE, VALID_WAGER_RANGE
 from app.exceptions import CustomException
 from app.game_contract import GameContract
 from app.game_registry import GameRegistry
@@ -41,7 +41,7 @@ class GameController:
             else:
                 self.logger.error(f"Emit event failed {MAX_EMIT_RETRIES} times, giving up")
 
-    async def init_listener(self, gid, sid):
+    async def _init_listener(self, gid, sid):
         self.logger.info("Initialising listener for game " + gid + ", user " + sid + ", on worker ID " + str(os.getpid()))
 
         def on_message(_, __, ___, body):
@@ -75,6 +75,18 @@ class GameController:
         except aioredis.RedisError as exc:
             raise CustomException(f"Redis error: {exc}", emit_local=False, gid=gid)
 
+    async def _validate_game_creation(self, sid, wager):
+        # rate limiting
+        games_inpr = 0
+        async for _ in self.redis_client.scan_iter("game:*"):  # count games in progress
+            games_inpr += 1
+        if games_inpr > RateLimitConfig.CONCURRENT_GAME_LIMIT:
+            raise CustomException("Server concurrent game limit reached. Please try again later", sid)
+
+        # check wager meets min/max requirements
+        if wager not in range(*VALID_WAGER_RANGE):
+            raise CustomException(f"Invalid wager. Wager must be in range {VALID_WAGER_RANGE} POL", sid)
+
     async def create(self, sid, time_control, wager, wallet_addr, n_rounds):
         """
         Create a new game
@@ -85,16 +97,11 @@ class GameController:
         :param wallet_addr: player's wallet address
         :param n_rounds: number of rounds in the game
         """
-        gid = str(uuid.uuid4())
-        self.sio.enter_room(sid, gid)  # create a room for the game
+        await self._validate_game_creation(sid, wager)
 
-        games_inpr = 0
-        async for _ in self.redis_client.scan_iter("game:*"):  # count games in progress
-            games_inpr += 1
-        if games_inpr > RateLimitConfig.CONCURRENT_GAME_LIMIT:
-            raise CustomException("Server concurrent game limit reached. Please try again later", sid)
+        gid = str(uuid.uuid4())  # generate game ID
+        self.sio.enter_room(sid, gid)  # create an SIO room for the game
 
-        tr = time_control * TimeConstants.MILLISECONDS_PER_MINUTE
         game = Game(
             players=[sid],
             board=Board(),
@@ -121,7 +128,7 @@ class GameController:
         self.rmq.channel.queue_bind(exchange=gid, queue=utils.get_queue_name(gid, sid), routing_key=BROADCAST_KEY)
 
         # init listener
-        await self.init_listener(gid, sid)
+        await self._init_listener(gid, sid)
 
     async def join(self, sid, gid):
         """
@@ -174,9 +181,9 @@ class GameController:
         self.rmq.channel.queue_bind(exchange=gid, queue=utils.get_queue_name(gid, sid), routing_key=sid)
         self.rmq.channel.queue_bind(exchange=gid, queue=utils.get_queue_name(gid, sid), routing_key=BROADCAST_KEY)
 
-        await self.init_listener(gid, sid)
+        await self._init_listener(gid, sid)
 
-        tr = game.time_control * TimeConstants.MILLISECONDS_PER_MINUTE
+        tr = game.time_control * MILLISECONDS_PER_MINUTE
 
         # start the game
         utils.publish_event(
@@ -228,7 +235,7 @@ class GameController:
             game.board.reset()  # reset board
             game.players.reverse()  # switch white and black
 
-            tr = game.time_control * TimeConstants.MILLISECONDS_PER_MINUTE
+            tr = game.time_control * MILLISECONDS_PER_MINUTE
 
             if not game.finished:  # if game has not been abandoned, send start event
                 utils.publish_event(

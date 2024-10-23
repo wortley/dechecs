@@ -5,9 +5,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-class TimeConstants:
-    DECISECONDS_PER_MINUTE = 600
-    MILLISECONDS_PER_MINUTE = 60000
+MILLISECONDS_PER_MINUTE = 60_000
+
+
+VALID_WAGER_RANGE = (1, 100)
 
 
 MAX_EMIT_RETRIES = 5

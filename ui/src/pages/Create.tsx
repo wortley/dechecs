@@ -31,11 +31,11 @@ export default function Create() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const throttledConverter = useCallback(
     throttle((amount) => {
-      POLtoGBP(amount).then((gbpAmount) => setWagerAmountGBP(gbpAmount));
-      POLtoUSD(amount).then((usdAmount) => setWagerAmountUSD(usdAmount));
+      POLtoGBP(amount).then((gbpAmount) => setWagerAmountGBP(gbpAmount))
+      POLtoUSD(amount).then((usdAmount) => setWagerAmountUSD(usdAmount))
     }, 500),
     []
-  );
+  )
 
   useEffect(() => {
     async function onGameId(gameId: string) {
@@ -90,9 +90,9 @@ export default function Create() {
 
   useEffect(() => {
     if (wagerAmount) {
-      throttledConverter(wagerAmount);
+      throttledConverter(wagerAmount)
     }
-  }, [wagerAmount, throttledConverter]);
+  }, [wagerAmount, throttledConverter])
 
   function validateGameCreation() {
     if (!isConnected) return "Please connect your wallet."
@@ -114,59 +114,64 @@ export default function Create() {
     socket.emit("create", timeControl, wagerAmount, address, rounds)
   }
 
-  const step = import.meta.env.PROD ? "1" : "0.1"
+  const step = import.meta.env.PROD ? 1 : 0.1
 
   return (
     <>
       <div className="home-div">
         {!newGameId && (
-          <>
-            <h4>New game</h4>
-            <label htmlFor="time-control">Time control:</label>
-            <select id="time-control" value={timeControl} onChange={(e) => setTimeControl(parseInt(e.currentTarget.value))}>
-              <option value={-1} disabled hidden></option>
-              <option value={3}>3m Blitz</option>
-              <option value={5}>5m Blitz</option>
-              <option value={10}>10m Rapid</option>
-              <option value={30}>30m Classical</option>
-            </select>
-            <label htmlFor="rounds">Rounds:</label>
-            <input
-              type="number"
-              id="rounds"
-              onKeyDown={(e) => e.preventDefault()}
-              style={{ caretColor: "transparent" }}
-              value={rounds}
-              min="1"
-              step="1"
-              max="10"
-              onChange={(e) => setRounds(parseInt(e.currentTarget.value))}
-            />
-            <label htmlFor="wager-amount">Wager (POL):</label>
-            <input type="number" id="wager-amount" value={wagerAmount} min={step} step={step} max="100" onChange={(e) => setWagerAmount(parseFloat(e.currentTarget.value))} />
-            <p>
-              Wager: {wagerAmountUSD.toFixed(2)} USD / {wagerAmountGBP.toFixed(2)} GBP
-            </p>
-            <p>Gas price: {(Number(gasPrice) / 10 ** 9).toFixed(2)} Gwei</p>
-            <div className="accept-terms-container">
-              <input type="checkbox" id="accept-terms" value={acceptTerms.toString()} onChange={(e) => setAcceptTerms(e.currentTarget.checked)} />
-              <label htmlFor="accept-terms">
-                I accept the{" "}
-                <a href="#" onClick={() => setShowModal(true)}>
-                  terms of use
-                </a>
-              </label>
-            </div>
-            <button onClick={onCreateGame}>Generate code</button>
-            <button
-              onClick={() => {
-                setTimeControl(-1)
-                navigate("/")
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                onCreateGame()
               }}
             >
-              Back
-            </button>
-          </>
+              <h4>New game</h4>
+              <label htmlFor="time-control">Time control:</label>
+              <select id="time-control" value={timeControl} onChange={(e) => setTimeControl(parseInt(e.currentTarget.value))}>
+                <option value={-1} disabled hidden></option>
+                <option value={3}>3m Blitz</option>
+                <option value={5}>5m Blitz</option>
+                <option value={10}>10m Rapid</option>
+                <option value={30}>30m Classical</option>
+              </select>
+              <label htmlFor="rounds">Rounds:</label>
+              <input
+                type="number"
+                id="rounds"
+                onKeyDown={(e) => e.preventDefault()}
+                style={{ caretColor: "transparent" }}
+                value={rounds}
+                min={1}
+                step={1}
+                max={10}
+                onChange={(e) => setRounds(parseInt(e.currentTarget.value))}
+              />
+              <label htmlFor="wager-amount">Wager (POL):</label>
+              <input type="number" id="wager-amount" value={wagerAmount} min={step} step={step} max={100} onChange={(e) => setWagerAmount(parseFloat(e.currentTarget.value))} />
+              <p>
+                Wager: {wagerAmountUSD.toFixed(2)} USD / {wagerAmountGBP.toFixed(2)} GBP
+              </p>
+              <p>Gas price: {(Number(gasPrice) / 10 ** 9).toFixed(2)} Gwei</p>
+              <div className="accept-terms-container">
+                <input type="checkbox" id="accept-terms" value={acceptTerms.toString()} onChange={(e) => setAcceptTerms(e.currentTarget.checked)} />
+                <label htmlFor="accept-terms">
+                  I accept the{" "}
+                  <a href="#" onClick={() => setShowModal(true)}>
+                    terms of use
+                  </a>
+                </label>
+              </div>
+              <button type="submit">Generate code</button>
+              <button
+                onClick={() => {
+                  setTimeControl(-1)
+                  navigate("/")
+                }}
+              >
+                Back
+              </button>
+            </form>
         )}
         {newGameId && (
           <>

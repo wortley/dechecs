@@ -63,8 +63,6 @@ export type BoardState = {
   isCheck: boolean
   legalMoves: string[]
   moveStack?: string[]
-  timeRemainingWhite?: number
-  timeRemainingBlack?: number
 }
 
 export interface StartData {
