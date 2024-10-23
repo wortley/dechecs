@@ -17,7 +17,6 @@ export default function Create() {
   const [newGameId, setNewGameId] = useState("")
   const [timeControl, setTimeControl] = useState<number>(3)
   const [wagerAmount, setWagerAmount] = useState<number>(0) // in POL
-  const [acceptTerms, setAcceptTerms] = useState<boolean>(false)
   const [gasPrice, setGasPrice] = useState<bigint>(0n)
   const [showModal, setShowModal] = useState<boolean>(false)
   const [rounds, setRounds] = useState<number>(1)
@@ -151,7 +150,7 @@ export default function Create() {
               </p>
               <p>Gas price: {(Number(gasPrice) / 10 ** 9).toFixed(2)} Gwei</p>
               <div className="accept-terms-container">
-                <input type="checkbox" id="accept-terms" required value={acceptTerms.toString()} onChange={(e) => setAcceptTerms(e.currentTarget.checked)} />
+                <input type="checkbox" id="accept-terms" required />
                 <label htmlFor="accept-terms">
                   I accept the{" "}
                   <a href="#" onClick={() => setShowModal(true)}>
