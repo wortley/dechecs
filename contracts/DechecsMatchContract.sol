@@ -4,7 +4,7 @@ pragma solidity >=0.8.2 <0.9.0;
 
 /**
  * @title DechecsMatchContract
- * @dev Pool funds from two players and transfer to winner
+ * @dev This contract manages wagered chess games between two players. It pools funds from both players, allows for game creation and joining, enforces commission payments, and facilitates payouts to the winner or in case of a draw. The contract also includes functionality for game cancellation, pausing, commission adjustments, and managing administrative tasks such as withdrawing funds and checking the contract's status.
  */
 contract DechecsMatchContract {
     struct Game {
