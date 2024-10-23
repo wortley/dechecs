@@ -1,3 +1,4 @@
+import * as amplitude from "@amplitude/analytics-browser"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createWeb3Modal } from "@web3modal/wagmi/react"
 import { useEffect, useState } from "react"
@@ -14,7 +15,7 @@ import Footer from "./components/Footer"
 import Header from "./components/Header"
 import { CustomPreview } from "./components/Piece"
 import { config } from "./config"
-import { WC_PROJECT_ID } from "./constants"
+import { AMPLITUDE_API_KEY, WC_PROJECT_ID } from "./constants"
 import { socket } from "./socket"
 
 const queryClient = new QueryClient()
@@ -61,6 +62,9 @@ function App() {
     }
   }, [])
 
+  useEffect(() => {
+    if (import.meta.env.PROD) amplitude.init(AMPLITUDE_API_KEY)
+  }, [])
 
   return (
     <WagmiProvider config={config}>
