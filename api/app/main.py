@@ -113,6 +113,12 @@ async def disconnect(sid):
 async def create(sid, time_control, wager, wallet_addr, n_rounds):
     await gc.create(sid, time_control, wager, wallet_addr, n_rounds)
 
+@chess_api.sio.on("cancel")
+@sioexc.sio_exception_handler
+async def cancel_game(sid):
+    """Game creator cancels the game and cashes out"""
+    await gc.cancel_game(sid)
+
 
 @chess_api.sio.on("join")
 @sioexc.sio_exception_handler

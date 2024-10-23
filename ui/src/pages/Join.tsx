@@ -6,7 +6,7 @@ import { estimateFeesPerGas, writeContract } from "wagmi/actions"
 import { abi } from "../abi"
 import TermsModal from "../components/TermsModal"
 import { config } from "../config"
-import { MAX_GAS, SC_ADDRESS, chainId } from "../constants"
+import { COMMISSION_PERCENTAGE, MAX_GAS, SC_ADDRESS, chainId } from "../constants"
 import { socket } from "../socket"
 import { GameInfo, StartData } from "../types"
 import { POLtoGBP, POLtoUSD, parsePOL } from "../utils/currency"
@@ -15,9 +15,9 @@ export default function Join() {
   const navigate = useNavigate()
   const [joiningGameId, setJoiningGameId] = useState("")
   const [gameInfo, setGameInfo] = useState<GameInfo | null>(null)
-  const [wagerAmount, setWagerAmount] = useState<number>(0)
   const [wagerAmountUSD, setWagerAmountUSD] = useState<number>(0)
   const [wagerAmountGBP, setWagerAmountGBP] = useState<number>(0)
+  const [gasPrice, setGasPrice] = useState<bigint>(0n)
   const [showModal, setShowModal] = useState<boolean>(false)
 
   const { address, isConnected } = useAccount()
@@ -36,7 +36,6 @@ export default function Join() {
     }
 
     async function onGameInfo(data: GameInfo) {
-      setWagerAmount(data.wagerAmount)
       setWagerAmountUSD(await POLtoUSD(data.wagerAmount))
       setWagerAmountGBP(await POLtoGBP(data.wagerAmount))
       setGameInfo(data)
@@ -51,6 +50,18 @@ export default function Join() {
     }
   }, [navigate])
 
+  useEffect(() => {
+    async function fetchGasPrice() {
+      if (isConnected) {
+        const priceInfo = await estimateFeesPerGas(config, {
+          chainId,
+        }) // gets estimated gas price in wei
+        setGasPrice(priceInfo.maxFeePerGas)
+      }
+    }
+    fetchGasPrice()
+  }, [isConnected])
+
   function onSubmitGameId() {
     socket.emit("join", joiningGameId)
   }
@@ -63,7 +74,7 @@ export default function Join() {
     })
     const gasPrice = priceInfo.maxFeePerGas
 
-    if (parsePOL(gameInfo.wagerAmount.toString()) >= balance!.value - gasPrice) return "Insufficient MATIC balance."
+    if (parsePOL(((gameInfo.wagerAmount * (100 + COMMISSION_PERCENTAGE)) / 100).toString()) >= balance!.value - gasPrice) return "Insufficient MATIC balance."
     return 0
   }
 
@@ -73,12 +84,13 @@ export default function Join() {
       toast.error(err)
       return
     }
+    const totalAmount = parsePOL(((gameInfo!.wagerAmount * (100 + COMMISSION_PERCENTAGE)) / 100).toString())
     try {
       const result = await writeContract(config, {
         abi,
         address: SC_ADDRESS,
         functionName: "joinGame",
-        value: parsePOL(gameInfo!.wagerAmount.toString()),
+        value: parsePOL(totalAmount.toString()),
         gas: MAX_GAS,
         args: [joiningGameId],
       })
@@ -97,7 +109,7 @@ export default function Join() {
         {!gameInfo && (
           <>
             <input type="text" placeholder="Enter game code" value={joiningGameId} onChange={(e) => setJoiningGameId(e.currentTarget.value)} />
-            <button onClick={onSubmitGameId}>Join</button>
+            <button onClick={onSubmitGameId}>View game details</button>
           </>
         )}
         {gameInfo && (
@@ -106,8 +118,10 @@ export default function Join() {
             <p>Time control: {gameInfo.timeControl}m</p>
             <p>Rounds: {gameInfo.totalRounds}</p>
             <p>
-              Wager: {wagerAmount} POL ({wagerAmountUSD.toFixed(2)} USD / {wagerAmountGBP.toFixed(2)} GBP)
+              Wager: {gameInfo.wagerAmount} POL ({wagerAmountUSD.toFixed(2)} USD / {wagerAmountGBP.toFixed(2)} GBP)
             </p>
+            <p>Gas price: {(Number(gasPrice) / 10 ** 9).toFixed(2)} Gwei</p>
+            <p>Commission: {COMMISSION_PERCENTAGE}%</p>
             <form
               onSubmit={(e) => {
                 e.preventDefault()

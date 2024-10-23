@@ -22,6 +22,18 @@ class GameContract:
         tx_hash = await self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
         await self.w3.eth.wait_for_transaction_receipt(tx_hash)
         return tx_hash
+    
+    async def cancel_game(self, gid: str):
+        """Cancel game and cash out before it has started"""
+        tx = await self.contract.functions.cancelGame(gid).build_transaction(
+            {
+                "from": self.acct.address,
+                "gas": self.GAS_LIMIT,
+                "nonce": await self.w3.eth.get_transaction_count(self.acct.address),
+            }
+        )
+        tx_hash = await self._sign_and_send_tx(tx)
+        self.logger.info(f"Game {gid} cancelled by creator. Transaction hash: {encode_hex(tx_hash)}")
 
     async def declare_winner(self, gid: str, winner_addr: str):
         """Declare winner of game"""

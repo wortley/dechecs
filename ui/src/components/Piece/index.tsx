@@ -124,6 +124,7 @@ export default function Piece({ pieceType, colour, onClick, onDrag }: Readonly<P
       className={styles.piece}
       onClick={onClick}
       onMouseDown={onDrag} // drag and drop
+      onTouchStart={onDrag}
       style={{
         opacity: isDragging ? 0 : 1, // hide original while dragging
       }}

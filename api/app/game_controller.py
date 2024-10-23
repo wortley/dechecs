@@ -4,7 +4,6 @@ import os
 import random
 import uuid
 from logging import Logger
-from time import time_ns
 
 import aioredis
 import app.utils as utils
@@ -150,7 +149,7 @@ class GameController:
         :param gid: game ID
         """
         game = await self.get_game_by_gid(gid, sid)
-        if len(game.players) > 1:
+        if len(game.players) >= 2:
             raise CustomException("This game already has two players", sid)
 
         game_info = {
@@ -159,6 +158,17 @@ class GameController:
             "totalRounds": game.n_rounds,
         }
         await self.sio.emit("gameInfo", game_info, to=sid)
+
+    async def cancel_game(self, sid):
+        """
+        Cancel game
+          - for when game creator wishes to cancel the game and cash out (must be done before an opponent has joined the game)
+
+        :param sid: player's socket ID
+        """
+        game, gid = await self.get_game_by_sid(sid)
+        await self.contract.cancel_game(gid)
+        await self.clear_game(sid, game, gid)
 
     async def accept_game(self, sid, gid, wallet_addr):
         """
@@ -236,7 +246,7 @@ class GameController:
                 await self.contract.declare_draw(gid)
         else:
             # start next round
-            await asyncio.sleep(20)  # wait 20 seconds before starting next round
+            await asyncio.sleep(15)  # wait some time before starting next round
             game = await self.get_game_by_gid(gid, game.players[0])  # refresh game in memory
             game.round += 1
             game.match_score = match_score  # restore match score

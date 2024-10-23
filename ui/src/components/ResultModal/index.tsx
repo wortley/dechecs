@@ -44,6 +44,19 @@ export default function ResultModal({ outcome, winner, side, score, round, total
   }, [])
 
   useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault()
+      }
+    }
+
+    window.addEventListener("keydown", handleEscape)
+    return () => {
+      window.removeEventListener("keydown", handleEscape)
+    }
+  }, [dialog])
+
+  useEffect(() => {
     if (outcome && outcome > 0) {
       dialog.showModal()
     }
@@ -110,8 +123,8 @@ export default function ResultModal({ outcome, winner, side, score, round, total
             {side === overallWinner
               ? "You win the match! Congratulations! You'll receive your payout shortly."
               : overallWinner === null
-                ? "Match drawn. Good game!"
-                : "You lost the match. Better luck next time!"}
+              ? "Match drawn. Good game!"
+              : "You lost the match. Better luck next time!"}
           </p>
         </>
       )}
