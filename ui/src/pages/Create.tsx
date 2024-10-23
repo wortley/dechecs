@@ -174,6 +174,7 @@ export default function Create() {
             <p>Share this code with a friend to play against them. Once they join and accept the wager, the game will start.</p>
             <h4>{newGameId}</h4>
             <button onClick={async () => await navigator.clipboard.writeText(newGameId).then(() => toast.success("Code copied to clipboard."))}>Copy code</button>
+            <button onClick={() => console.warn("TODO")}>Cancel and cash out</button>
           </>
         )}
       </div>
