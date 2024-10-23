@@ -94,6 +94,12 @@ class GameController:
         if n_rounds not in range(VALID_N_ROUNDS_RANGE[0], VALID_N_ROUNDS_RANGE[1] + 1):
             raise CustomException(f"Number of rounds must be in range {VALID_N_ROUNDS_RANGE}", sid)
 
+    def _validate_joining_gid(self, gid):
+        try:
+            uuid.UUID(gid)
+        except ValueError:  # invalid UUID
+            raise CustomException("Invalid game ID")
+
     async def create(self, sid, time_control, wager, wallet_addr, n_rounds):
         """
         Create a new game
@@ -148,6 +154,8 @@ class GameController:
         :param sid: player's socket ID
         :param gid: game ID
         """
+        self._validate_joining_gid(gid)
+
         game = await self.get_game_by_gid(gid, sid)
         if len(game.players) >= 2:
             raise CustomException("This game already has two players", sid)

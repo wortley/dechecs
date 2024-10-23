@@ -107,10 +107,15 @@ export default function Join() {
       <div className="home-div">
         <h4>Join game</h4>
         {!gameInfo && (
-          <>
-            <input type="text" placeholder="Enter game code" value={joiningGameId} onChange={(e) => setJoiningGameId(e.currentTarget.value)} />
-            <button onClick={onSubmitGameId}>View game details</button>
-          </>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              onSubmitGameId()
+            }}
+          >
+            <input type="text" placeholder="Enter game code" value={joiningGameId} onChange={(e) => setJoiningGameId(e.currentTarget.value)} required />
+            <button type="submit">View game details</button>
+          </form>
         )}
         {gameInfo && (
           <>
@@ -137,7 +142,7 @@ export default function Join() {
                   </a>
                 </label>
               </div>
-              <button type="submit">Start game</button>
+              <button type="submit">Join and start game</button>
             </form>
           </>
         )}
