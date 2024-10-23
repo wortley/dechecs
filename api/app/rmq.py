@@ -3,7 +3,7 @@ from logging import Logger
 from pika import URLParameters
 from pika.adapters.asyncio_connection import AsyncioConnection
 
-# TODO: just use aio-pika - much easier than callback hell
+# TODO: just use aio-pika - much better than callback hell
 
 
 class RMQConnectionManager:

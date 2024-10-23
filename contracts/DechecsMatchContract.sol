@@ -16,7 +16,7 @@ contract DechecsMatchContract {
 
     address private _owner; // owner of the contract
     uint256 private _gasLimit = 1000000; // gas limit for each transaction
-    bool private _paused; // flag to indicate if the contract is paused
+    bool private _paused = false; // flag to indicate if the contract is paused
     uint32 private _gameExpiry = 86400; // expire after 24 hours if no other player has joined
     uint32 private _commissionPercentage = 5; // (initial value) 5% commission on wagers
 
