@@ -48,7 +48,7 @@ def set_commission(value: int):
 
 def get_balance():
     balance_in_wei = contract.functions.getContractBalance().call({"from": acct.address})
-    balance_in_pol = w3.fromWei(balance_in_wei, "ether")
+    balance_in_pol = w3.from_wei(balance_in_wei, "ether")
     return balance_in_pol
 
 
@@ -64,3 +64,7 @@ def withdraw(amount: int):  # amount in POL
     signed_tx = w3.eth.account.sign_transaction(tx, private_key=acct.key)
     tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
     return w3.eth.wait_for_transaction_receipt(tx_hash)
+
+
+if __name__ == "__main__":
+    print(get_balance())

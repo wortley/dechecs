@@ -38,16 +38,17 @@ export default function Create() {
 
   useEffect(() => {
     async function onGameId(gameId: string) {
-      const wager = parsePOL(wagerAmount.toString())
-      const totalAmount = parsePOL((wagerAmount * (100 + COMMISSION_PERCENTAGE) / 100).toString());
+      const wagerWei = parsePOL(wagerAmount.toString())
+      const commissionWei = (wagerWei * BigInt(COMMISSION_PERCENTAGE)) / BigInt(100)
+
       try {
         const result = await writeContract(config, {
           abi,
           address: SC_ADDRESS,
           functionName: "createGame",
-          value: totalAmount,
+          value: wagerWei + commissionWei,
           gas: MAX_GAS,
-          args: [gameId, wager],
+          args: [gameId, wagerWei],
         })
         console.log("Transaction successful:", result)
         setNewGameId(gameId)
@@ -91,14 +92,18 @@ export default function Create() {
 
   useEffect(() => {
     if (wagerAmount) {
-      throttledConverter(wagerAmount)
+      throttledConverter(wagerAmount) // uses CMC API so throttle
     }
   }, [wagerAmount, throttledConverter])
 
   function validateGameCreation() {
     if (!isConnected) return "Please connect your wallet."
     if (!gasPrice) return "Please wait for gas price to load."
-    if (parsePOL((wagerAmount * (100 + COMMISSION_PERCENTAGE) / 100).toString()) >= balance!.value - gasPrice) return "Insufficient MATIC balance."
+
+    const wagerWei = parsePOL(wagerAmount.toString())
+    const commissionWei = (wagerWei * BigInt(COMMISSION_PERCENTAGE)) / BigInt(100)
+
+    if (wagerWei + commissionWei >= balance!.value - gasPrice) return "Insufficient MATIC balance."
     return 0
   }
 
