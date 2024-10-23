@@ -81,7 +81,7 @@ class GameController:
         async for _ in self.redis_client.scan_iter("game:*"):  # count games in progress
             games_inpr += 1
         if games_inpr > RateLimitConfig.CONCURRENT_GAME_LIMIT:
-            raise CustomException("Server concurrent game limit reached. Please try again later", sid)
+            raise CustomException("Server at capacity. Please come back later", sid)
 
         # check wager meets min/max requirements
         if wager not in range(VALID_WAGER_RANGE[0], VALID_WAGER_RANGE[1] + 1):

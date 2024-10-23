@@ -2,10 +2,10 @@ import asyncio
 
 
 class RateLimitConfig:
-    CONCURRENT_GAME_LIMIT = 100
-    BUCKET_CAPACITY = 100
-    INITIAL_TOKENS = 20
-    REFILL_RATE_MINUTE = 4
+    CONCURRENT_GAME_LIMIT = 500
+    BUCKET_CAPACITY = 1000
+    INITIAL_TOKENS = 100
+    REFILL_RATE_MINUTE = 10
 
 
 class TokenBucketRateLimiter:
