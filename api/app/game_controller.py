@@ -9,7 +9,7 @@ from time import time_ns
 import aioredis
 import app.utils as utils
 from aioredis.client import Redis
-from app.constants import BROADCAST_KEY, MAX_EMIT_RETRIES, MILLISECONDS_PER_MINUTE, VALID_WAGER_RANGE
+from app.constants import BROADCAST_KEY, MAX_EMIT_RETRIES, MILLISECONDS_PER_MINUTE, VALID_N_ROUNDS_RANGE, VALID_TIME_CONTROLS, VALID_WAGER_RANGE
 from app.exceptions import CustomException
 from app.game_contract import GameContract
 from app.game_registry import GameRegistry
@@ -75,7 +75,7 @@ class GameController:
         except aioredis.RedisError as exc:
             raise CustomException(f"Redis error: {exc}", emit_local=False, gid=gid)
 
-    async def _validate_game_creation(self, sid, wager):
+    async def _validate_game_creation(self, sid, time_control, wager, n_rounds):
         # rate limiting
         games_inpr = 0
         async for _ in self.redis_client.scan_iter("game:*"):  # count games in progress
@@ -84,8 +84,16 @@ class GameController:
             raise CustomException("Server concurrent game limit reached. Please try again later", sid)
 
         # check wager meets min/max requirements
-        if wager not in range(*VALID_WAGER_RANGE):
+        if wager not in range(VALID_WAGER_RANGE[0], VALID_WAGER_RANGE[1] + 1):
             raise CustomException(f"Invalid wager. Wager must be in range {VALID_WAGER_RANGE} POL", sid)
+
+        # check time control
+        if time_control not in VALID_TIME_CONTROLS:
+            raise CustomException("Invalid time control", sid)
+
+        # check number of rounds
+        if n_rounds not in range(VALID_N_ROUNDS_RANGE[0], VALID_N_ROUNDS_RANGE[1] + 1):
+            raise CustomException(f"Number of rounds must be in range {VALID_N_ROUNDS_RANGE}", sid)
 
     async def create(self, sid, time_control, wager, wallet_addr, n_rounds):
         """
@@ -97,7 +105,7 @@ class GameController:
         :param wallet_addr: player's wallet address
         :param n_rounds: number of rounds in the game
         """
-        await self._validate_game_creation(sid, wager)
+        await self._validate_game_creation(sid, time_control, wager, n_rounds)
 
         gid = str(uuid.uuid4())  # generate game ID
         self.sio.enter_room(sid, gid)  # create an SIO room for the game

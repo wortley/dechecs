@@ -15,7 +15,7 @@ import { parsePOL, POLtoGBP, POLtoUSD } from "../utils/currency"
 export default function Create() {
   const navigate = useNavigate()
   const [newGameId, setNewGameId] = useState("")
-  const [timeControl, setTimeControl] = useState<number>(-1)
+  const [timeControl, setTimeControl] = useState<number>(3)
   const [wagerAmount, setWagerAmount] = useState<number>(0) // in POL
   const [acceptTerms, setAcceptTerms] = useState<boolean>(false)
   const [gasPrice, setGasPrice] = useState<bigint>(0n)
@@ -97,11 +97,7 @@ export default function Create() {
   function validateGameCreation() {
     if (!isConnected) return "Please connect your wallet."
     if (!gasPrice) return "Please wait for gas price to load."
-    if (timeControl < 0) return "Please select a time control."
-    if (rounds < 1 || rounds > 10) return "Please enter a valid number of rounds."
-    if (wagerAmount <= 0) return "Please enter a wager amount."
     if (parsePOL(wagerAmount.toString()) >= balance!.value - gasPrice) return "Insufficient MATIC balance."
-    if (!acceptTerms) return "Please accept the terms of use."
     return 0
   }
 
@@ -128,8 +124,8 @@ export default function Create() {
             >
               <h4>New game</h4>
               <label htmlFor="time-control">Time control:</label>
-              <select id="time-control" value={timeControl} onChange={(e) => setTimeControl(parseInt(e.currentTarget.value))}>
-                <option value={-1} disabled hidden></option>
+              <select id="time-control" value={timeControl} required onChange={(e) => setTimeControl(parseInt(e.currentTarget.value))}>
+                {/* <option value={-1} disabled hidden></option> */}
                 <option value={3}>3m Blitz</option>
                 <option value={5}>5m Blitz</option>
                 <option value={10}>10m Rapid</option>
@@ -146,15 +142,16 @@ export default function Create() {
                 step={1}
                 max={10}
                 onChange={(e) => setRounds(parseInt(e.currentTarget.value))}
+                required
               />
               <label htmlFor="wager-amount">Wager (POL):</label>
-              <input type="number" id="wager-amount" value={wagerAmount} min={step} step={step} max={100} onChange={(e) => setWagerAmount(parseFloat(e.currentTarget.value))} />
+              <input type="number" id="wager-amount" required value={wagerAmount} min={step} step={step} max={100} onChange={(e) => setWagerAmount(parseFloat(e.currentTarget.value))} />
               <p>
                 Wager: {wagerAmountUSD.toFixed(2)} USD / {wagerAmountGBP.toFixed(2)} GBP
               </p>
               <p>Gas price: {(Number(gasPrice) / 10 ** 9).toFixed(2)} Gwei</p>
               <div className="accept-terms-container">
-                <input type="checkbox" id="accept-terms" value={acceptTerms.toString()} onChange={(e) => setAcceptTerms(e.currentTarget.checked)} />
+                <input type="checkbox" id="accept-terms" required value={acceptTerms.toString()} onChange={(e) => setAcceptTerms(e.currentTarget.checked)} />
                 <label htmlFor="accept-terms">
                   I accept the{" "}
                   <a href="#" onClick={() => setShowModal(true)}>
