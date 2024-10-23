@@ -8,7 +8,7 @@ Performant multiplayer chess dapp on the Polygon blockchain utilising web3py, wa
 
 ![High-level system design diagram](./media/system.png)
 
-## Running locally
+## For developers: Running locally
 
 ### Backend
 
