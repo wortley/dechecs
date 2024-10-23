@@ -98,7 +98,7 @@ class GameController:
         try:
             uuid.UUID(gid)
         except ValueError:  # invalid UUID
-            raise CustomException("Invalid game ID")
+            raise CustomException("Invalid game code")
 
     async def create(self, sid, time_control, wager, wallet_addr, n_rounds):
         """

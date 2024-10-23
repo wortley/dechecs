@@ -143,7 +143,13 @@ export const abi = [
     type: "function",
   },
   {
-    inputs: [],
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "withdrawalAmount",
+        type: "uint256",
+      },
+    ],
     name: "withdraw",
     outputs: [],
     stateMutability: "nonpayable",

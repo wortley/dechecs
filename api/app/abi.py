@@ -23,6 +23,6 @@ abi = [
     {"inputs": [{"internalType": "string", "name": "gid", "type": "string"}], "name": "joinGame", "outputs": [], "stateMutability": "payable", "type": "function"},
     {"inputs": [{"internalType": "uint32", "name": "commission", "type": "uint32"}], "name": "setCommissionPercentage", "outputs": [], "stateMutability": "nonpayable", "type": "function"},
     {"inputs": [], "name": "togglePause", "outputs": [], "stateMutability": "nonpayable", "type": "function"},
-    {"inputs": [], "name": "withdraw", "outputs": [], "stateMutability": "nonpayable", "type": "function"},
+    {"inputs": [{"internalType": "uint256", "name": "withdrawalAmount", "type": "uint256"}], "name": "withdraw", "outputs": [], "stateMutability": "nonpayable", "type": "function"},
     {"stateMutability": "payable", "type": "receive"},
 ]

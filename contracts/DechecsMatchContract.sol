@@ -63,16 +63,22 @@ contract DechecsMatchContract {
     }
 
     /**
-     * @dev Withdraw the full balance of the contract
+     * @dev Withdraw a specified amount from the contract balance
+     * @param withdrawalAmount The amount to withdraw (in wei)
      */
-    function withdraw() external isOwner {
+    function withdraw(uint256 withdrawalAmount) external isOwner {
         uint256 contractBalance = address(this).balance;
         uint256 gasAmount = _gasLimit * tx.gasprice;
+
         require(
-            contractBalance > gasAmount,
-            "Insufficient balance to cover gas fee"
+            withdrawalAmount > 0,
+            "Withdrawal amount must be greater than zero"
         );
-        uint256 withdrawalAmount = contractBalance - gasAmount;
+        require(
+            withdrawalAmount + gasAmount <= contractBalance,
+            "Insufficient balance to cover withdrawal and gas fee"
+        );
+
         payable(_owner).transfer(withdrawalAmount);
     }
 
