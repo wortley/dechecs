@@ -6,18 +6,3 @@
   padding: 0;
   text-align: center;
 }
-
-.triplecol {
-  display: grid;
-  grid-template-columns: 1fr 2fr 1fr;
-  grid-gap: 1em;
-  max-width: 100%;
-}
-
-@media (max-width: 1024px) {
-  .triplecol {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr auto;
-    grid-gap: 0;
-  }
-}

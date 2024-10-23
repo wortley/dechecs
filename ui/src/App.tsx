@@ -1,4 +1,3 @@
-import { Adsense } from "@ctrl/react-adsense"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createWeb3Modal } from "@web3modal/wagmi/react"
 import { useEffect, useState } from "react"
@@ -62,11 +61,6 @@ function App() {
     }
   }, [])
 
-  const adTest = import.meta.env.PROD ? "off" : "on"
-  const adClient = "ca-pub-6019420046943386"
-  const adSlot = "8114392452"
-
-  const adHeight = window.innerWidth <= 1024 ? "150px" : "auto";
 
   return (
     <WagmiProvider config={config}>
@@ -76,12 +70,7 @@ function App() {
           <ToastContainer autoClose={2500} hideProgressBar newestOnTop closeOnClick pauseOnFocusLoss draggable={false} pauseOnHover theme="colored" />
           <Header />
           <ConnectionStatus connected={connected} />
-          <div className="triplecol">
-            <Adsense client={adClient} slot={adSlot} adTest={adTest} format="fluid" responsive="true" style={{display: "block", height: adHeight}} />
-            <Router />
-            <Adsense client={adClient} slot={adSlot} adTest={adTest} format="fluid" responsive="true" style={{display: "block", height: adHeight}} />
-          </div>
-          <Adsense client={adClient} slot={adSlot} adTest={adTest} format="fluid" responsive="true"  style={{display: window.innerWidth > 1024 ? "block" : "none"}} />
+          <Router />
           <Footer />
         </DndProvider>
       </QueryClientProvider>
