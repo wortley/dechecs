@@ -15,6 +15,12 @@
     <meta property="og:description" content="Play chess against your friends for POL" />
     <meta property="og:locale" content="en_GB" />
     <title>d&eacute;checs</title>
+    <script src="https://cdn.amplitude.com/libs/analytics-browser-2.11.1-min.js.gz"></script>
+    <script src="https://cdn.amplitude.com/libs/plugin-session-replay-browser-1.8.0-min.js.gz"></script>
+    <script>
+      window.amplitude.add(window.sessionReplay.plugin({ sampleRate: 1 }))
+      window.amplitude.init("2c4e76195265e21360fccfef3ab6fd7f", { autocapture: { elementInteractions: true } })
+    </script>
   </head>
   <body>
     <div id="root"></div>
