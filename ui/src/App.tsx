@@ -33,7 +33,7 @@ createWeb3Modal({
 function App() {
   const [connected, setConnected] = useState(false)
   const dndBackend = window.innerWidth <= 1024 ? TouchBackend : HTML5Backend
-
+  const [theme, setTheme] = useState("")
   const { setThemeMode } = useWeb3ModalTheme()
 
   useEffect(() => {
@@ -67,13 +67,28 @@ function App() {
     if (import.meta.env.PROD) amplitude.init(AMPLITUDE_API_KEY)
   }, [])
 
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme") ?? window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+    setTheme(savedTheme)
+    setThemeMode(savedTheme)
+    document.documentElement.setAttribute("data-theme", savedTheme)
+  }, [])
+
+  const toggleTheme = () => {
+    const newTheme = theme === "light" ? "dark" : "light"
+    setTheme(newTheme)
+    setThemeMode(newTheme)
+    document.documentElement.setAttribute("data-theme", newTheme)
+    localStorage.setItem("theme", newTheme)
+  }
+
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <DndProvider backend={dndBackend} options={{ enableMouseEvents: true }}>
           <CustomPreview />
           <ToastContainer autoClose={3000} hideProgressBar newestOnTop closeOnClick pauseOnFocusLoss draggable={false} pauseOnHover theme="colored" />
-          <Header setThemeMode={setThemeMode} />
+          <Header theme={theme} toggleTheme={toggleTheme} />
           <ConnectionStatus connected={connected} />
           <Router />
           <Footer />
