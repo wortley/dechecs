@@ -16,6 +16,7 @@
   --color-link: #646cff;
   --color-link-hover: #747bff;
   --button-bg: #f9f9f9;
+  --header-box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
 
   color-scheme: light;
   color: var(--color-text);
@@ -35,6 +36,7 @@
   --color-link: #bb86fc;
   --color-link-hover: #3700b3;
   --button-bg: #333333;
+  --header-box-shadow: rgba(255, 255, 255, 0.2) 0px 7px 29px 0px; 
 
   color-scheme: dark;
   color: var(--color-text);
