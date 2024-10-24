@@ -2,7 +2,7 @@
   box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
   text-align: center;
   margin: 0;
-  padding: 1.5em;
+  padding: 1em;
   position: relative;
   display: flex;
   justify-content: space-between;
@@ -19,11 +19,26 @@
   margin: 0.2em;
 }
 
+.headerRight {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.themeSwitch {
+  font-size: 1.5em;
+  margin-right: 1em;
+  padding: 1ex;
+}
+
 @media only screen and (max-width: 1024px) {
   .header {
     padding: 1em;
   }
   .headerLogo {
     font-size: 1.5em;
+  }
+  .themeSwitch {
+    font-size: 1.2em;
   }
 }

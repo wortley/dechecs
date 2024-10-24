@@ -1,6 +1,6 @@
 import * as amplitude from "@amplitude/analytics-browser"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { createWeb3Modal } from "@web3modal/wagmi/react"
+import { createWeb3Modal, useWeb3ModalTheme } from "@web3modal/wagmi/react"
 import { useEffect, useState } from "react"
 import { DndProvider } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
@@ -25,7 +25,6 @@ createWeb3Modal({
   projectId: WC_PROJECT_ID,
   enableAnalytics: true,
   enableOnramp: true,
-  themeMode: "light",
   themeVariables: {
     "--w3m-font-family": "'Red Hat Mono', monospace",
   },
@@ -34,6 +33,8 @@ createWeb3Modal({
 function App() {
   const [connected, setConnected] = useState(false)
   const dndBackend = window.innerWidth <= 1024 ? TouchBackend : HTML5Backend
+
+  const { setThemeMode } = useWeb3ModalTheme()
 
   useEffect(() => {
     function onConnect() {
@@ -71,8 +72,8 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <DndProvider backend={dndBackend} options={{ enableMouseEvents: true }}>
           <CustomPreview />
-          <ToastContainer autoClose={2500} hideProgressBar newestOnTop closeOnClick pauseOnFocusLoss draggable={false} pauseOnHover theme="colored" />
-          <Header />
+          <ToastContainer autoClose={3000} hideProgressBar newestOnTop closeOnClick pauseOnFocusLoss draggable={false} pauseOnHover theme="colored" />
+          <Header setThemeMode={setThemeMode} />
           <ConnectionStatus connected={connected} />
           <Router />
           <Footer />
