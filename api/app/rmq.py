@@ -27,15 +27,15 @@ class RMQConnectionManager:
         conn.channel(on_open_callback=lambda ch: self.on_channel_open(ch, conn, set_channel))
 
     def on_connection_open_error(self, err):
-        self.logger.error("Connection open failed: %s", err)
+        self.logger.error("RMQ connection open failed: %s", err)
 
     def on_connection_closed(self, reason):
-        self.logger.warning("Connection closed: %s", reason)
+        self.logger.warning("RMQ connection closed: %s", reason)
 
     def on_channel_closed(self, conn):
         conn.close()
 
     def on_channel_open(self, ch, conn, set_channel):
-        self.logger.info("Channel opened")
+        self.logger.info("RMQ channel opened")
         set_channel(ch)
         ch.add_on_close_callback(lambda _, __: self.on_channel_closed(conn))

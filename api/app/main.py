@@ -17,6 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi_socketio import SocketManager
 from web3 import AsyncWeb3
 from web3.middleware import async_geth_poa_middleware
+from urllib.parse import urlparse
 
 # logging config (override uvicorn default)
 logger = logging.getLogger("uvicorn")
@@ -33,7 +34,8 @@ gr = GameRegistry()
 rate_limiter = TokenBucketRateLimiter()
 
 # Redis client and MQ setup
-redis_client = aioredis.Redis.from_url(REDIS_URL)
+rurl = urlparse(REDIS_URL)
+redis_client = aioredis.Redis(host=rurl.hostname, port=rurl.port, password=rurl.password, ssl=(rurl.scheme == "rediss"), ssl_cert_reqs=None)
 
 # RabbitMQ connection manager (pika)
 rmq = RMQConnectionManager(CLOUDAMQP_URL, logger)
@@ -112,6 +114,7 @@ async def disconnect(sid):
 @sioexc.sio_exception_handler
 async def create(sid, time_control, wager, wallet_addr, n_rounds):
     await gc.create(sid, time_control, wager, wallet_addr, n_rounds)
+
 
 @chess_api.sio.on("cancel")
 @sioexc.sio_exception_handler
