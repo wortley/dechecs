@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom"
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom"
 import Create from "./pages/Create"
 import Home from "./pages/Home"
 import Join from "./pages/Join"
@@ -14,6 +14,7 @@ export default function Router() {
         <Route path="/create" element={<Create />} />
         <Route path="/play" element={<Play />} />
         <Route path="/r" element={<Redirect />} />
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
   )
