@@ -25,5 +25,5 @@ WALLET_PK = os.environ.get("WALLET_PK")
 
 CMC_API_KEY = os.environ.get("CMC_API_KEY")
 
-CONCURRENT_GAME_LIMIT = os.environ.get("CONCURRENT_GAME_LIMIT")
-BUCKET_CAPACITY = os.environ.get("BUCKET_CAPACITY")
+CONCURRENT_GAME_LIMIT = int(os.environ.get("CONCURRENT_GAME_LIMIT"))
+BUCKET_CAPACITY = int(os.environ.get("BUCKET_CAPACITY"))
