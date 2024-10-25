@@ -115,9 +115,9 @@ async def create(sid, time_control, wager, wallet_addr, n_rounds):
 
 @chess_api.sio.on("cancel")
 @sioexc.sio_exception_handler
-async def cancel_game(sid):
+async def cancel_game(sid, created_on_contract):
     """Game creator cancels the game and cashes out"""
-    await gc.cancel_game(sid)
+    await gc.cancel_game(sid, created_on_contract)
 
 
 @chess_api.sio.on("join")

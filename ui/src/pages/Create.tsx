@@ -24,6 +24,8 @@ export default function Create() {
   const [wagerAmountGBP, setWagerAmountGBP] = useState<number>(0)
   const [wagerAmountUSD, setWagerAmountUSD] = useState<number>(0)
 
+  const [loading, setLoading] = useState(0);  // 0: off, 1: generating code, 2: cancelling game
+
   const { address, isConnected } = useAccount()
   const { data: balance } = useBalance({ address, chainId })
 
@@ -54,8 +56,12 @@ export default function Create() {
         setNewGameId(gameId)
       } catch (err) {
         console.error("Transaction error:", err)
-        toast.error((err as Error).message.split(".")[0])
+        const errmsg = (err as Error).message
+        if (!errmsg.includes("rejected the request")) toast.error(errmsg.split(".")[0])
+        socket.emit("cancel", false)
       }
+
+      setLoading(0)
     }
 
     function onStart(data: StartData) {
@@ -69,12 +75,19 @@ export default function Create() {
       })
     }
 
+    function onGameCancelled() {
+      toast.success("Game cancelled")
+      setNewGameId("")  // switch back to form screen
+    }
+
     socket.on("gameId", onGameId)
     socket.on("start", onStart)
+    socket.on("gameCancelled", onGameCancelled)
 
     return () => {
       socket.off("gameId", onGameId)
       socket.off("start", onStart)
+      socket.off("gameCancelled", onGameCancelled)
     }
   }, [wagerAmount, navigate])
 
@@ -111,13 +124,15 @@ export default function Create() {
     const err = validateGameCreation()
     if (err) {
       toast.error(err)
+      setLoading(0)
       return
     }
     socket.emit("create", timeControl, wagerAmount, address, rounds)
   }
 
   function onCancelGame() {
-    socket.emit("cancel")
+    setLoading(2)
+    socket.emit("cancel", true)
   }
 
   const step = import.meta.env.PROD ? 1 : 0.1
@@ -129,6 +144,7 @@ export default function Create() {
           <form
             onSubmit={(e) => {
               e.preventDefault()
+              setLoading(1)
               onCreateGame()
             }}
           >
@@ -170,7 +186,7 @@ export default function Create() {
                 </a>
               </label>
             </div>
-            <button type="submit">Generate code</button>
+            <button type="submit" className={loading == 1 ? "loading" : ""}>Generate code{loading == 1 && <span className="spinner" />}</button>
             <button
               onClick={() => {
                 setTimeControl(-1)
@@ -186,7 +202,7 @@ export default function Create() {
             <p>Share this code with a friend to play against them. Once they join and accept the wager, the game will start.</p>
             <h4>{newGameId}</h4>
             <button onClick={async () => await navigator.clipboard.writeText(newGameId).then(() => toast.success("Code copied to clipboard."))}>Copy code</button>
-            <button onClick={onCancelGame}>Cancel and cash out</button>
+            <button onClick={onCancelGame} className={loading == 2 ? "loading" : ""}>Cancel and cash out{loading == 2 && <span className="spinner" />}</button>
           </>
         )}
       </div>

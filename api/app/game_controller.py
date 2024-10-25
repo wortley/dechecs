@@ -167,15 +167,18 @@ class GameController:
         }
         await self.sio.emit("gameInfo", game_info, to=sid)
 
-    async def cancel_game(self, sid):
+    async def cancel_game(self, sid, created_on_contract):
         """
         Cancel game
           - for when game creator wishes to cancel the game and cash out (must be done before an opponent has joined the game)
 
         :param sid: player's socket ID
+        :param created_on_contract: whether the contract interaction to create the game completed
         """
         game, gid = await self.get_game_by_sid(sid)
-        await self.contract.cancel_game(gid)
+        if created_on_contract:
+            await self.contract.cancel_game(gid)
+        await self.sio.emit("gameCancelled", to=sid) 
         await self.clear_game(sid, game, gid)
 
     async def accept_game(self, sid, gid, wallet_addr):
@@ -303,6 +306,7 @@ class GameController:
 
     async def clear_game(self, sid, game, gid):
         """Clears a user's game(s) from memory"""
+        self.logger.info("Clearing game " + gid + " (user " + sid + ")")
         self.gr.remove_player_gid_record(sid)
         self.rmq.channel.queue_unbind(utils.get_queue_name(gid, sid), exchange=gid, routing_key=sid)
         self.rmq.channel.queue_unbind(utils.get_queue_name(gid, sid), exchange=gid, routing_key=BROADCAST_KEY)

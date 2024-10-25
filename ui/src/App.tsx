@@ -68,10 +68,10 @@ function App() {
   }, [])
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") ?? window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
-    setTheme(savedTheme)
-    setThemeMode(savedTheme)
-    document.documentElement.setAttribute("data-theme", savedTheme)
+    const userDefaultTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+    setTheme(userDefaultTheme)
+    setThemeMode(userDefaultTheme)
+    document.documentElement.setAttribute("data-theme", userDefaultTheme)
   }, [])
 
   const toggleTheme = () => {
@@ -79,7 +79,6 @@ function App() {
     setTheme(newTheme)
     setThemeMode(newTheme)
     document.documentElement.setAttribute("data-theme", newTheme)
-    localStorage.setItem("theme", newTheme)
   }
 
   return (

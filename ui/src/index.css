@@ -36,7 +36,7 @@
   --color-link: #bb86fc;
   --color-link-hover: #3700b3;
   --button-bg: #333333;
-  --header-box-shadow: rgba(255, 255, 255, 0.2) 0px 7px 29px 0px; 
+  --header-box-shadow: rgba(255, 255, 255, 0.2) 0px 7px 29px 0px;
 
   color-scheme: dark;
   color: var(--color-text);
@@ -121,6 +121,27 @@ button:hover {
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+button.loading {
+  opacity: 0.5;
+  border-color: orange;
+  pointer-events: none;
+}
+button.loading .spinner {
+  display: inline-block;
+  width: 0.6em;
+  height: 0.6em;
+  border: 3px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: -2px;
+  margin-left: .8em;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* <select> */

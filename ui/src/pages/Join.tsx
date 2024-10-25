@@ -21,6 +21,8 @@ export default function Join() {
   const [gasPrice, setGasPrice] = useState<bigint>(0n)
   const [showModal, setShowModal] = useState<boolean>(false)
 
+  const [loading, setLoading] = useState(0);  // 0: off, 1: fetching game details, 2: joining game
+
   const { address, isConnected } = useAccount()
   const { data: balance } = useBalance({ address, chainId })
 
@@ -45,6 +47,7 @@ export default function Join() {
       setWagerPlusCommissionWei(wagerWei + commissionWei)
 
       setGameInfo(data)
+      setLoading(0)
     }
 
     socket.on("start", onStart)
@@ -88,6 +91,7 @@ export default function Join() {
     const err = await validateAcceptGame()
     if (err) {
       toast.error(err)
+      setLoading(0)
       return
     }
     try {
@@ -101,9 +105,11 @@ export default function Join() {
       })
       console.log("Transaction successful:", result)
       socket.emit("acceptGame", joiningGameId, address)
+      setLoading(0)
     } catch (err) {
       console.error("Transaction error:", err)
       toast.error((err as Error).message.split(".")[0])
+      setLoading(0)
     }
   }
 
@@ -115,11 +121,12 @@ export default function Join() {
           <form
             onSubmit={(e) => {
               e.preventDefault()
+              setLoading(1)
               onSubmitGameId()
             }}
           >
             <input type="text" placeholder="Enter game code" value={joiningGameId} onChange={(e) => setJoiningGameId(e.currentTarget.value)} required />
-            <button type="submit">View game details</button>
+            <button type="submit" className={loading == 1 ? "loading" : ""}>View game details{loading == 1 && <span className="spinner" />}</button>
           </form>
         )}
         {gameInfo && (
@@ -135,6 +142,7 @@ export default function Join() {
             <form
               onSubmit={(e) => {
                 e.preventDefault()
+                setLoading(2)
                 onAcceptGame()
               }}
             >
@@ -147,7 +155,7 @@ export default function Join() {
                   </a>
                 </label>
               </div>
-              <button type="submit">Join and start game</button>
+              <button type="submit" className={loading == 2 ? "loading" : ""}>Join and start game{loading == 2 && <span className="spinner" />}</button>
             </form>
           </>
         )}

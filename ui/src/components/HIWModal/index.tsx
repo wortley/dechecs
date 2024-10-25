@@ -38,7 +38,7 @@ export default function TermsModal({ show, setShow }: Readonly<HIWModalProps>) {
     <dialog className={styles.hiwModal}>
       <h3>How it works</h3>
       <ol type="1">
-        <li>Connect your web3 wallet and ensure you have some POL on the Polygon mainnet</li>
+        <li>Connect your web3 wallet and ensure you have some POL (formerly MATIC) on the Polygon blockchain</li>
         <li>Create a new game and select time control, number of rounds and wager</li>
         <li>Pay the wager plus a small commission (so that we can afford gas fees) in POL and share the game code with a chosen opponent</li>
         <li>Join a game by entering the game code and paying the wager (plus commission)</li>
