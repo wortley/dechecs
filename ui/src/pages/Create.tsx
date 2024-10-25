@@ -24,7 +24,7 @@ export default function Create() {
   const [wagerAmountGBP, setWagerAmountGBP] = useState<number>(0)
   const [wagerAmountUSD, setWagerAmountUSD] = useState<number>(0)
 
-  const [loading, setLoading] = useState(0);  // 0: off, 1: generating code, 2: cancelling game
+  const [loading, setLoading] = useState(0) // 0: off, 1: generating code, 2: cancelling game
 
   const { address, isConnected } = useAccount()
   const { data: balance } = useBalance({ address, chainId })
@@ -77,17 +77,24 @@ export default function Create() {
 
     function onGameCancelled() {
       toast.success("Game cancelled")
-      setNewGameId("")  // switch back to form screen
+      setNewGameId("") // switch back to form screen
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    function onError(_1: string) {
+      setLoading(0)
     }
 
     socket.on("gameId", onGameId)
     socket.on("start", onStart)
     socket.on("gameCancelled", onGameCancelled)
+    socket.on("error", onError)
 
     return () => {
       socket.off("gameId", onGameId)
       socket.off("start", onStart)
       socket.off("gameCancelled", onGameCancelled)
+      socket.off("error", onError)
     }
   }, [wagerAmount, navigate])
 
@@ -135,8 +142,6 @@ export default function Create() {
     socket.emit("cancel", true)
   }
 
-  const step = import.meta.env.PROD ? 1 : 0.1
-
   return (
     <>
       <div className="home-div">
@@ -171,7 +176,7 @@ export default function Create() {
               required
             />
             <label htmlFor="wager-amount">Wager (POL):</label>
-            <input type="number" id="wager-amount" required value={wagerAmount} min={step} step={step} max={100} onChange={(e) => setWagerAmount(parseFloat(e.currentTarget.value))} />
+            <input type="number" id="wager-amount" required value={wagerAmount} min={1} step={1} max={100} onChange={(e) => setWagerAmount(parseFloat(e.currentTarget.value))} />
             <p>
               Wager: {wagerAmountUSD.toFixed(2)} USD / {wagerAmountGBP.toFixed(2)} GBP
             </p>
@@ -186,13 +191,10 @@ export default function Create() {
                 </a>
               </label>
             </div>
-            <button type="submit" className={loading == 1 ? "loading" : ""}>Generate code{loading == 1 && <span className="spinner" />}</button>
-            <button
-              onClick={() => {
-                setTimeControl(-1)
-                navigate("/")
-              }}
-            >
+            <button type="submit" className={loading == 1 ? "loading" : ""}>
+              Generate code{loading == 1 && <span className="spinner" />}
+            </button>
+            <button onClick={() => navigate("/")} disabled={loading > 0}>
               Back
             </button>
           </form>
@@ -202,7 +204,9 @@ export default function Create() {
             <p>Share this code with a friend to play against them. Once they join and accept the wager, the game will start.</p>
             <h4>{newGameId}</h4>
             <button onClick={async () => await navigator.clipboard.writeText(newGameId).then(() => toast.success("Code copied to clipboard."))}>Copy code</button>
-            <button onClick={onCancelGame} className={loading == 2 ? "loading" : ""}>Cancel and cash out{loading == 2 && <span className="spinner" />}</button>
+            <button onClick={onCancelGame} className={loading == 2 ? "loading" : ""}>
+              Cancel and cash out{loading == 2 && <span className="spinner" />}
+            </button>
           </>
         )}
       </div>

@@ -120,10 +120,10 @@ async def cancel_game(sid, created_on_contract):
     await gc.cancel_game(sid, created_on_contract)
 
 
-@chess_api.sio.on("join")
+@chess_api.sio.on("getGameDetails")
 @sioexc.sio_exception_handler
-async def join(sid, gid):
-    await gc.join(sid, gid)
+async def get_game_details(sid, gid):
+    await gc.get_game_details(sid, gid)
 
 
 @chess_api.sio.on("acceptGame")

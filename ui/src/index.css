@@ -127,6 +127,10 @@ button.loading {
   border-color: orange;
   pointer-events: none;
 }
+button:disabled{
+  opacity: 0.5;
+  pointer-events: none;
+}
 button.loading .spinner {
   display: inline-block;
   width: 0.6em;

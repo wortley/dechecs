@@ -21,7 +21,7 @@ export default function Join() {
   const [gasPrice, setGasPrice] = useState<bigint>(0n)
   const [showModal, setShowModal] = useState<boolean>(false)
 
-  const [loading, setLoading] = useState(0);  // 0: off, 1: fetching game details, 2: joining game
+  const [loading, setLoading] = useState(0) // 0: off, 1: fetching game details, 2: joining game
 
   const { address, isConnected } = useAccount()
   const { data: balance } = useBalance({ address, chainId })
@@ -50,12 +50,19 @@ export default function Join() {
       setLoading(0)
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    function onError(_1: string) {
+      setLoading(0)
+    }
+
     socket.on("start", onStart)
     socket.on("gameInfo", onGameInfo)
+    socket.on("error", onError)
 
     return () => {
       socket.off("start", onStart)
       socket.off("gameInfo", onGameInfo)
+      socket.off("error", onError)
     }
   }, [navigate])
 
@@ -72,7 +79,7 @@ export default function Join() {
   }, [isConnected])
 
   function onSubmitGameId() {
-    socket.emit("join", joiningGameId)
+    socket.emit("getGameDetails", joiningGameId)
   }
 
   async function validateAcceptGame() {
@@ -126,7 +133,9 @@ export default function Join() {
             }}
           >
             <input type="text" placeholder="Enter game code" value={joiningGameId} onChange={(e) => setJoiningGameId(e.currentTarget.value)} required />
-            <button type="submit" className={loading == 1 ? "loading" : ""}>View game details{loading == 1 && <span className="spinner" />}</button>
+            <button type="submit" className={loading == 1 ? "loading" : ""}>
+              View game details{loading == 1 && <span className="spinner" />}
+            </button>
           </form>
         )}
         {gameInfo && (
@@ -155,16 +164,13 @@ export default function Join() {
                   </a>
                 </label>
               </div>
-              <button type="submit" className={loading == 2 ? "loading" : ""}>Join and start game{loading == 2 && <span className="spinner" />}</button>
+              <button type="submit" className={loading == 2 ? "loading" : ""}>
+                Join and start game{loading == 2 && <span className="spinner" />}
+              </button>
             </form>
           </>
         )}
-        <button
-          onClick={() => {
-            setJoiningGameId("")
-            navigate("/")
-          }}
-        >
+        <button onClick={() => navigate("/")} disabled={loading > 0}>
           Back
         </button>
       </div>

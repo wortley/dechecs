@@ -143,9 +143,9 @@ class GameController:
         # init listener
         await self._init_listener(gid, sid)
 
-    async def join(self, sid, gid):
+    async def get_game_details(self, sid, gid):
         """
-        Player request to join a game
+        User request to view game information before joining
 
         Returns game information (time control and wager amount)
           - gives user joining game a chance to review and accept wager amount before joining
