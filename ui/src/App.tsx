@@ -46,7 +46,6 @@ function App() {
     }
 
     function onError(message: string) {
-      // TODO: set loading states to 0
       toast.error(message)
     }
 

@@ -38,5 +38,4 @@ def deserialise_game_state(game: str):
 
 
 def publish_event(channel: Channel, gid: str, event: Event, rk=BROADCAST_KEY):
-    # TODO: better place to put this?
     channel.basic_publish(exchange=gid, routing_key=rk, body=json.dumps(event.__dict__))
