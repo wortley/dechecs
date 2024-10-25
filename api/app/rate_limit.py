@@ -1,6 +1,6 @@
 import asyncio
 
-from api.app.constants import BUCKET_CAPACITY
+from app.constants import BUCKET_CAPACITY
 
 
 class TokenBucketRateLimiter:
