@@ -57,7 +57,7 @@ export default function Create() {
       } catch (err) {
         console.error("Transaction error:", err)
         const errmsg = (err as Error).message
-        if (!errmsg.includes("rejected the request")) toast.error(errmsg.split(".")[0])
+        toast.error(errmsg.split(".")[0])
         socket.emit("cancel", false)
       }
 
@@ -76,7 +76,6 @@ export default function Create() {
     }
 
     function onGameCancelled() {
-      toast.success("Game cancelled")
       setNewGameId("") // switch back to form screen
     }
 
