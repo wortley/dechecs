@@ -8,12 +8,11 @@ from logging import Logger
 import aioredis
 import app.utils as utils
 from aioredis.client import Redis
-from app.constants import BROADCAST_KEY, MAX_EMIT_RETRIES, MILLISECONDS_PER_MINUTE, VALID_N_ROUNDS_RANGE, VALID_TIME_CONTROLS, VALID_WAGER_RANGE
+from app.constants import BROADCAST_KEY, CONCURRENT_GAME_LIMIT, MAX_EMIT_RETRIES, MILLISECONDS_PER_MINUTE, VALID_N_ROUNDS_RANGE, VALID_TIME_CONTROLS, VALID_WAGER_RANGE
 from app.exceptions import CustomException
 from app.game_contract import GameContract
 from app.game_registry import GameRegistry
 from app.models import Colour, Event, Game, Outcome
-from app.rate_limit import RateLimitConfig
 from app.rmq import RMQConnectionManager
 from chess import Board
 from socketio.asyncio_server import AsyncServer
@@ -79,7 +78,7 @@ class GameController:
         games_inpr = 0
         async for _ in self.redis_client.scan_iter("game:*"):  # count games in progress
             games_inpr += 1
-        if games_inpr > RateLimitConfig.CONCURRENT_GAME_LIMIT:
+        if games_inpr > CONCURRENT_GAME_LIMIT:
             raise CustomException("Server at capacity. Please come back later", sid)
 
         # check wager meets min/max requirements
@@ -178,7 +177,7 @@ class GameController:
         game, gid = await self.get_game_by_sid(sid)
         if created_on_contract:
             await self.contract.cancel_game(gid)
-        await self.sio.emit("gameCancelled", to=sid) 
+        await self.sio.emit("gameCancelled", to=sid)
         await self.clear_game(sid, game, gid)
 
     async def accept_game(self, sid, gid, wallet_addr):

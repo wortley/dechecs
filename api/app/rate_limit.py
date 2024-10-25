@@ -1,16 +1,12 @@
 import asyncio
 
-
-class RateLimitConfig:
-    CONCURRENT_GAME_LIMIT = 1000
-    BUCKET_CAPACITY = 400
-    INITIAL_TOKENS = 100
-    REFILL_RATE_MINUTE = 10
+from api.app.constants import BUCKET_CAPACITY
 
 
 class TokenBucketRateLimiter:
     def __init__(self):
-        self.bucket = RateLimitConfig.INITIAL_TOKENS
+        self.bucket = 100
+        self.refill_rate = 10  # per minute
         self.refiller = None
 
     async def refill_tokens(self):
@@ -19,7 +15,7 @@ class TokenBucketRateLimiter:
         """
         while True:
             await asyncio.sleep(60)
-            self.bucket = min(self.bucket + RateLimitConfig.REFILL_RATE_MINUTE, RateLimitConfig.BUCKET_CAPACITY)
+            self.bucket = min(self.bucket + self.refill_rate, BUCKET_CAPACITY)
 
     def start_refiller(self):
         asyncio.create_task(self.refill_tokens())
