@@ -124,7 +124,7 @@ button:focus-visible {
 }
 button.loading {
   opacity: 0.5;
-  border-color: var(--color-link);;
+  border-color: var(--color-link);
   pointer-events: none;
 }
 button:disabled{
