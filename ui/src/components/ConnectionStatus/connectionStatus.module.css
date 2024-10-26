@@ -5,11 +5,11 @@
   border: 0.5px solid var(--color-text);
   height: 0.6em;
   width: 0.6em;
-  margin-right: 0.3em;
+  margin-right: 0.6em;
   transition: background-color 0.3s ease;
 
   &.connected {
-    border: 0.5px solid green;
-    background-color: green;
+    border: 0.5px solid --var(--color-link);
+    background-color: --var(--color-link);
   }
 }

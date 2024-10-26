@@ -120,11 +120,11 @@ button:hover {
 }
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: 3px auto -webkit-focus-ring-color;
 }
 button.loading {
   opacity: 0.5;
-  border-color: orange;
+  border-color: var(--color-link);;
   pointer-events: none;
 }
 button:disabled{
@@ -141,6 +141,7 @@ button.loading .spinner {
   animation: spin 0.8s linear infinite;
   margin-bottom: -2px;
   margin-left: .8em;
+  background-color: var(--color-link);
 }
 @keyframes spin {
   to {
@@ -163,7 +164,7 @@ select:hover {
 }
 select:focus,
 select:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: 3px auto -webkit-focus-ring-color;
 }
 
 /* <input> */
@@ -181,7 +182,7 @@ input:hover {
 }
 input:focus,
 input:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: 3px auto -webkit-focus-ring-color;
 }
 
 /* <input type="checkbox"> */
