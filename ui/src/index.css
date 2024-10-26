@@ -2,7 +2,7 @@
   font-family: "Red Hat Mono";
   font-style: normal;
   font-weight: 100 900;
-  src: url(./assets/fonts/RedHatMono-VariableFont_wght.ttf) format(truetype);
+  src: url(/assets/fonts/RedHatMono-VariableFont_wght.ttf) format(truetype);
 }
 
 :root {

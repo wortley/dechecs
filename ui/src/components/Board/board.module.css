@@ -1,7 +1,7 @@
 .board {
   width: min(80vh, 90vw);
   aspect-ratio: 1 / 1;
-  background-image: url("../../assets/board.svg");
+  background-image: url("/assets/board.svg");
   background-size: cover;
 }
 
