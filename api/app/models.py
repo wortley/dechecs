@@ -54,3 +54,4 @@ class MoveData:
     enPassant: bool
     legalMoves: List[str]
     moveStack: List[str]
+    timestamp: int

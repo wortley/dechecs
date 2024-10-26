@@ -63,6 +63,7 @@ export type BoardState = {
   isCheck: boolean
   legalMoves: string[]
   moveStack?: string[]
+  timestamp?: number
 }
 
 export interface StartData {
@@ -70,6 +71,7 @@ export interface StartData {
   timeRemaining: number
   round: number
   totalRounds: number
+  roundStartTimestamp: number
 }
 
 export interface TimerData {

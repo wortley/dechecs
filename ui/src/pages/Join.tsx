@@ -34,6 +34,7 @@ export default function Join() {
           timeRemaining: data.timeRemaining,
           round: data.round,
           totalRounds: data.totalRounds,
+          roundStartTimestamp: data.roundStartTimestamp
         },
       })
     }

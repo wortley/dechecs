@@ -26,6 +26,7 @@ export default function ResultModal({ outcome, winner, side, score, round, total
           timeRemaining: data.timeRemaining,
           round: data.round,
           totalRounds: data.totalRounds,
+          roundStartTimestamp: data.roundStartTimestamp
         },
       })
     }

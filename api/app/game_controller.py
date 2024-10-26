@@ -4,6 +4,7 @@ import os
 import random
 import uuid
 from logging import Logger
+import time
 
 import aioredis
 import app.utils as utils
@@ -212,6 +213,7 @@ class GameController:
         await self._init_listener(gid, sid)
 
         tr = game.time_control * MILLISECONDS_PER_MINUTE
+        round_start_ts = time.time_ns() // 1_000_000
 
         # start the game
         utils.publish_event(
@@ -219,7 +221,7 @@ class GameController:
             gid,
             Event(
                 "start",
-                {"colour": Colour.BLACK.value[0], "timeRemaining": tr, "round": game.round, "totalRounds": game.n_rounds},
+                {"colour": Colour.BLACK.value[0], "timeRemaining": tr, "round": game.round, "totalRounds": game.n_rounds, "roundStartTimestamp": round_start_ts},
             ),
             game.players[0],
         )
@@ -228,7 +230,7 @@ class GameController:
             gid,
             Event(
                 "start",
-                {"colour": Colour.WHITE.value[0], "timeRemaining": tr, "round": game.round, "totalRounds": game.n_rounds},
+                {"colour": Colour.WHITE.value[0], "timeRemaining": tr, "round": game.round, "totalRounds": game.n_rounds, "roundStartTimestamp": round_start_ts},
             ),
             game.players[1],
         )
@@ -264,6 +266,7 @@ class GameController:
             game.players.reverse()  # switch white and black
 
             tr = game.time_control * MILLISECONDS_PER_MINUTE
+            round_start_ts = time.time_ns() // 1_000_000
 
             if not game.finished:  # if game has not been abandoned, send start event
                 utils.publish_event(
@@ -271,7 +274,7 @@ class GameController:
                     gid,
                     Event(
                         "start",
-                        {"colour": Colour.BLACK.value[0], "timeRemaining": tr, "round": game.round, "totalRounds": game.n_rounds},
+                        {"colour": Colour.BLACK.value[0], "timeRemaining": tr, "round": game.round, "totalRounds": game.n_rounds, "roundStartTimestamp": round_start_ts},
                     ),
                     game.players[0],
                 )
@@ -280,7 +283,7 @@ class GameController:
                     gid,
                     Event(
                         "start",
-                        {"colour": Colour.WHITE.value[0], "timeRemaining": tr, "round": game.round, "totalRounds": game.n_rounds},
+                        {"colour": Colour.WHITE.value[0], "timeRemaining": tr, "round": game.round, "totalRounds": game.n_rounds, "roundStartTimestamp": round_start_ts},
                     ),
                     game.players[1],
                 )

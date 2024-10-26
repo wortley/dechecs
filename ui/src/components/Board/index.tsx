@@ -263,7 +263,7 @@ export default function Board({ colour, turn, setTurn, setOutcome, setWinner, se
       // send move to server
       const uci = moveToUci({ fromSquare, toSquare, promotion })
       setPrevMove(uci)
-      socket.emit("move", uci)
+      socket.emit("move", uci, Date.now())
 
       if (animating.current) {
         setTimeout(() => {

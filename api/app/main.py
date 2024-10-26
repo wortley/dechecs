@@ -140,8 +140,8 @@ async def accept_game(sid, gid, wallet_addr):
 
 @chess_api.sio.on("move")
 @sioexc.sio_exception_handler
-async def move(sid, uci):
-    await pc.move(sid, uci)
+async def move(sid, uci, timestamp):
+    await pc.move(sid, uci, timestamp)
 
 
 @chess_api.sio.on("offerDraw")

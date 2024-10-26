@@ -141,7 +141,6 @@ button.loading .spinner {
   animation: spin 0.8s linear infinite;
   margin-bottom: -2px;
   margin-left: .8em;
-  background-color: var(--color-link);
 }
 @keyframes spin {
   to {
@@ -207,8 +206,8 @@ label {
 dialog {
   margin: 0;
   padding: 1.2em;
-  border-radius: 12px;
-  border: 1px solid lightgrey;
+  border-radius: 8px;
+  border: 2px solid var(--color-link-hover);
 }
 dialog::backdrop {
   backdrop-filter: blur(0.5px);

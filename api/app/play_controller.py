@@ -27,7 +27,7 @@ class PlayController:
             match_score[idx] = game.match_score[pid]
         return game, tuple(match_score)
 
-    async def move(self, sid, uci):
+    async def move(self, sid, uci, timestamp):
         game, gid = await self.gc.get_game_by_sid(sid)
         board = game.board
         move = Move.from_uci(uci)
@@ -64,6 +64,7 @@ class PlayController:
             enPassant=en_passant,
             legalMoves=[str(m) for m in board.legal_moves],
             moveStack=[str(m) for m in board.move_stack],
+            timestamp=timestamp,
         )
 
         # send updated game state to clients in room
