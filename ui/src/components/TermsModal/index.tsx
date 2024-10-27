@@ -51,11 +51,12 @@ export default function TermsModal({ show, setShow }: Readonly<TermsModalProps>)
           consequential damages.
         </li>
         <li>
-          <strong>Assistance Disclaimer:</strong> This platform does not detect or prevent use of computer assistance. Play only with trusted individuals. All games carry the risk of third-party assistance. By
-          participating, you acknowledge and accept this risk.
+          <strong>Assistance Disclaimer:</strong> This platform does not detect or prevent use of computer assistance. Play only with trusted individuals. All games carry the risk of third-party
+          assistance.
         </li>
         <li>
-          <strong>Commission:</strong> A commission of {COMMISSION_PERCENTAGE}% will be added to each player's wager and paid upon creating or joining a game. This is used to cover gas fees and cloud service costs.
+          <strong>Commission:</strong> A commission of {COMMISSION_PERCENTAGE}% will be added to each player's wager and paid upon creating or joining a game. This is used to cover gas fees and cloud
+          service costs.
         </li>
         <li>
           <strong>Minimum Age Requirement:</strong> You must be at least 18 years old or the legal age in your jurisdiction to participate.
