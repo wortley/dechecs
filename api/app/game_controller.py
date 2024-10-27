@@ -79,7 +79,7 @@ class GameController:
         games_inpr = 0
         async for _ in self.redis_client.scan_iter("game:*"):  # count games in progress
             games_inpr += 1
-        if games_inpr > CONCURRENT_GAME_LIMIT:
+        if games_inpr >= CONCURRENT_GAME_LIMIT:
             raise CustomException("Server at capacity. Please come back later", sid)
 
         # check wager meets min/max requirements
@@ -115,6 +115,8 @@ class GameController:
         gid = str(uuid.uuid4())  # generate game ID
         self.sio.enter_room(sid, gid)  # create an SIO room for the game
 
+        tr = time_control * MILLISECONDS_PER_MINUTE
+
         game = Game(
             players=[sid],
             board=Board(),
@@ -124,6 +126,8 @@ class GameController:
             match_score={sid: 0},
             n_rounds=n_rounds,
             round=1,
+            tr_white=tr,
+            tr_black=tr,
         )
 
         self.gr.add_player_gid_record(sid, gid)
@@ -202,6 +206,9 @@ class GameController:
         # randomly pick white and black
         random.shuffle(game.players)
 
+        # set start timestamp (ms)
+        game.last_turn_timestamp = time.time_ns() // 1_000_000
+
         await self.save_game(gid, game, sid)
 
         # create player 2 queue
@@ -212,28 +219,17 @@ class GameController:
 
         await self._init_listener(gid, sid)
 
-        tr = game.time_control * MILLISECONDS_PER_MINUTE
-        round_start_ts = time.time_ns() // 1_000_000
-
-        # start the game
-        utils.publish_event(
-            self.rmq.channel,
-            gid,
-            Event(
-                "start",
-                {"colour": Colour.BLACK.value[0], "timeRemaining": tr, "round": game.round, "totalRounds": game.n_rounds, "roundStartTimestamp": round_start_ts},
-            ),
-            game.players[0],
-        )
-        utils.publish_event(
-            self.rmq.channel,
-            gid,
-            Event(
-                "start",
-                {"colour": Colour.WHITE.value[0], "timeRemaining": tr, "round": game.round, "totalRounds": game.n_rounds, "roundStartTimestamp": round_start_ts},
-            ),
-            game.players[1],
-        )
+        for i, colour in enumerate([Colour.BLACK.value[0], Colour.WHITE.value[0]]):
+            # start the game
+            utils.publish_event(
+                self.rmq.channel,
+                gid,
+                Event(
+                    "start",
+                    {"colour": colour, "timeRemaining": game.tr_white, "round": game.round, "totalRounds": game.n_rounds},
+                ),
+                game.players[i],
+            )
 
     async def handle_end_of_round(self, gid: str, game: Game):
         overall_winner = None
@@ -264,30 +260,22 @@ class GameController:
             game.match_score = match_score  # restore match score
             game.board.reset()  # reset board
             game.players.reverse()  # switch white and black
+            game.tr_white = game.tr_black = game.time_control * MILLISECONDS_PER_MINUTE
+            game.last_turn_timestamp = time.time_ns() // 1_000_000
 
-            tr = game.time_control * MILLISECONDS_PER_MINUTE
-            round_start_ts = time.time_ns() // 1_000_000
+            await self.save_game(gid, game)
 
             if not game.finished:  # if game has not been abandoned, send start event
-                utils.publish_event(
-                    self.rmq.channel,
-                    gid,
-                    Event(
-                        "start",
-                        {"colour": Colour.BLACK.value[0], "timeRemaining": tr, "round": game.round, "totalRounds": game.n_rounds, "roundStartTimestamp": round_start_ts},
-                    ),
-                    game.players[0],
-                )
-                utils.publish_event(
-                    self.rmq.channel,
-                    gid,
-                    Event(
-                        "start",
-                        {"colour": Colour.WHITE.value[0], "timeRemaining": tr, "round": game.round, "totalRounds": game.n_rounds, "roundStartTimestamp": round_start_ts},
-                    ),
-                    game.players[1],
-                )
-            await self.save_game(gid, game)
+                for i, colour in enumerate([Colour.BLACK.value[0], Colour.WHITE.value[0]]):
+                    utils.publish_event(
+                        self.rmq.channel,
+                        gid,
+                        Event(
+                            "start",
+                            {"colour": colour, "timeRemaining": game.tr_white, "round": game.round, "totalRounds": game.n_rounds},
+                        ),
+                        game.players[i],
+                    )
 
     async def handle_exit(self, sid):
         if not self.gr.get_gid(sid):

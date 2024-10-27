@@ -71,13 +71,13 @@ export default function Create() {
           timeRemaining: data.timeRemaining,
           round: data.round,
           totalRounds: data.totalRounds,
-          roundStartTimestamp: data.roundStartTimestamp
         },
       })
     }
 
     function onGameCancelled() {
       setNewGameId("") // switch back to form screen
+      setLoading(0)
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

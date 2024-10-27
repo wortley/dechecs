@@ -55,5 +55,4 @@ def withdraw(amount: int):  # amount in POL
 
 
 if __name__ == "__main__":
-    print(toggle_pause())
-    print(get_paused())
+    print(get_balance())

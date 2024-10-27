@@ -1,9 +1,10 @@
-from time import time_ns
+import time
+from logging import Logger
 
 import app.utils as utils
 from app.exceptions import CustomException
 from app.game_controller import GameController
-from app.models import Castles, Event, MoveData, Outcome
+from app.models import Castles, Colour, Event, MoveData, Outcome, TimerData
 from app.rmq import RMQConnectionManager
 from chess import Move
 from socketio.asyncio_server import AsyncServer
@@ -11,10 +12,13 @@ from socketio.asyncio_server import AsyncServer
 
 class PlayController:
 
-    def __init__(self, rmq: RMQConnectionManager, sio: AsyncServer, gc: GameController):
+    TIMER_HALF_PRECISION = 100  # ms
+
+    def __init__(self, rmq: RMQConnectionManager, sio: AsyncServer, gc: GameController, logger: Logger):
         self.rmq = rmq
         self.sio = sio
         self.gc = gc
+        self.logger = logger
 
     def _update_match_score(self, game, outcome, winner_sid=None):
         if outcome == Outcome.AGREEMENT.value:
@@ -27,7 +31,9 @@ class PlayController:
             match_score[idx] = game.match_score[pid]
         return game, tuple(match_score)
 
-    async def move(self, sid, uci, timestamp):
+    async def move(self, sid, uci):
+        move_timestamp = time.time_ns() // 1_000_000
+
         game, gid = await self.gc.get_game_by_sid(sid)
         board = game.board
         move = Move.from_uci(uci)
@@ -64,11 +70,23 @@ class PlayController:
             enPassant=en_passant,
             legalMoves=[str(m) for m in board.legal_moves],
             moveStack=[str(m) for m in board.move_stack],
-            timestamp=timestamp,
         )
+
+        move_time = move_timestamp - game.last_turn_timestamp
+        game.last_turn_timestamp = move_timestamp
+
+        timer_data = None
+        if move_data.turn == 0:  # last turn was white
+            game.tr_white -= move_time
+        else:  # last turn was black
+            game.tr_black -= move_time
+
+        timer_data = TimerData(white=game.tr_white, black=game.tr_black)
 
         # send updated game state to clients in room
         utils.publish_event(self.rmq.channel, gid, Event("move", move_data.__dict__))
+        # send GT clock times
+        utils.publish_event(self.rmq.channel, gid, Event("clockSync", timer_data.__dict__))
 
         if outcome:
             await self.gc.handle_end_of_round(gid, game)
@@ -99,7 +117,20 @@ class PlayController:
         await self.gc.handle_end_of_round(gid, game)
 
     async def flag(self, sid, flagged):
+        flag_received = time.time_ns() // 1_000_000
         game, gid = await self.gc.get_game_by_sid(sid)
+
+        # validate flag request
+        if int(game.board.turn) != flagged:
+            self.logger.warning(f"Flag request in game {gid} from client {sid} dismissed as flagged colour does not match turn")
+            return
+        tr = game.tr_white if flagged == Colour.WHITE.value[0] else game.tr_black
+        move_time = flag_received - game.last_turn_timestamp
+        if move_time < tr - self.TIMER_HALF_PRECISION:
+            self.logger.warning(f"Flag request in game {gid} from client {sid} dismissed as player still has time remaining")
+            return 
+
+        # set winner and outcome
         winner_ind = utils.opponent_ind(flagged)
         outcome = Outcome.TIMEOUT.value
         # update match score

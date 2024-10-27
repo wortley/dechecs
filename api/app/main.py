@@ -83,7 +83,7 @@ contract = GameContract(w3, logger)
 gc = GameController(rmq, redis_client, chess_api.sio, gr, contract, logger)
 
 # Play (in game events) controller
-pc = PlayController(rmq, chess_api.sio, gc)
+pc = PlayController(rmq, chess_api.sio, gc, logger)
 
 # Global exception handler for controller methods
 sioexc = SocketIOExceptionHandler(chess_api.sio, rmq, logger)
@@ -140,8 +140,8 @@ async def accept_game(sid, gid, wallet_addr):
 
 @chess_api.sio.on("move")
 @sioexc.sio_exception_handler
-async def move(sid, uci, timestamp):
-    await pc.move(sid, uci, timestamp)
+async def move(sid, uci):
+    await pc.move(sid, uci)
 
 
 @chess_api.sio.on("offerDraw")

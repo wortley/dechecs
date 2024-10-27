@@ -49,14 +49,13 @@ export default function Play() {
     }
   }, [])
 
-  let colour, timeControl, round, totalRounds, roundStartTimestamp
+  let colour, timeControl, round, totalRounds
 
   try {
     colour = location.state.colour
     timeControl = location.state.timeRemaining
     round = location.state.round
     totalRounds = location.state.totalRounds
-    roundStartTimestamp = location.state.roundStartTimestamp
   } catch (err) {
     window.location.href = "../"
     return
@@ -83,7 +82,7 @@ export default function Play() {
             <h4>
               Round {round}/{totalRounds}
             </h4>
-            <Timer side={colour} timeControl={timeControl} outcome={outcome} roundStartTimestamp={roundStartTimestamp} />
+            <Timer side={colour} timeControl={timeControl} outcome={outcome} />
             {drawOffer ? <button onClick={onAcceptDraw}>Accept draw offer</button> : <button onClick={onOfferDraw}>Offer draw</button>}
             <button onClick={onResign}>Resign</button>
           </div>

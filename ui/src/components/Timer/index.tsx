@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { socket } from "../../socket"
-import { BoardState, Colour, Outcome, TimerData } from "../../types"
+import { Colour, Outcome, TimerData } from "../../types"
 import { millisecondsToTimeFormat } from "../../utils"
 import styles from "./timer.module.css"
 
@@ -8,42 +8,29 @@ type TimerProps = {
   side: Colour
   timeControl: number
   outcome?: Outcome
-  roundStartTimestamp: number
 }
 
-export default function Timer({ side, timeControl, outcome, roundStartTimestamp }: Readonly<TimerProps>) {
+export default function Timer({ side, timeControl, outcome }: Readonly<TimerProps>) {
   const [timer, setTimer] = useState<TimerData>({
     white: timeControl,
     black: timeControl,
   })
   const [turn, setTurn] = useState<Colour>(Colour.WHITE)
   const timerIntervalId = useRef<NodeJS.Timer>()
-  const lastUpdateRef = useRef(roundStartTimestamp);
+  const lastUpdateRef = useRef(performance.now())
   const timerRef = useRef(timer)
 
   useEffect(() => {
-    const onMove = (data: BoardState) => {
-      if (data.timestamp) {
-        const lagTime = Date.now() - data.timestamp
-
-        let newTimer
-        if (turn === Colour.WHITE) {
-          newTimer = { white: timerRef.current.white + lagTime, black: timerRef.current.black }
-        } else {
-          newTimer = { white: timerRef.current.white, black: timerRef.current.black + lagTime }
-        }
-
-        setTimer(newTimer)
-        timerRef.current = newTimer
-      }
-
-      setTurn(data.turn)
+    const onSync = (timerData: TimerData) => {
+      setTimer(timerData)
+      timerRef.current = timerData
+      setTurn((curr) => curr === Colour.WHITE ? Colour.BLACK : Colour.WHITE)
     }
 
-    socket.on("move", onMove)
+    socket.on("clockSync", onSync)
 
     return () => {
-      socket.off("move", onMove)
+      socket.off("clockSync", onSync)
     }
   }, [])
 
@@ -54,7 +41,7 @@ export default function Timer({ side, timeControl, outcome, roundStartTimestamp 
     }
 
     const intervalId = setInterval(() => {
-      const now = Date.now()
+      const now = performance.now()
       const elapsed = now - lastUpdateRef.current // compute time elapsed since last tick
       lastUpdateRef.current = now // update last tick time
 
@@ -65,17 +52,17 @@ export default function Timer({ side, timeControl, outcome, roundStartTimestamp 
         newTimer = { white: timerRef.current.white, black: Math.max(0, timerRef.current.black - elapsed) }
       }
 
-      // emit 'flag' event if time runs out for current player
-      const currentPlayerTime = turn === Colour.WHITE ? newTimer.white : newTimer.black;
-      if (currentPlayerTime <= 0 && side === turn) {
-        socket.emit("flag", turn);
-        clearInterval(timerIntervalId.current);
-        return;
+      // emit 'flag' event if time runs out for either player
+      if (newTimer.black <= 0 && newTimer.white <= 0) {
+        const flagged = newTimer.black <= newTimer.white ? Colour.BLACK : Colour.WHITE
+        socket.emit("flag", flagged)
       }
+      else if (newTimer.black <= 0) socket.emit("flag", Colour.BLACK)
+      else if (newTimer.white <= 0) socket.emit("flag", Colour.WHITE)
 
       setTimer(newTimer)
       timerRef.current = newTimer
-    }, 100) // run every tenth of a second
+    }, 200) // run every fifth of a second
 
     timerIntervalId.current = intervalId
 

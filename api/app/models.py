@@ -32,13 +32,10 @@ class Game:
     match_score: Dict[str, int]  # keeps track of how many rounds each player has won
     round: int  # current round
     n_rounds: int  # number of rounds
+    tr_white: int  # time remaining in round (white)
+    tr_black: int  # time reamining in round (black)
     finished: bool = False  # whether the game has finished
-
-
-@dataclass
-class Event:
-    name: str
-    data: int | str | dict
+    last_turn_timestamp: int = 0  # timestamp for end of last turn (or start of round)
 
 
 @dataclass
@@ -54,4 +51,15 @@ class MoveData:
     enPassant: bool
     legalMoves: List[str]
     moveStack: List[str]
-    timestamp: int
+
+
+@dataclass
+class TimerData:
+    white: int
+    black: int
+
+
+@dataclass
+class Event:
+    name: str
+    data: int | str | dict
