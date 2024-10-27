@@ -21,6 +21,8 @@ class PlayController:
         self.logger = logger
 
     def _update_match_score(self, game, outcome, winner_sid=None):
+        assert sum(game.match_score.values()) < game.n_rounds  # check score has not already been updated (flag request handling)
+
         if outcome == Outcome.AGREEMENT.value:
             for pid in game.players:
                 game.match_score[pid] += 0.5
@@ -32,7 +34,7 @@ class PlayController:
         return game, tuple(match_score)
 
     async def move(self, sid, uci):
-        move_timestamp = time.time_ns() // 1_000_000
+        move_timestamp = utils.get_time_now_ms()
 
         game, gid = await self.gc.get_game_by_sid(sid)
         board = game.board
@@ -117,7 +119,7 @@ class PlayController:
         await self.gc.handle_end_of_round(gid, game)
 
     async def flag(self, sid, flagged):
-        flag_received = time.time_ns() // 1_000_000
+        flag_received = utils.get_time_now_ms()
         game, gid = await self.gc.get_game_by_sid(sid)
 
         # validate flag request
@@ -128,13 +130,17 @@ class PlayController:
         move_time = flag_received - game.last_turn_timestamp
         if move_time < tr - self.TIMER_HALF_PRECISION:
             self.logger.warning(f"Flag request in game {gid} from client {sid} dismissed as player still has time remaining")
-            return 
+            return
 
         # set winner and outcome
         winner_ind = utils.opponent_ind(flagged)
         outcome = Outcome.TIMEOUT.value
         # update match score
-        game, match_score = self._update_match_score(game, outcome, game.players[winner_ind])
+        try:
+            game, match_score = self._update_match_score(game, outcome, game.players[winner_ind])
+        except AssertionError:
+            self.logger.warning(f"Duplicate valid flag request received for game {gid}")
+            return
         # outcome event
         utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": winner_ind, "outcome": outcome, "matchScore": match_score}))
         # save game

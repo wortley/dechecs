@@ -1,6 +1,6 @@
 import copy
 import json
-
+import time
 from app.constants import BROADCAST_KEY
 from app.models import Event, Game
 from chess import Board
@@ -39,3 +39,7 @@ def deserialise_game_state(game: str):
 
 def publish_event(channel: Channel, gid: str, event: Event, rk=BROADCAST_KEY):
     channel.basic_publish(exchange=gid, routing_key=rk, body=json.dumps(event.__dict__))
+
+
+def get_time_now_ms():
+    return time.time_ns() // 1_000_000

@@ -207,7 +207,7 @@ class GameController:
         random.shuffle(game.players)
 
         # set start timestamp (ms)
-        game.last_turn_timestamp = time.time_ns() // 1_000_000
+        game.last_turn_timestamp = utils.get_time_now_ms()
 
         await self.save_game(gid, game, sid)
 
@@ -261,7 +261,7 @@ class GameController:
             game.board.reset()  # reset board
             game.players.reverse()  # switch white and black
             game.tr_white = game.tr_black = game.time_control * MILLISECONDS_PER_MINUTE
-            game.last_turn_timestamp = time.time_ns() // 1_000_000
+            game.last_turn_timestamp = utils.get_time_now_ms()
 
             await self.save_game(gid, game)
 
@@ -284,7 +284,7 @@ class GameController:
 
         game, gid = await self.get_game_by_sid(sid)
         if len(game.players) > 1 and not game.finished:
-            # if game not finished, the player automatically loses the game
+            # if game not finished, the player automatically loses the match
             winner_ind = utils.opponent_ind(game.players.index(sid))
             utils.publish_event(self.rmq.channel, gid, Event("move", {"winner": winner_ind, "outcome": Outcome.ABANDONED.value, "matchScore": game.match_score}))
             utils.publish_event(self.rmq.channel, gid, Event("matchEnded", {"overallWinner": winner_ind}))
