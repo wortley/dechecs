@@ -29,7 +29,7 @@ class Game:
     time_control: int  # time control (minutes)
     wager: float  # wager amount
     player_wallet_addrs: Dict[str, str]  # maps sids to wallet addresses
-    match_score: Dict[str, int]  # keeps track of how many rounds each player has won
+    match_score: Dict[str, float]  # keeps track of how many rounds each player has won
     round: int  # current round
     n_rounds: int  # number of rounds
     tr_white: int  # time remaining in round (white)
@@ -44,7 +44,7 @@ class MoveData:
     turn: int
     winner: int
     outcome: int
-    matchScore: Optional[Tuple[int, int]]  # TODO: move winner, outcome, matchScore to separate event
+    matchScore: Optional[Tuple[float, float]]  # TODO: move winner, outcome, matchScore to separate event
     move: str
     castles: Optional[str]
     isCheck: bool
