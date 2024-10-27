@@ -74,10 +74,10 @@ class PlayController:
             moveStack=[str(m) for m in board.move_stack],
         )
 
+        # calculate move time and update players' time remaining
         move_time = move_timestamp - game.last_turn_timestamp
         game.last_turn_timestamp = move_timestamp
 
-        timer_data = None
         if move_data.turn == 0:  # last turn was white
             game.tr_white -= move_time
         else:  # last turn was black
