@@ -47,14 +47,15 @@ export default function TermsModal({ show, setShow }: Readonly<TermsModalProps>)
           <strong>Game Forfeiture:</strong> Abandoning a game results in automatic forfeiture, declaring your opponent the winner.
         </li>
         <li>
-          <strong>No Liability for Losses:</strong> We are not responsible for any financial losses incurred. You manage your own funds and wagers. We are not liable for indirect, incidental, or consequential damages.
+          <strong>No Liability for Losses:</strong> We are not responsible for any financial losses incurred. You manage your own funds and wagers. We are not liable for indirect, incidental, or
+          consequential damages.
         </li>
         <li>
-          <strong>Fair Play:</strong> You must play honestly, without unauthorised aids, cheats, or exploits.
+          <strong>Assistance Disclaimer:</strong> This platform does not detect or prevent use of computer assistance. Play only with trusted individuals. All games carry the risk of third-party assistance. By
+          participating, you acknowledge and accept this risk.
         </li>
         <li>
-          <strong>Commission:</strong> A commission of {COMMISSION_PERCENTAGE}% will be added to each player's wager and paid upon creating or joining a game. This is used to cover the gas fees on our
-          smart contract.
+          <strong>Commission:</strong> A commission of {COMMISSION_PERCENTAGE}% will be added to each player's wager and paid upon creating or joining a game. This is used to cover gas fees and cloud service costs.
         </li>
         <li>
           <strong>Minimum Age Requirement:</strong> You must be at least 18 years old or the legal age in your jurisdiction to participate.
