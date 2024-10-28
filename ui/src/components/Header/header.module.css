@@ -31,6 +31,13 @@
   padding: 1ex;
 }
 
+#github {
+  display: inherit;
+  color: var(--color-text);
+  margin-right: 1em;
+  padding: 0 1ex;
+}
+
 @media only screen and (max-width: 1024px) {
   .header {
     padding: 1em;
@@ -40,5 +47,11 @@
   }
   .themeSwitch {
     font-size: 1.2em;
+  }
+}
+
+@media only screen and (max-width: 768px) {
+  #github {
+    display: none;
   }
 }

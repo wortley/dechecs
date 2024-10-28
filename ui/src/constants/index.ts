@@ -9,6 +9,7 @@ export const SC_ADDRESS = import.meta.env.VITE_SC_ADDRESS
 export const CMC_API_KEY = import.meta.env.VITE_CMC_API_KEY
 export const API_URL = import.meta.env.VITE_API_URL
 export const AMPLITUDE_API_KEY = import.meta.env.VITE_AMPLITUDE_API_KEY
+export const GITHUB_URL = import.meta.env.VITE_GITHUB_URL
 
 export const MAX_GAS = 1000000n
 
