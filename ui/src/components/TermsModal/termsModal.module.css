@@ -2,7 +2,7 @@
   position: fixed;
   left: 50%;
   top: 50%;
-  width: min(600px, 80vw);
+  width: min(600px, 80%);
   aspect-ratio: 1 / 1;
   transform: translate(-50%, -50%);
   z-index: 100;
@@ -11,5 +11,12 @@
   ol {
     text-align: left;
     text-justify: inter-word;
+  }
+}
+
+@media (max-width: 1024px) {
+  .termsModal {
+    aspect-ratio: unset;
+    max-height: 80%;
   }
 }
