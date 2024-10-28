@@ -7,6 +7,7 @@
   transform: translate(-50%, -50%);
   z-index: 100;
   overflow-y: scroll;
+  max-height: 80%;
 
   ol {
     text-align: left;
@@ -17,6 +18,5 @@
 @media (max-width: 1024px) {
   .termsModal {
     aspect-ratio: unset;
-    max-height: 80%;
   }
 }
