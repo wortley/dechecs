@@ -40,15 +40,17 @@ export default function TermsModal({ show, setShow }: Readonly<TermsModalProps>)
       <h3>Terms of use</h3>
       <ol type="1">
         <li>
+          <strong>Minimum Age Requirement:</strong> You must be at least 18 years old or the legal age in your jurisdiction to participate.
+        </li>
+        <li>
           <strong>Binding Contract:</strong> By starting a game, you enter a binding contract to play it to completion. The creator may cancel and cash out until the opponent joins; once joined, both
           players are bound to the contract upon payment of the wager.
         </li>
         <li>
-          <strong>Game Forfeiture:</strong> Abandoning a game results in automatic forfeiture, declaring your opponent the winner.
+          <strong>Fair Play:</strong> Players are expected to compete without third-party assistance and to engage with others respectfully.
         </li>
         <li>
-          <strong>No Liability for Losses:</strong> We are not responsible for any financial losses incurred. You manage your own funds and wagers. We are not liable for indirect, incidental, or
-          consequential damages.
+          <strong>Game Forfeiture:</strong> Abandoning a game results in automatic forfeiture, declaring your opponent the winner.
         </li>
         <li>
           <strong>Assistance Disclaimer:</strong> This platform does not detect or prevent use of computer assistance. Play only with trusted individuals. All games carry the risk of third-party
@@ -59,13 +61,12 @@ export default function TermsModal({ show, setShow }: Readonly<TermsModalProps>)
           service costs.
         </li>
         <li>
-          <strong>Minimum Age Requirement:</strong> You must be at least 18 years old or the legal age in your jurisdiction to participate.
+          <strong>No Liability for Losses:</strong> We are not responsible for any financial losses incurred. You manage your own funds and wagers. We are not liable for indirect, incidental, or
+          consequential damages.
         </li>
+
         <li>
           <strong>Compliance with Laws:</strong> Ensure your use complies with all applicable laws; we are not liable for any legal consequences.
-        </li>
-        <li>
-          <strong>User Conduct:</strong> Players are expected to engage respectfully and refrain from abusive behavior.
         </li>
         <li>
           <strong>Intellectual Property:</strong> All content on the platform is owned by us or our licensors. Users may not reproduce or distribute this content without permission.

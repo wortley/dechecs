@@ -81,6 +81,12 @@ function App() {
     document.documentElement.setAttribute("data-theme", newTheme)
   }
 
+  const maintenanceMessage = <p>d&eacute;checs is currently undergoing maintenance. Please come back later.</p>
+
+  if (import.meta.env.VITE_MAINTENANCE > 0) {
+    return maintenanceMessage
+  }
+
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
