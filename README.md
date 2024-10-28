@@ -10,4 +10,4 @@ Performant multiplayer chess dapp on the Polygon blockchain utilising web3py, wa
 
 ## License
 
-d&eacute;checs is licensed under the GNU Affero General Public License v3. Any file in this project that does not state otherwise is part of d&eacute;checs and copyright (c) 2024 Montagu Technologies.
+d&eacute;checs is licensed under the GNU Affero General Public License v3. Any file in this project that does not state otherwise is part of d&eacute;checs and copyright (c) 2024 Montagu Technologies. See the NOTICE file for the full notice.
