@@ -43,22 +43,20 @@ export default function TermsModal({ show, setShow }: Readonly<TermsModalProps>)
           <strong>Minimum Age Requirement:</strong> You must be at least 18 years old or the legal age in your jurisdiction to participate.
         </li>
         <li>
-          <strong>Binding Contract:</strong> By starting a game, you enter a binding contract to play it to completion. The creator may cancel and cash out until the opponent joins; once joined, both
-          players are bound to the contract upon payment of the wager.
+          <strong>Binding Contract:</strong> By starting a game, you enter a binding contract to play it to completion. The creator may cancel and cash out up until the point when their opponent joins and pays the wager, at which time the game will start.
         </li>
         <li>
           <strong>Fair Play:</strong> Players are expected to compete without third-party assistance and to engage with others respectfully.
         </li>
         <li>
-          <strong>Game Forfeiture:</strong> Abandoning a game results in automatic forfeiture, declaring your opponent the winner.
+          <strong>Game Forfeiture:</strong> Abandoning a game results in automatic forfeiture, declaring your opponent the overall victor.
         </li>
         <li>
           <strong>Assistance Disclaimer:</strong> This platform does not detect or prevent use of computer assistance. Play only with trusted individuals. All games carry the risk of third-party
           assistance.
         </li>
         <li>
-          <strong>Commission:</strong> A commission of {COMMISSION_PERCENTAGE}% will be added to each player's wager and paid upon creating or joining a game. This is used to cover gas fees and cloud
-          service costs.
+          <strong>Commission:</strong> A commission of {COMMISSION_PERCENTAGE}% will be added to each player's wager and paid upon creating or joining a game. This is used to cover gas fees and cloud PaaS costs.
         </li>
         <li>
           <strong>No Liability for Losses:</strong> We are not responsible for any financial losses incurred. You manage your own funds and wagers. We are not liable for indirect, incidental, or
