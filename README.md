@@ -8,17 +8,6 @@ Performant multiplayer chess dapp on the Polygon blockchain utilising web3py, wa
 
 ![High-level system design diagram](./media/system.png)
 
-## For developers: Running locally
+## License
 
-### Backend
-
-1. Navigate to /api
-2. Run `venv/scripts/activate`
-3. Ensure Memurai or Redis is running in background or in another terminal window
-4. Open another terminal window and run `rabbitmq-server` to start RabbitMQ
-5. Run with single worker: `uvicorn app.main:chess_api --reload` or n workers: `uvicorn app.main:chess_api --workers n`
-
-### Frontend
-
-1. Navigate to /ui
-2. Run `yarn dev`
+d&eacute;checs is licensed under the GNU Affero General Public License v3. Any file in this project that does not state otherwise is part of d&eacute;checs and copyright (c) 2024 Montagu Technologies.
