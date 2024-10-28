@@ -9,7 +9,7 @@ import { config } from "../config"
 import { COMMISSION_PERCENTAGE, MAX_GAS, SC_ADDRESS, chainId } from "../constants"
 import { socket } from "../socket"
 import { GameInfo, StartData } from "../types"
-import { POLtoGBP, POLtoUSD, parsePOL } from "../utils/currency"
+import { POLtoX, parsePOL } from "../utils/currency"
 
 export default function Join() {
   const navigate = useNavigate()
@@ -17,6 +17,7 @@ export default function Join() {
   const [gameInfo, setGameInfo] = useState<GameInfo | null>(null)
   const [wagerAmountUSD, setWagerAmountUSD] = useState<number>(0)
   const [wagerAmountGBP, setWagerAmountGBP] = useState<number>(0)
+  const [wagerAmountEUR, setWagerAmountEUR] = useState<number>(0)
   const [wagerPlusCommissionWei, setWagerPlusCommissionWei] = useState<bigint>() // in Wei
   const [gasPrice, setGasPrice] = useState<bigint>(0n)
   const [showModal, setShowModal] = useState<boolean>(false)
@@ -39,8 +40,9 @@ export default function Join() {
     }
 
     async function onGameInfo(data: GameInfo) {
-      setWagerAmountUSD(await POLtoUSD(data.wagerAmount))
-      setWagerAmountGBP(await POLtoGBP(data.wagerAmount))
+      setWagerAmountUSD(await POLtoX(data.wagerAmount, "usd"))
+      setWagerAmountGBP(await POLtoX(data.wagerAmount, "gbp"))
+      setWagerAmountEUR(await POLtoX(data.wagerAmount, "eur"))
 
       const wagerWei = parsePOL(data.wagerAmount.toString())
       const commissionWei = (wagerWei * BigInt(COMMISSION_PERCENTAGE)) / BigInt(100)
@@ -144,7 +146,7 @@ export default function Join() {
             <p>Time control: {gameInfo.timeControl}m</p>
             <p>Rounds: {gameInfo.totalRounds}</p>
             <p>
-              Wager: {gameInfo.wagerAmount} POL ({wagerAmountUSD.toFixed(2)} USD / {wagerAmountGBP.toFixed(2)} GBP)
+              Wager: {gameInfo.wagerAmount} POL ({wagerAmountUSD.toFixed(2)} USD / {wagerAmountGBP.toFixed(2)} GBP / {wagerAmountEUR.toFixed(2)} EUR)
             </p>
             <p>Gas price: {(Number(gasPrice) / 10 ** 9).toFixed(2)} Gwei</p>
             <p>Commission: {COMMISSION_PERCENTAGE}%</p>

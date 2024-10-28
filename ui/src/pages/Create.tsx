@@ -10,7 +10,7 @@ import { config } from "../config"
 import { chainId, COMMISSION_PERCENTAGE, MAX_GAS, SC_ADDRESS } from "../constants"
 import { socket } from "../socket"
 import { StartData } from "../types"
-import { parsePOL, POLtoGBP, POLtoUSD } from "../utils/currency"
+import { parsePOL, POLtoX } from "../utils/currency"
 
 export default function Create() {
   const navigate = useNavigate()
@@ -23,6 +23,7 @@ export default function Create() {
 
   const [wagerAmountGBP, setWagerAmountGBP] = useState<number>(0)
   const [wagerAmountUSD, setWagerAmountUSD] = useState<number>(0)
+  const [wagerAmountEUR, setWagerAmountEUR] = useState<number>(0)
 
   const [loading, setLoading] = useState(0) // 0: off, 1: generating code, 2: cancelling game
 
@@ -32,8 +33,9 @@ export default function Create() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const throttledConverter = useCallback(
     throttle((amount) => {
-      POLtoGBP(amount).then((gbpAmount) => setWagerAmountGBP(gbpAmount))
-      POLtoUSD(amount).then((usdAmount) => setWagerAmountUSD(usdAmount))
+      POLtoX(amount, "gbp").then((gbpAmount) => setWagerAmountGBP(gbpAmount))
+      POLtoX(amount, "usd").then((usdAmount) => setWagerAmountUSD(usdAmount))
+      POLtoX(amount, "eur").then((usdAmount) => setWagerAmountEUR(usdAmount))
     }, 500),
     []
   )
@@ -178,7 +180,7 @@ export default function Create() {
             <label htmlFor="wager-amount">Wager (POL):</label>
             <input type="number" id="wager-amount" required value={wagerAmount} min={1} step={1} max={100} onChange={(e) => setWagerAmount(parseFloat(e.currentTarget.value))} />
             <p>
-              Wager: {wagerAmountUSD.toFixed(2)} USD / {wagerAmountGBP.toFixed(2)} GBP
+              Wager: {wagerAmountUSD.toFixed(2)} USD / {wagerAmountGBP.toFixed(2)} GBP / {wagerAmountEUR.toFixed(2)} EUR
             </p>
             <p>Gas price: {(Number(gasPrice) / 10 ** 9).toFixed(2)} Gwei</p>
             <p>Commission: {COMMISSION_PERCENTAGE}%</p>

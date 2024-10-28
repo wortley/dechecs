@@ -19,30 +19,18 @@ async function getPOLExchangeRate(fiat: string) {
   }
 }
 
-export async function POLtoGBP(amountPOL: number) {
+export async function POLtoX(amountPOL: number, fiat: string) {
   /**
    * Fetch the current exchange rate of POL to GBP from CoinGecko API
    *
-   * @param amountPOL - the amount in POL to convert to GBP
-   * @returns the amount in GBP
+   * @param amountPOL - the amount in POL to convert
+   * @param fiat - the target fiat currency
+   * @returns the amount in {fiat}
    */
-  let gbpAmount = 0
-  const exchangeRate = await getPOLExchangeRate("gbp")
-  gbpAmount = amountPOL * exchangeRate
-  return gbpAmount
-}
-
-export async function POLtoUSD(amountPOL: number) {
-  /**
-   * Fetch the current exchange rate of POL to GBP from CoinGecko API
-   *
-   * @param amountPOL - the amount in POL to convert to GBP
-   * @returns the amount in USD
-   */
-  let usdAmount = 0
-  const exchangeRate = await getPOLExchangeRate("usd")
-  usdAmount = amountPOL * exchangeRate
-  return usdAmount
+  let fiatAmount = 0
+  const exchangeRate = await getPOLExchangeRate(fiat)
+  fiatAmount = amountPOL * exchangeRate
+  return fiatAmount
 }
 
 export function parsePOL(amount: string) {
