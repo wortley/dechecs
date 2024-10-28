@@ -127,7 +127,7 @@ button.loading {
   border-color: var(--color-link);
   pointer-events: none;
 }
-button:disabled{
+button:disabled {
   opacity: 0.5;
   pointer-events: none;
 }
@@ -140,7 +140,7 @@ button.loading .spinner {
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin-bottom: -2px;
-  margin-left: .8em;
+  margin-left: 0.8em;
 }
 @keyframes spin {
   to {

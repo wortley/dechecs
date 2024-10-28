@@ -1,7 +1,7 @@
 import * as amplitude from "@amplitude/analytics-browser"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createWeb3Modal, useWeb3ModalTheme } from "@web3modal/wagmi/react"
-import { useEffect, useState } from "react"
+import { useEffect, useLayoutEffect, useState } from "react"
 import { DndProvider } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
 import { TouchBackend } from "react-dnd-touch-backend"
@@ -67,11 +67,12 @@ function App() {
     if (import.meta.env.PROD) amplitude.init(AMPLITUDE_API_KEY)
   }, [])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const userDefaultTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
     setTheme(userDefaultTheme)
     setThemeMode(userDefaultTheme)
     document.documentElement.setAttribute("data-theme", userDefaultTheme)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const toggleTheme = () => {
