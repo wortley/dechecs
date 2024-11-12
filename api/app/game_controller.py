@@ -4,7 +4,6 @@ import os
 import random
 import uuid
 from logging import Logger
-import time
 
 import aioredis
 import app.utils as utils
@@ -54,7 +53,7 @@ class GameController:
     async def get_game_by_gid(self, gid, sid):
         """Get game state from redis by game ID"""
         try:
-            game = utils.deserialise_game_state(await self.redis_client.get(utils.get_redis_key(gid)))
+            game = utils.deserialise_game_state(await self.redis_client.get(utils.get_redis_game_key(gid)))
         except aioredis.RedisError as exc:
             raise CustomException(f"Redis error: {exc}", sid)
         if not game:
@@ -70,7 +69,7 @@ class GameController:
     async def save_game(self, gid, game, _=None):
         """Save game state in Redis"""
         try:
-            await self.redis_client.set(utils.get_redis_key(gid), utils.serialise_game_state(game))
+            await self.redis_client.set(utils.get_redis_game_key(gid), utils.serialise_game_state(game))
         except aioredis.RedisError as exc:
             raise CustomException(f"Redis error: {exc}", emit_local=False, gid=gid)
 
@@ -206,11 +205,6 @@ class GameController:
         # randomly pick white and black
         random.shuffle(game.players)
 
-        # set start timestamp (ms)
-        game.last_turn_timestamp = utils.get_time_now_ms()
-
-        await self.save_game(gid, game, sid)
-
         # create player 2 queue
         self.rmq.channel.queue_declare(queue=utils.get_queue_name(gid, sid))
         # bind the queue to the game exchange
@@ -219,8 +213,12 @@ class GameController:
 
         await self._init_listener(gid, sid)
 
+        # set start timestamp (ms) and save game before sending start events
+        game.last_turn_timestamp = utils.get_time_now_ms()
+        await self.save_game(gid, game, sid)
+
+        # send start events to both players
         for i, colour in enumerate([Colour.BLACK.value[0], Colour.WHITE.value[0]]):
-            # start the game
             utils.publish_event(
                 self.rmq.channel,
                 gid,
@@ -230,6 +228,9 @@ class GameController:
                 ),
                 game.players[i],
             )
+        
+        # increment n_games usage stat
+        await self.redis_client.incr(utils.get_redis_stat_key("n_games"))
 
     async def handle_end_of_round(self, gid: str, game: Game):
         overall_winner = None
@@ -311,4 +312,4 @@ class GameController:
                 self.rmq.channel.basic_cancel(consumer_tag=ctag)
             self.gr.remove_all_game_ctags(gid)
             self.rmq.channel.exchange_delete(exchange=gid)
-            await self.redis_client.delete(utils.get_redis_key(gid))
+            await self.redis_client.delete(utils.get_redis_game_key(gid))

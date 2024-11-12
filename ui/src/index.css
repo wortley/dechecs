@@ -236,4 +236,9 @@ hr {
     display: flex;
     flex-direction: column;
   }
+
+  #ngames {
+    font-size: smaller;
+    margin: 2em 0;
+  }
 }

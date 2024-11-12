@@ -5,6 +5,7 @@ import aioredis
 from app.constants import ALCHEMY_API_URL, CLOUDAMQP_URL, REDIS_URL
 from app.exceptions import SocketIOExceptionHandler
 from app.exchange import router as exchange_router
+from app.stats import build_stats_router
 from app.game_contract import GameContract
 from app.game_controller import GameController
 from app.game_registry import GameRegistry
@@ -12,7 +13,7 @@ from app.log_formatter import custom_formatter
 from app.play_controller import PlayController
 from app.rate_limit import TokenBucketRateLimiter
 from app.rmq import RMQConnectionManager
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_socketio import SocketManager
 from web3 import AsyncWeb3
@@ -73,6 +74,7 @@ chess_api.add_middleware(
 )
 
 chess_api.include_router(exchange_router)
+chess_api.include_router(build_stats_router(redis_client))
 
 socket_manager = SocketManager(app=chess_api)
 

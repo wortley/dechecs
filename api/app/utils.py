@@ -11,8 +11,12 @@ def get_queue_name(gid: str, sid: str):
     return f"{gid}::{sid}"
 
 
-def get_redis_key(gid: str):
+def get_redis_game_key(gid: str):
     return f"game:{gid}"
+
+
+def get_redis_stat_key(stat_tag: str):
+    return f"stat:{stat_tag}"
 
 
 def opponent_ind(turn: int):

@@ -4,7 +4,7 @@ import { API_URL } from "../constants"
 
 async function getPOLExchangeRate(fiat: string) {
   /**
-   * Fetch the current exchange rate of POL to {fiat} from CoinGecko API
+   * Fetch the current exchange rate of POL to {fiat} from CoinMarketCap
    *
    * @param fiat - the target fiat currency
    * @returns the exchange rate
@@ -21,7 +21,7 @@ async function getPOLExchangeRate(fiat: string) {
 
 export async function POLtoX(amountPOL: number, fiat: string) {
   /**
-   * Fetch the current exchange rate of POL to GBP from CoinGecko API
+   * Fetch the current exchange rate of POL to GBP from CoinMarketCap
    *
    * @param amountPOL - the amount in POL to convert
    * @param fiat - the target fiat currency
