@@ -1,18 +1,19 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import HIWModal from "../components/HIWModal"
-import { getTotalNGames } from "../utils/stats"
+import { UsageStats } from "../types"
+import { getUsageStats } from "../utils/stats"
 
 export default function Home() {
   const navigate = useNavigate()
   const [showModal, setShowModal] = useState<boolean>(false)
-  const [nGames, setNGames] = useState<number>()
+  const [usageStats, setUsageStats] = useState<UsageStats>()
 
   useEffect(() => {
-    async function getAndSetNGames() {
-      setNGames(await getTotalNGames())
+    async function getAndSetUsageStats() {
+      setUsageStats(await getUsageStats())
     }
-    getAndSetNGames()
+    getAndSetUsageStats()
   }, [])
 
   return (
@@ -21,7 +22,11 @@ export default function Home() {
         <button onClick={() => navigate("/create")}>New game</button>
         <button onClick={() => navigate("/join")}>Join game</button>
         <button onClick={() => setShowModal(true)}>How it works</button>
-        <p id="ngames">Total games played so far: {nGames ?? 0}</p>
+        <p id="stats">
+          Total games played: {usageStats?.gamesPlayed ?? 0}
+          <br />
+          Total amount wagered: {usageStats?.totalWagered ?? 0} POL
+        </p>
       </div>
       <HIWModal show={showModal} setShow={setShowModal} />
     </>

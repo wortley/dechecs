@@ -237,8 +237,9 @@ hr {
     flex-direction: column;
   }
 
-  #ngames {
+  #stats {
     font-size: smaller;
     margin: 2em 0;
+    line-height: 2em;
   }
 }

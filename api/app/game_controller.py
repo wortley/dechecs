@@ -228,9 +228,10 @@ class GameController:
                 ),
                 game.players[i],
             )
-        
-        # increment n_games usage stat
+
+        # update usage stats
         await self.redis_client.incr(utils.get_redis_stat_key("n_games"))
+        await self.redis_client.incr(utils.get_redis_stat_key("total_wagered"), game.wager * 2)
 
     async def handle_end_of_round(self, gid: str, game: Game):
         overall_winner = None

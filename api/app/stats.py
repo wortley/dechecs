@@ -15,7 +15,8 @@ def build_stats_router(redis_client):
         """
         try:
             n_games = await redis_client.get(utils.get_redis_stat_key("n_games"))
-            return {"n_games": n_games}
+            total_wagered = await redis_client.get(utils.get_redis_stat_key("total_wagered"))
+            return {"gamesPlayed": n_games, "totalWagered": total_wagered}
         except Exception as e:
             print(e)
             raise HTTPException(

@@ -82,3 +82,8 @@ export interface GameInfo {
   wagerAmount: number
   totalRounds: number
 }
+
+export interface UsageStats {
+  gamesPlayed?: number
+  totalWagered?: number
+}
