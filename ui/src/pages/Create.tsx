@@ -1,16 +1,19 @@
-import { throttle } from "lodash"
-import { useCallback, useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
-import { toast } from "react-toastify"
-import { useAccount, useBalance } from "wagmi"
-import { estimateFeesPerGas, writeContract } from "wagmi/actions"
-import { abi } from "../abi"
-import TermsModal from "../components/TermsModal"
-import { config } from "../config"
-import { chainId, COMMISSION_PERCENTAGE, MAX_GAS, SC_ADDRESS } from "../constants"
-import { socket } from "../socket"
-import { StartData } from "../types"
-import { parsePOL, POLtoX } from "../utils/currency"
+import parse from "html-react-parser";
+import { throttle } from "lodash";
+import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { useAccount, useBalance } from "wagmi";
+import { estimateFeesPerGas, writeContract } from "wagmi/actions";
+import { abi } from "../abi";
+import Modal from "../components/Modal";
+import modalStyles from "../components/Modal/modal.module.css";
+import { config } from "../config";
+import { chainId, COMMISSION_PERCENTAGE, MAX_GAS, SC_ADDRESS } from "../constants";
+import { termsModalContent } from "../constants/modalContent";
+import { socket } from "../socket";
+import { StartData } from "../types";
+import { parsePOL, POLtoX } from "../utils/currency";
 
 export default function Create() {
   const navigate = useNavigate()
@@ -212,7 +215,7 @@ export default function Create() {
           </>
         )}
       </div>
-      <TermsModal show={showModal} setShow={setShowModal} />
+      <Modal show={showModal} setShow={setShowModal} heading="Terms of use" closeButtonText="Close" body={parse(termsModalContent)} className={modalStyles.termsModal} />
     </>
   )
 }

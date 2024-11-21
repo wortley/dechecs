@@ -11,7 +11,7 @@ contract DechecsMatchContract {
         address player1; // wallet address of player 1
         address player2; // wallet address of player 2
         uint256 wager; // amount to wager in wei
-        uint256 created_at; // timestamp of when the game was created
+        uint256 createdAt; // timestamp of when the game was created
     }
 
     address private _owner; // owner of the contract
@@ -143,7 +143,7 @@ contract DechecsMatchContract {
     function joinGame(string calldata gid) external payable notPaused {
         Game storage game = _games[gid];
 
-        require(game.created_at > 0, "Game does not exist");
+        require(game.createdAt > 0, "Game does not exist");
         require(game.wager > 0, "Game has no wager");
         require(game.player2 == address(0), "Game has already started");
 
@@ -151,7 +151,7 @@ contract DechecsMatchContract {
 
         require(msg.value == game.wager + commission, "Incorrect value sent");
         require(
-            block.timestamp - game.created_at < _gameExpiry,
+            block.timestamp - game.createdAt < _gameExpiry,
             "Game has expired"
         );
 
@@ -164,7 +164,7 @@ contract DechecsMatchContract {
      */
     function cancelGame(string calldata gid) external isOwner notPaused {
         Game storage game = _games[gid];
-        require(game.created_at > 0, "Game does not exist");
+        require(game.createdAt > 0, "Game does not exist");
         require(game.player2 == address(0), "Game has already started");
 
         uint256 gasFee = tx.gasprice * _gasLimit;
@@ -185,7 +185,7 @@ contract DechecsMatchContract {
      */
     function declareDraw(string calldata gid) external isOwner notPaused {
         Game storage game = _games[gid];
-        require(game.created_at > 0, "Game does not exist");
+        require(game.createdAt > 0, "Game does not exist");
         require(game.player2 != address(0), "Game has not started");
 
         uint256 gasFee = tx.gasprice * _gasLimit;
@@ -210,7 +210,7 @@ contract DechecsMatchContract {
         address _winner
     ) external isOwner notPaused {
         Game storage game = _games[gid];
-        require(game.created_at > 0, "Game does not exist");
+        require(game.createdAt > 0, "Game does not exist");
         require(game.player2 != address(0), "Game has not started");
         require(
             _winner == game.player1 || _winner == game.player2,

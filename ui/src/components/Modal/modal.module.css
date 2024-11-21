@@ -1,4 +1,4 @@
-.hiwModal {
+.modal {
   position: fixed;
   left: 50%;
   top: 50%;
@@ -11,5 +11,16 @@
   ol {
     text-align: left;
     text-justify: inter-word;
+  }
+}
+
+.termsModal {
+  aspect-ratio: 1 / 1;
+  overflow-y: scroll;
+}
+
+@media (max-width: 1024px) {
+  .termsModal {
+    aspect-ratio: unset;
   }
 }

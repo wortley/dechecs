@@ -15,6 +15,7 @@ type SquareProps = {
 }
 
 const Square = memo(({ id, onClick, selected, onDrop, isLegalMove, wasPrevMove, isCheckedKing, children }: SquareProps) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [{ isOver }, drop] = useDrop(
     () => ({
       accept: DraggableTypes.PIECE,

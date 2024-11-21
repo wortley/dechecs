@@ -1,12 +1,15 @@
+import parse from "html-react-parser"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { toast } from "react-toastify"
 import { useAccount, useBalance } from "wagmi"
 import { estimateFeesPerGas, writeContract } from "wagmi/actions"
 import { abi } from "../abi"
-import TermsModal from "../components/TermsModal"
+import Modal from "../components/Modal"
+import modalStyles from "../components/Modal/modal.module.css"
 import { config } from "../config"
 import { COMMISSION_PERCENTAGE, MAX_GAS, SC_ADDRESS, chainId } from "../constants"
+import { termsModalContent } from "../constants/modalContent"
 import { socket } from "../socket"
 import { GameInfo, StartData } from "../types"
 import { POLtoX, parsePOL } from "../utils/currency"
@@ -176,7 +179,7 @@ export default function Join() {
           Back
         </button>
       </div>
-      <TermsModal show={showModal} setShow={setShowModal} />
+      <Modal show={showModal} setShow={setShowModal} heading="Terms of use" closeButtonText="Close" body={parse(termsModalContent)} className={modalStyles.termsModal} />
     </>
   )
 }
