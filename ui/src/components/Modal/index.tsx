@@ -1,11 +1,12 @@
-import React, { useEffect } from "react"
-import styles from "./modal.module.css"
+import parse from "html-react-parser";
+import { useEffect } from "react";
+import styles from "./modal.module.css";
 
 interface ModalProps {
   show: boolean
   setShow: (show: boolean) => void
   heading: string
-  body: React.ReactNode
+  body: string
   closeButtonText: string
   idx?: number
   className?: string
@@ -42,7 +43,7 @@ export default function Modal({ show, setShow, heading, body, closeButtonText, c
   return (
     <dialog className={`${styles.modal} ${className}`}>
       <h3>{heading}</h3>
-      {body}
+      {parse(body)}
       <button onClick={onClose}>{closeButtonText}</button>
     </dialog>
   )

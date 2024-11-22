@@ -1,4 +1,3 @@
-import parse from "html-react-parser";
 import { throttle } from "lodash";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -215,7 +214,7 @@ export default function Create() {
           </>
         )}
       </div>
-      <Modal show={showModal} setShow={setShowModal} heading="Terms of use" closeButtonText="Close" body={parse(termsModalContent)} className={modalStyles.termsModal} />
+      <Modal show={showModal} setShow={setShowModal} heading="Terms of use" closeButtonText="Close" body={termsModalContent} className={modalStyles.termsModal} />
     </>
   )
 }
