@@ -13,10 +13,19 @@ export default function Home() {
 
   useEffect(() => {
     async function getAndSetUsageStats() {
-      setUsageStats(await getUsageStats())
+      const storedStats = sessionStorage.getItem("usageStats");
+
+      if (storedStats) {
+        setUsageStats(JSON.parse(storedStats));
+      } else {
+        const stats = await getUsageStats();
+        setUsageStats(stats);
+        sessionStorage.setItem("usageStats", JSON.stringify(stats));
+      }
     }
-    getAndSetUsageStats()
-  }, [])
+
+    getAndSetUsageStats();
+  }, []);
 
   return (
     <>
