@@ -144,14 +144,19 @@ export default function Join() {
         )}
         {gameInfo && (
           <>
-            <p>Game code: {joiningGameId}</p>
-            <p>Time control: {gameInfo.timeControl}m</p>
-            <p>Rounds: {gameInfo.totalRounds}</p>
-            <p>
-              Wager: {gameInfo.wagerAmount} POL ({wagerAmountUSD.toFixed(2)} USD / {wagerAmountGBP.toFixed(2)} GBP / {wagerAmountEUR.toFixed(2)} EUR)
+            <p style={{ textAlign: "left" }}>
+              <label>Game code:</label> {joiningGameId}
+              <br />
+              <label>Time control:</label> {gameInfo.timeControl}m
+              <br />
+              <label>Rounds:</label> {gameInfo.totalRounds}
+              <br />
+              <label>Wager:</label> {gameInfo.wagerAmount} POL ({wagerAmountUSD.toFixed(2)} USD / {wagerAmountGBP.toFixed(2)} GBP / {wagerAmountEUR.toFixed(2)} EUR)
+              <br />
+              <label>Gas price:</label> {(Number(gasPrice) / 10 ** 9).toFixed(2)} Gwei
+              <br />
+              <label>Commission:</label> {COMMISSION_PERCENTAGE}%
             </p>
-            <p>Gas price: {(Number(gasPrice) / 10 ** 9).toFixed(2)} Gwei</p>
-            <p>Commission: {COMMISSION_PERCENTAGE}%</p>
             <form
               onSubmit={(e) => {
                 e.preventDefault()

@@ -1,18 +1,18 @@
-import { throttle } from "lodash";
-import { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
-import { useAccount, useBalance } from "wagmi";
-import { estimateFeesPerGas, writeContract } from "wagmi/actions";
-import { abi } from "../abi";
-import Modal from "../components/Modal";
-import modalStyles from "../components/Modal/modal.module.css";
-import { config } from "../config";
-import { chainId, COMMISSION_PERCENTAGE, MAX_GAS, SC_ADDRESS } from "../constants";
-import { termsModalContent } from "../constants/modalContent";
-import { socket } from "../socket";
-import { StartData } from "../types";
-import { parsePOL, POLtoX } from "../utils/currency";
+import { throttle } from "lodash"
+import { useCallback, useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { toast } from "react-toastify"
+import { useAccount, useBalance } from "wagmi"
+import { estimateFeesPerGas, writeContract } from "wagmi/actions"
+import { abi } from "../abi"
+import Modal from "../components/Modal"
+import modalStyles from "../components/Modal/modal.module.css"
+import { config } from "../config"
+import { chainId, COMMISSION_PERCENTAGE, MAX_GAS, SC_ADDRESS } from "../constants"
+import { termsModalContent } from "../constants/modalContent"
+import { socket } from "../socket"
+import { StartData } from "../types"
+import { parsePOL, POLtoX } from "../utils/currency"
 
 export default function Create() {
   const navigate = useNavigate()
@@ -181,11 +181,11 @@ export default function Create() {
             />
             <label htmlFor="wager-amount">Wager (POL):</label>
             <input type="number" id="wager-amount" required value={wagerAmount} min={1} step={1} max={100} onChange={(e) => setWagerAmount(parseFloat(e.currentTarget.value))} />
-            <p>
-              Wager: {wagerAmountUSD.toFixed(2)} USD / {wagerAmountGBP.toFixed(2)} GBP / {wagerAmountEUR.toFixed(2)} EUR
+            <p style={{textAlign: "left"}}>
+              <label>Wager:</label> {wagerAmountUSD.toFixed(2)} USD / {wagerAmountGBP.toFixed(2)} GBP / {wagerAmountEUR.toFixed(2)} EUR<br />
+              <label>Gas price:</label> {(Number(gasPrice) / 10 ** 9).toFixed(2)} Gwei<br />
+              <label>Commission:</label> {COMMISSION_PERCENTAGE}%
             </p>
-            <p>Gas price: {(Number(gasPrice) / 10 ** 9).toFixed(2)} Gwei</p>
-            <p>Commission: {COMMISSION_PERCENTAGE}%</p>
             <div className="accept-terms-container">
               <input type="checkbox" id="accept-terms" required />
               <label htmlFor="accept-terms">
