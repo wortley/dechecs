@@ -1,4 +1,4 @@
-export const termsModalContent = `<ol type="1">
+export const termsModalContent = (commissionPercentage: string) => `<ol type="1">
     <li>
         <strong>Minimum Age Requirement:</strong> You must be at least 18 years old or the legal age in your jurisdiction to participate.
     </li>
@@ -16,7 +16,7 @@ export const termsModalContent = `<ol type="1">
         assistance.
     </li>
     <li>
-        <strong>Commission:</strong> A commission of {COMMISSION_PERCENTAGE}% will be added to each player's wager and paid upon creating or joining a game. This is used to cover gas fees and cloud PaaS costs.
+        <strong>Commission:</strong> A commission of ${commissionPercentage}% will be added to each player's wager and paid upon creating or joining a game. This is used to cover gas fees and cloud PaaS costs.
     </li>
     <li>
         <strong>No Liability for Losses:</strong> We are not responsible for any financial losses incurred. You manage your own funds and wagers. We are not liable for indirect, incidental, or

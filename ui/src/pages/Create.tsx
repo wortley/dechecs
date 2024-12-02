@@ -214,7 +214,7 @@ export default function Create() {
           </>
         )}
       </div>
-      <Modal show={showModal} setShow={setShowModal} heading="Terms of use" closeButtonText="Close" body={termsModalContent} className={modalStyles.termsModal} />
+      <Modal show={showModal} setShow={setShowModal} heading="Terms of use" closeButtonText="Close" body={termsModalContent(COMMISSION_PERCENTAGE)} className={modalStyles.termsModal} />
     </>
   )
 }
